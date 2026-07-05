@@ -1,0 +1,7 @@
+# 改行コードをLFに統一する(Windows/他OS間での差分混入を防止)。
+* text=auto eol=lf
+
+# Windows バッチファイルは cmd.exe の複数行 if ブロック解析に CRLF が必須。
+# チェックアウト環境の core.autocrlf 設定に依存せず常に CRLF で展開する。
+*.cmd text eol=crlf
+*.bat text eol=crlf
