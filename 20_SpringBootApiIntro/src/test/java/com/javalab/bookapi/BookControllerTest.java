@@ -1,0 +1,74 @@
+package com.javalab.bookapi;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+class BookControllerTest {
+
+    @Autowired
+    private TestRestTemplate restTemplate;
+
+    @Autowired
+    private BookService bookService;
+
+    @Test
+    void getBooksReturnsRegisteredBooks() {
+        bookService.create("坊っちゃん", "夏目漱石");
+
+        ResponseEntity<Book[]> response = restTemplate.getForEntity("/api/books", Book[].class);
+
+        List<Book> books = List.of(response.getBody());
+        assertTrue(books.stream().anyMatch(b -> b.title().equals("坊っちゃん")));
+    }
+
+    @Test
+    void postBooksCreatesBookAndReturns201() {
+        BookRequest request = new BookRequest("こころ", "夏目漱石");
+
+        ResponseEntity<Book> response = restTemplate.postForEntity("/api/books", request, Book.class);
+
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals("こころ", response.getBody().title());
+        assertEquals("夏目漱石", response.getBody().author());
+    }
+
+    @Test
+    void getBookByIdReturnsBookForExistentId() {
+        Book created = bookService.create("三四郎", "夏目漱石");
+
+        ResponseEntity<Book> response = restTemplate.getForEntity("/api/books/" + created.id(), Book.class);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("三四郎", response.getBody().title());
+    }
+
+    @Test
+    void getBookByIdReturns404ForNonExistentId() {
+        ResponseEntity<String> response = restTemplate.getForEntity("/api/books/999999", String.class);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    void deleteBookRemovesBookAndReturns204() {
+        Book created = bookService.create("それから", "夏目漱石");
+
+        ResponseEntity<Void> response =
+                restTemplate.exchange("/api/books/" + created.id(), HttpMethod.DELETE, null, Void.class);
+
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        assertThrows(BookNotFoundException.class, () -> bookService.findById(created.id()));
+    }
+}
