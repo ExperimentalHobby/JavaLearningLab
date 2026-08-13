@@ -9,30 +9,30 @@ Java学習用のアプリ・技術トピックを30個作成するプロジェ�
 
 ## アプリ一覧・進捗チェックリスト
 
-- [ ] [01_Calculator](01_Calculator/README.md) - 電卓アプリ(CLI)
-- [ ] [02_RockPaperScissors](02_RockPaperScissors/README.md) - じゃんけんゲーム
-- [ ] [03_UnitConverter](03_UnitConverter/README.md) - 単位変換ツール
-- [ ] [04_ToDoList](04_ToDoList/README.md) - ToDoリスト(CLI)
-- [ ] [05_BmiTracker](05_BmiTracker/README.md) - BMI計算機+履歴保存
-- [ ] [06_RpnCalculator](06_RpnCalculator/README.md) - 簡易電卓(逆ポーランド記法)
-- [ ] [07_ShapePolymorphism](07_ShapePolymorphism/README.md) - 継承/ポリモーフィズム練習(図形計算)
-- [ ] [08_RpsTournament](08_RpsTournament/README.md) - じゃんけん大会シミュレーター
-- [ ] [09_QuizApp](09_QuizApp/README.md) - クイズアプリ(CLI)
-- [ ] [10_BankAccountSystem](10_BankAccountSystem/README.md) - 銀行口座管理システム(CLI)
-- [ ] [11_HouseholdBudgetGui](11_HouseholdBudgetGui/README.md) - 家計簿アプリ(Swing/JavaFX)
-- [ ] [12_StreamApiPractice](12_StreamApiPractice/README.md) - Stream API練習(データ集計ツール)
-- [ ] [13_FileOrganizer](13_FileOrganizer/README.md) - ファイル整理ツール
-- [ ] [14_HttpClientTool](14_HttpClientTool/README.md) - 簡易HTTPクライアント
-- [ ] [15_MultiThreadDownloader](15_MultiThreadDownloader/README.md) - マルチスレッドダウンローダー
-- [ ] [16_JdbcCrudApp](16_JdbcCrudApp/README.md) - 簡易データベースアプリ(JDBC)
-- [ ] [17_GenericCollectionLib](17_GenericCollectionLib/README.md) - ジェネリクス活用ライブラリ(汎用スタック/キュー)
-- [ ] [18_TextEditorSwing](18_TextEditorSwing/README.md) - 簡易テキストエディタ(Swing)
-- [ ] [19_LogAnalyzerRegex](19_LogAnalyzerRegex/README.md) - 正規表現ログ解析ツール
-- [ ] [20_SpringBootApiIntro](20_SpringBootApiIntro/README.md) - 簡易Webサーバー/API(Spring Boot入門)
-- [ ] [21_MazeSolverVisualizer](21_MazeSolverVisualizer/README.md) - 迷路生成&探索ビジュアライザ(JavaFX)
-- [ ] [22_GameOfLife](22_GameOfLife/README.md) - ライフゲーム(Conway's Game of Life)
-- [ ] [23_DesignPatternsPractice](23_DesignPatternsPractice/README.md) - デザインパターン実践集
-- [ ] [24_SocketChatApp](24_SocketChatApp/README.md) - マルチスレッドチャットアプリ(Socket通信)
+- [x] [01_Calculator](01_Calculator/README.md) - 電卓アプリ(CLI)
+- [x] [02_RockPaperScissors](02_RockPaperScissors/README.md) - じゃんけんゲーム
+- [x] [03_UnitConverter](03_UnitConverter/README.md) - 単位変換ツール
+- [x] [04_ToDoList](04_ToDoList/README.md) - ToDoリスト(CLI)
+- [x] [05_BmiTracker](05_BmiTracker/README.md) - BMI計算機+履歴保存
+- [x] [06_RpnCalculator](06_RpnCalculator/README.md) - 簡易電卓(逆ポーランド記法)
+- [x] [07_ShapePolymorphism](07_ShapePolymorphism/README.md) - 継承/ポリモーフィズム練習(図形計算)
+- [x] [08_RpsTournament](08_RpsTournament/README.md) - じゃんけん大会シミュレーター
+- [x] [09_QuizApp](09_QuizApp/README.md) - クイズアプリ(CLI)
+- [x] [10_BankAccountSystem](10_BankAccountSystem/README.md) - 銀行口座管理システム(CLI)
+- [x] [11_HouseholdBudgetGui](11_HouseholdBudgetGui/README.md) - 家計簿アプリ(Swing/JavaFX)
+- [x] [12_StreamApiPractice](12_StreamApiPractice/README.md) - Stream API練習(データ集計ツール)
+- [x] [13_FileOrganizer](13_FileOrganizer/README.md) - ファイル整理ツール
+- [x] [14_HttpClientTool](14_HttpClientTool/README.md) - 簡易HTTPクライアント
+- [x] [15_MultiThreadDownloader](15_MultiThreadDownloader/README.md) - マルチスレッドダウンローダー
+- [x] [16_JdbcCrudApp](16_JdbcCrudApp/README.md) - 簡易データベースアプリ(JDBC)
+- [x] [17_GenericCollectionLib](17_GenericCollectionLib/README.md) - ジェネリクス活用ライブラリ(汎用スタック/キュー)
+- [x] [18_TextEditorSwing](18_TextEditorSwing/README.md) - 簡易テキストエディタ(Swing)
+- [x] [19_LogAnalyzerRegex](19_LogAnalyzerRegex/README.md) - 正規表現ログ解析ツール
+- [x] [20_SpringBootApiIntro](20_SpringBootApiIntro/README.md) - 簡易Webサーバー/API(Spring Boot入門)
+- [x] [21_MazeSolverVisualizer](21_MazeSolverVisualizer/README.md) - 迷路生成&探索ビジュアライザ(JavaFX)
+- [x] [22_GameOfLife](22_GameOfLife/README.md) - ライフゲーム(Conway's Game of Life)
+- [x] [23_DesignPatternsPractice](23_DesignPatternsPractice/README.md) - デザインパターン実践集
+- [x] [24_SocketChatApp](24_SocketChatApp/README.md) - マルチスレッドチャットアプリ(Socket通信)
 - [ ] [25_JUnitPractice](25_JUnitPractice/README.md) - 単体テスト練習(JUnit)
 - [ ] [26_BuilderPatternOrderApp](26_BuilderPatternOrderApp/README.md) - Builderパターン活用アプリ(注文管理システム)
 - [ ] [27_JpaHibernateApp](27_JpaHibernateApp/README.md) - 簡易ORM/DB操作アプリ(JPA/Hibernate)

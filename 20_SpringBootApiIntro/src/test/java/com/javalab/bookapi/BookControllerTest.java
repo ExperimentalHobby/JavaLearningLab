@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -28,8 +29,10 @@ class BookControllerTest {
         bookService.create("坊っちゃん", "夏目漱石");
 
         ResponseEntity<Book[]> response = restTemplate.getForEntity("/api/books", Book[].class);
+        Book[] body = response.getBody();
 
-        List<Book> books = List.of(response.getBody());
+        assertNotNull(body);
+        List<Book> books = List.of(body);
         assertTrue(books.stream().anyMatch(b -> b.title().equals("坊っちゃん")));
     }
 
@@ -38,10 +41,12 @@ class BookControllerTest {
         BookRequest request = new BookRequest("こころ", "夏目漱石");
 
         ResponseEntity<Book> response = restTemplate.postForEntity("/api/books", request, Book.class);
+        Book created = response.getBody();
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals("こころ", response.getBody().title());
-        assertEquals("夏目漱石", response.getBody().author());
+        assertNotNull(created);
+        assertEquals("こころ", created.title());
+        assertEquals("夏目漱石", created.author());
     }
 
     @Test
@@ -49,9 +54,11 @@ class BookControllerTest {
         Book created = bookService.create("三四郎", "夏目漱石");
 
         ResponseEntity<Book> response = restTemplate.getForEntity("/api/books/" + created.id(), Book.class);
+        Book body = response.getBody();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("三四郎", response.getBody().title());
+        assertNotNull(body);
+        assertEquals("三四郎", body.title());
     }
 
     @Test
