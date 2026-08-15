@@ -44,6 +44,7 @@ public class ChatClientMain {
         while (scanner.hasNextLine()) {
             out.println(scanner.nextLine());
         }
+        scanner.close();
         socket.close();
     }
 }
