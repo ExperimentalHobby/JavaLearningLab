@@ -36,11 +36,44 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
-      - name: Find folders containing pom.xml
+      - name: Find folders containing pom.xml changed in this run
         id: set-matrix
         run: |
-          dirs=$(find . -mindepth 2 -maxdepth 2 -name pom.xml -printf '%h\n' | sed 's#^\./##' | sort)
+          all_dirs=$(find . -mindepth 2 -maxdepth 2 -name pom.xml -printf '%h\n' | sed 's#^\./##' | sort)
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+            head="${{ github.event.pull_request.head.sha }}"
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            base="${{ github.event.before }}"
+            head="${{ github.sha }}"
+          else
+            base=""
+          fi
+
+          # workflow_dispatch、または比較元コミットが取得できない場合(新規ブランチの初回pushなど)は
+          # 差分を判定できないため、安全側に倒して全フォルダを対象にする。
+          if [ -n "$base" ] && git cat-file -e "$base" 2>/dev/null; then
+            changed_files=$(git diff --name-only "$base" "$head")
+
+            # CIワークフロー自体の変更はロジック検証のため全フォルダを対象にする。
+            if printf '%s\n' "$changed_files" | grep -q '^\.github/workflows/'; then
+              dirs="$all_dirs"
+            else
+              dirs=$(printf '%s\n' "$all_dirs" | while IFS= read -r d; do
+                [ -n "$d" ] || continue
+                if printf '%s\n' "$changed_files" | grep -q "^$d/"; then
+                  echo "$d"
+                fi
+              done)
+            fi
+          else
+            dirs="$all_dirs"
+          fi
+
           json=$(printf '%s\n' "$dirs" | jq -R -s -c 'split("\n") | map(select(length > 0))')
           echo "matrix=$json" >> "$GITHUB_OUTPUT"
 
