@@ -11,10 +11,14 @@ import java.util.Scanner;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * {@link Main#run(Scanner, PrintStream, List)} の出題ループを結合テストするクラス。
+ */
 class MainTest {
 
     @Test
     void showsFinalScoreWhenAllAnswersAreCorrect() {
+        // 2問とも正解を入力し、最終結果が "2/2" と表示されることを確認する。
         List<Question> questions = List.of(
                 new Question("Javaの生みの親は誰?", "James Gosling"),
                 new Question("1+1は?", "2"));
@@ -30,6 +34,8 @@ class MainTest {
 
     @Test
     void showsCorrectAndIncorrectFeedbackAndFinalScore() {
+        // 1問目は正解、2問目は不正解("99")を入力し、各問ごとの正誤フィードバックと
+        // 最終結果("1/2")の両方が表示されることを確認する。
         List<Question> questions = List.of(
                 new Question("Javaの生みの親は誰?", "James Gosling"),
                 new Question("1+1は?", "2"));
