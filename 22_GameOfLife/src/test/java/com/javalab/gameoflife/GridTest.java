@@ -4,6 +4,9 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * {@link Grid#countLiveNeighbors(int, int)} の隣接カウントロジックを検証するテスト。
+ */
 class GridTest {
 
     @Test
