@@ -67,4 +67,19 @@ class MainTest {
         assertTrue(result.contains("取得失敗"));
         assertTrue(result.contains("入手可能な価格がありませんでした"));
     }
+
+    @Test
+    void runShowsErrorAndContinuesForUnknownCommand() {
+        List<ShopPriceFetcher> fetchers = List.of(new SimulatedShopPriceFetcher("ShopA", 1000, 10, false));
+        Scanner scanner = new Scanner("unknown foo\ncompare ノートPC\nexit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out, service, fetchers);
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains("不明なコマンドです"));
+        // 不明なコマンドでループを抜けず、後続のコマンドが処理されることまで確認する
+        assertTrue(result.contains("最安値"));
+    }
 }
