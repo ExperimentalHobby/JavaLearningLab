@@ -42,4 +42,32 @@ class MainTest {
         String output = outContent.toString(StandardCharsets.UTF_8);
         assertTrue(output.contains("合計面積=98.54"));
     }
+
+    @Test
+    void triangleCommandAddsShapeReflectedInListTotalArea() {
+        // 3-4-5の直角三角形(面積6.00)を登録し、listの合計面積に反映されることを確認する。
+        Scanner scanner = new Scanner(new StringReader("triangle 3 4 5\nlist\nexit\n"));
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(outContent, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out);
+
+        String output = outContent.toString(StandardCharsets.UTF_8);
+        assertTrue(output.contains("合計面積=6.00"));
+    }
+
+    @Test
+    void triangleCommandShowsErrorForInvalidTriangleAndContinues() {
+        // "1 1 5"は三角不等式(1+1<=5)を満たさない不正な三角形。
+        // エラー表示のみで継続し、直後の正常な "triangle 3 4 5" が処理されることを確認する。
+        Scanner scanner = new Scanner(new StringReader("triangle 1 1 5\ntriangle 3 4 5\nlist\nexit\n"));
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(outContent, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out);
+
+        String output = outContent.toString(StandardCharsets.UTF_8);
+        assertTrue(output.contains("エラー"));
+        assertTrue(output.contains("合計面積=6.00"));
+    }
 }
