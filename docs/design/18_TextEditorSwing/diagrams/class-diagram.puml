@@ -8,16 +8,24 @@ class Main {
 }
 
 class TextEditorFrame extends JFrame {
-  -fileService: TextFileService
+  -document: EditorDocument
   -textArea: JTextArea
-  -currentFile: Path
   +TextEditorFrame()
   -buildMenuBar(): JMenuBar
   -onOpen(): void
   -onSave(): void
   -onSaveAs(): void
-  -saveTo(path: Path): void
-  -updateTitle(): void
+}
+
+class EditorDocument {
+  -fileService: TextFileService
+  -currentFile: Path
+  +EditorDocument(fileService: TextFileService)
+  +open(path: Path): String
+  +hasCurrentFile(): boolean
+  +save(content: String): void
+  +saveAs(path: Path, content: String): void
+  +windowTitle(): String
 }
 
 class TextFileService {
@@ -30,8 +38,10 @@ class TextFileException extends RuntimeException {
 }
 
 Main ..> TextEditorFrame : 起動する
-TextEditorFrame "1" --> "1" TextFileService : 利用する
+TextEditorFrame "1" --> "1" EditorDocument : 状態遷移を委譲する
+EditorDocument "1" --> "1" TextFileService : 利用する
 TextEditorFrame ..> TextFileException : catchしダイアログ表示する
+EditorDocument ..> TextFileException : 伝播させる(自身はcatchしない)
 TextFileService ..> TextFileException : throwする
 
 note right of TextFileService
@@ -41,11 +51,21 @@ note right of TextFileService
   TextFileException に統一している。
 end note
 
+note right of EditorDocument
+  現在のファイルパスの保持・切り替えという
+  状態遷移をTextEditorFrameから切り出したクラス。
+  JFileChooser等のGUI要素に依存しないため、
+  GUIを起動せずに単体テストできる。
+  save()は現在のファイルへ上書きし、
+  saveAs()は保存先を選び直しcurrentFileを
+  切り替える点が両者の違い。
+end note
+
 note bottom of TextEditorFrame
   中央にJTextArea、上部にファイル操作用の
   JMenuBar(開く/保存/名前を付けて保存/終了)を配置。
-  「保存」はcurrentFileがあれば上書き、
-  なければ「名前を付けて保存」と同じ動作になる。
+  「保存」はEditorDocument#hasCurrentFile()が
+  falseの場合、「名前を付けて保存」と同じ動作になる。
 end note
 
 @enduml
