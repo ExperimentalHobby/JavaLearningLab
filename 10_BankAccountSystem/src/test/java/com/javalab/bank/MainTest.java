@@ -42,4 +42,19 @@ class MainTest {
         String output = outContent.toString(StandardCharsets.UTF_8);
         assertTrue(output.contains("残高: 700"));
     }
+
+    @Test
+    void historyCommandShowsDepositAndWithdrawalWithBalanceSnapshot() {
+        // 1000入金→300出金の後、historyコマンドで各取引の種別・金額・取引後残高が
+        // 「種別 金額 (残高: 残高)」の形式で表示されることを確認する。
+        Scanner scanner = new Scanner(new StringReader("Alice\ndeposit 1000\nwithdraw 300\nhistory\nexit\n"));
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(outContent, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out);
+
+        String output = outContent.toString(StandardCharsets.UTF_8);
+        assertTrue(output.contains("DEPOSIT 1000 (残高: 1000)"));
+        assertTrue(output.contains("WITHDRAWAL 300 (残高: 700)"));
+    }
 }
