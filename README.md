@@ -36,7 +36,7 @@ Java学習用のアプリ・技術トピックを30個作成するプロジェ�
 - [x] [25_JUnitPractice](25_JUnitPractice/README.md) - 単体テスト練習(JUnit)
 - [x] [26_BuilderPatternOrderApp](26_BuilderPatternOrderApp/README.md) - Builderパターン活用アプリ(注文管理システム)
 - [x] [27_JpaHibernateApp](27_JpaHibernateApp/README.md) - 簡易ORM/DB操作アプリ(JPA/Hibernate)
-- [ ] [28_LoggingTool](28_LoggingTool/README.md) - ログ収集&解析ツール(SLF4J+Logback)
+- [x] [28_LoggingTool](28_LoggingTool/README.md) - ログ収集&解析ツール(SLF4J+Logback)
 - [ ] [29_CompletableFutureDemo](29_CompletableFutureDemo/README.md) - 並行処理デモ(CompletableFuture)
 - [ ] [30_MavenCliPackaging](30_MavenCliPackaging/README.md) - CLIパッケージ化&配布(Mavenプロジェクト)
 

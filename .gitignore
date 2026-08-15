@@ -4,6 +4,9 @@ dist/
 bin/
 out/
 
+# Logback/SLF4J実行時ログ出力先(28_LoggingToolなどlogback.xmlでlogs/配下に出力する構成のため)
+logs/
+
 # Maven Wrapper downloaded binaries (auto-downloaded when a project uses mvnw)
 .mvn/wrapper/maven-wrapper.jar
 
