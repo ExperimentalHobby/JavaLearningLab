@@ -36,6 +36,30 @@ class MainTest {
     }
 
     @Test
+    void runShowsRawJsonForFetchCommand() {
+        // fetchコマンドはfetchUserと異なりUserへ解析せず、レスポンスのJSON文字列を
+        // そのまま表示することを確認する。
+        String responseBody = "{\"id\":1,\"name\":\"Alice\",\"email\":\"alice@example.com\"}";
+        server.createContext("/user", exchange -> {
+            byte[] bytes = responseBody.getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(200, bytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(bytes);
+            }
+        });
+        server.start();
+
+        Scanner scanner = new Scanner("fetch http://localhost:" + port + "/user\nexit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out);
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains(responseBody));
+    }
+
+    @Test
     void runShowsUserInfoForFetchUserCommand() {
         // fetchUserコマンドが正常に処理され、User.toString()相当のid/name/email形式で
         // 表示されることを確認する。
