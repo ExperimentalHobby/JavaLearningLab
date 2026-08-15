@@ -26,14 +26,10 @@ public class LifeFrame extends JFrame {
     private static final int CELL_SIZE = 16;
     private static final int TIMER_DELAY_MS = 150;
 
-    private final GameOfLife gameOfLife = new GameOfLife();
-    private final Random random = new Random();
+    private final LifeBoardState state = new LifeBoardState(COLS, ROWS, new GameOfLife(), new Random());
     private final JPanel canvas;
     private final Timer timer;
     private final JLabel generationLabel = new JLabel("世代: 0");
-
-    private Grid grid = new Grid(COLS, ROWS);
-    private int generation = 0;
 
     public LifeFrame() {
         super("ライフゲーム");
@@ -79,15 +75,15 @@ public class LifeFrame extends JFrame {
         JButton clearButton = new JButton("クリア");
         clearButton.addActionListener(e -> {
             timer.stop();
-            grid = new Grid(COLS, ROWS);
-            resetGeneration();
+            state.clear();
+            refreshView();
         });
 
         JButton randomButton = new JButton("ランダム生成");
         randomButton.addActionListener(e -> {
             timer.stop();
-            grid = randomGrid();
-            resetGeneration();
+            state.randomize();
+            refreshView();
         });
 
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -103,41 +99,28 @@ public class LifeFrame extends JFrame {
     private void onCellClicked(int x, int y) {
         int col = x / CELL_SIZE;
         int row = y / CELL_SIZE;
-        if (row >= 0 && row < grid.height() && col >= 0 && col < grid.width()) {
-            grid.setAlive(row, col, !grid.isAlive(row, col));
+        if (row >= 0 && row < state.grid().height() && col >= 0 && col < state.grid().width()) {
+            state.toggleCell(row, col);
             canvas.repaint();
         }
     }
 
     private void step() {
-        grid = gameOfLife.nextGeneration(grid);
-        generation++;
-        updateGenerationLabel();
+        state.step();
+        refreshView();
+    }
+
+    /**
+     * 世代ラベルの表示を現在の状態に合わせて更新し、盤面を再描画する。
+     * クリア・ランダム生成・1世代進行のいずれの後も呼び出す。
+     */
+    private void refreshView() {
+        generationLabel.setText("世代: " + state.generation());
         canvas.repaint();
-    }
-
-    private void resetGeneration() {
-        generation = 0;
-        updateGenerationLabel();
-        canvas.repaint();
-    }
-
-    private Grid randomGrid() {
-        Grid newGrid = new Grid(COLS, ROWS);
-        for (int row = 0; row < ROWS; row++) {
-            for (int col = 0; col < COLS; col++) {
-                // 2回のnextBooleanのANDで生存率を約25%に抑え、初期盤面が密集しすぎないようにする。
-                newGrid.setAlive(row, col, random.nextBoolean() && random.nextBoolean());
-            }
-        }
-        return newGrid;
-    }
-
-    private void updateGenerationLabel() {
-        generationLabel.setText("世代: " + generation);
     }
 
     private void drawGrid(Graphics g) {
+        Grid grid = state.grid();
         g.setColor(Color.BLACK);
         for (int row = 0; row < grid.height(); row++) {
             for (int col = 0; col < grid.width(); col++) {

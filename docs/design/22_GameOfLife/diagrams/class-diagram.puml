@@ -24,20 +24,36 @@ class Main {
 }
 
 class LifeFrame extends JFrame {
-  -gameOfLife: GameOfLife
+  -state: LifeBoardState
   -canvas: JPanel
   -timer: Timer
-  -grid: Grid
-  -generation: int
   +LifeFrame()
   -drawGrid(g: Graphics): void
   -onCellClicked(x: int, y: int): void
   -step(): void
+  -refreshView(): void
+}
+
+class LifeBoardState {
+  -width: int
+  -height: int
+  -gameOfLife: GameOfLife
+  -random: Random
+  -grid: Grid
+  -generation: int
+  +LifeBoardState(width: int, height: int, gameOfLife: GameOfLife, random: Random)
+  +grid(): Grid
+  +generation(): int
+  +toggleCell(row: int, col: int): void
+  +step(): void
+  +clear(): void
+  +randomize(): void
 }
 
 Main ..> LifeFrame : 起動する
-LifeFrame "1" --> "1" GameOfLife : 利用する
-LifeFrame "1" --> "1" Grid : 現在の盤面として保持する
+LifeFrame "1" --> "1" LifeBoardState : 状態遷移を委譲する
+LifeBoardState "1" --> "1" GameOfLife : 利用する
+LifeBoardState "1" --> "1" Grid : 現在の盤面として保持する
 GameOfLife ..> Grid : nextGenerationで生成する
 
 note right of GameOfLife
@@ -53,9 +69,21 @@ note right of Grid
   (トーラス状のラップアラウンドはしない)。
 end note
 
+note right of LifeBoardState
+  盤面編集・世代進行・クリア・ランダム生成という
+  状態遷移をLifeFrameから切り出したクラス。
+  Timer/JPanel等のSwing描画要素に依存しないため、
+  GUIを起動せずに単体テストできる。
+  clear()/randomize()はいずれも世代数を0に
+  リセットする(手動でのstep()進行との違い)。
+end note
+
 note bottom of LifeFrame
   javax.swing.Timer で一定間隔(150ms)ごとに
   step() を呼ぶ「タイマー駆動更新」を実装している。
+  開始/停止ボタンはtimer.start()/stop()を
+  直接呼ぶのみで、抽出すべき固有ロジックがないため
+  手動確認のままとした。
 end note
 
 @enduml

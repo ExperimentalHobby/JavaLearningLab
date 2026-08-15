@@ -120,7 +120,7 @@ include::diagrams/sequence-error.puml[]
 include::diagrams/class-diagram.puml[]
 ----
 
-`LifeFrame`(`JFrame` を継承したメインウィンドウ)は `Grid`(盤面)と `GameOfLife`(世代更新ロジック)を保持する。`GameOfLife.nextGeneration` は現在の `Grid` を書き換えず新しい `Grid` を返す純粋関数である。
+`LifeFrame`(`JFrame` を継承したメインウィンドウ)は盤面編集・世代進行・クリア・ランダム生成という状態遷移を `LifeBoardState` に委譲し、自身は描画とタイマー操作のみを担当する。`LifeBoardState` は `Grid`(盤面)と `GameOfLife`(世代更新ロジック)を保持する。`GameOfLife.nextGeneration` は現在の `Grid` を書き換えず新しい `Grid` を返す純粋関数である。
 
 <<<
 
@@ -136,6 +136,13 @@ include::diagrams/activity-diagram.puml[]
 
 === テスト方針の分離
 Issue #11/#18/#21と同じ方針で、`Grid`/`GameOfLife` はGUIに依存しない純粋なロジックとしてTDDし、`LifeFrame` は実装後に実機起動・スクリーンショットで手動確認した。
+
+=== 盤面・世代カウンタの状態遷移の切り出し
+当初「盤面のクリア」「ランダムな初期パターン生成」(UC-5・UC-6)が `LifeFrame` のボタンハンドラ・privateメソッドに直接実装されており、世代カウンタのリセットを伴う状態遷移がテストで検証できていなかった。
+
+この状態遷移を `LifeBoardState` として切り出すことで、`Timer`/`JPanel`/`Graphics` に依存せずUC-1・UC-4・UC-5・UC-6をTDDで検証できるようにした。11_HouseholdBudgetGuiの `BudgetTableModel`、18_TextEditorSwingの `EditorDocument`、21_MazeSolverVisualizerの `MazeVisualizerState` 分離と同じ考え方を踏襲している。ランダム生成は `Random` をコンストラクタ注入することで、シード固定による再現性テストを可能にした(21の `MazeGenerator` と同じ考え方)。
+
+UC-2(自動更新開始)・UC-3(自動更新停止)は `timer.start()`/`timer.stop()` という `javax.swing.Timer` への直接委譲のみで、抽出すべき独自ロジックが存在しないため、既存方針どおり手動確認のままとした(21のCanvas描画・アニメーションタイミングのような、切り出す余地のある計算処理を伴わないため、追跡用Issueも作成していない)。
 
 === 境界の扱い
 `Grid` は `boolean[][]` の2次元配列で盤面を表現し、`countLiveNeighbors` は境界外を非生存として扱う(トーラス状のラップアラウンドはしない、盤面の端では隣接マスが少なくカウントされる仕様)。
@@ -156,4 +163,5 @@ Issue #11/#18/#21と同じ方針で、`Grid`/`GameOfLife` はGUIに依存しな�
 Red → Green → Refactor サイクルで実装した。
 
 * *単体テスト*(`GridTest`/`GameOfLifeTest`): 生存隣接数のカウント、境界外の非生存扱い、ブリンカーパターンでの世代遷移を検証
-* *手動確認*: `LifeFrame` のウィンドウ表示・マスクリック編集・開始/停止/1世代進める/クリア/ランダム生成を実機で確認
+* *単体テスト*(`LifeBoardStateTest`): マスの生死反転、`step`による世代進行とブリンカーパターンの遷移、`clear`/`randomize`による盤面・世代カウンタのリセット、`randomize`の同一シードでの再現性を検証
+* *手動確認*: `LifeFrame` のウィンドウ表示・マスクリック編集・開始/停止のタイマー動作を実機で確認
