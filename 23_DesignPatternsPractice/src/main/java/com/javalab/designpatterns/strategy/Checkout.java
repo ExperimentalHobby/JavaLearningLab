@@ -11,10 +11,20 @@ public class Checkout {
         this.strategy = strategy;
     }
 
+    /**
+     * 決済方法を実行時に差し替える(Strategyパターンの要点: アルゴリズムをコンテキストから独立させ、
+     * 実行時に切り替え可能にする)。
+     * @param strategy 新しい決済方法
+     */
     public void setStrategy(PaymentStrategy strategy) {
         this.strategy = strategy;
     }
 
+    /**
+     * 現在設定されている決済方法で決済する。
+     * @param amount 決済金額
+     * @return 決済結果メッセージ
+     */
     public String checkout(int amount) {
         return strategy.pay(amount);
     }

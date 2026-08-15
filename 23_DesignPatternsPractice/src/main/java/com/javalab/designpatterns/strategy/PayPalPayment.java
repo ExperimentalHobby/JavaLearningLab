@@ -1,5 +1,8 @@
 package com.javalab.designpatterns.strategy;
 
+/**
+ * PayPal決済(Strategyパターンにおける具象戦略の1つ)。
+ */
 public class PayPalPayment implements PaymentStrategy {
 
     @Override

@@ -6,6 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+/**
+ * {@link ShapeFactory#create(String, double...)} のFactoryパターン実装を検証するテスト。
+ * タイプ文字列に応じて正しい具象クラス({@link Circle}/{@link Rectangle})が
+ * 生成されることと、未知のタイプでは例外になることを確認する。
+ */
 class ShapeFactoryTest {
 
     private final ShapeFactory factory = new ShapeFactory();
