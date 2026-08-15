@@ -15,6 +15,11 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+/**
+ * {@link JsonHttpFetcher} のHTTP通信・JSON解析を検証するテスト。
+ * モックを使わず、JDK標準の{@link HttpServer}をポート0(空きポート自動割当)で
+ * テストごとに実際に起動し、本物のHTTP通信を通して検証する。
+ */
 class JsonHttpFetcherTest {
 
     private HttpServer server;
@@ -51,6 +56,8 @@ class JsonHttpFetcherTest {
 
     @Test
     void fetchJsonThrowsExceptionFor404Response() throws Exception {
+        // 200以外のステータスコードはfetchJson()内で異常とみなされ、
+        // レスポンスボディの中身に関わらずHttpClientExceptionになることを確認する。
         server.createContext("/missing", exchange -> {
             byte[] bytes = "not found".getBytes(StandardCharsets.UTF_8);
             exchange.sendResponseHeaders(404, bytes.length);
@@ -94,6 +101,8 @@ class JsonHttpFetcherTest {
 
     @Test
     void fetchUserThrowsExceptionForMalformedJson() {
+        // ステータスコードは200(通信自体は成功)だが、ボディがJSONとして解析できないケース。
+        // fetchUser()内でのJackson変換時の失敗がHttpClientExceptionに変換されることを確認する。
         server.createContext("/broken", exchange -> {
             byte[] bytes = "not valid json".getBytes(StandardCharsets.UTF_8);
             exchange.sendResponseHeaders(200, bytes.length);

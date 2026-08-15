@@ -15,6 +15,10 @@ import java.util.Scanner;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * {@link Main#run(Scanner, PrintStream)} のREPLループを結合テストするクラス。
+ * {@link JsonHttpFetcherTest}と同様、実際に起動したHTTPサーバーに対して通信する。
+ */
 class MainTest {
 
     private HttpServer server;
@@ -33,6 +37,8 @@ class MainTest {
 
     @Test
     void runShowsUserInfoForFetchUserCommand() {
+        // fetchUserコマンドが正常に処理され、User.toString()相当のid/name/email形式で
+        // 表示されることを確認する。
         String responseBody = "{\"id\":1,\"name\":\"Alice\",\"email\":\"alice@example.com\"}";
         server.createContext("/user", exchange -> {
             byte[] bytes = responseBody.getBytes(StandardCharsets.UTF_8);
