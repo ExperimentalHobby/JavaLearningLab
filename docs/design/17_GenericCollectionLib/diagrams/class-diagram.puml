@@ -31,7 +31,7 @@ class "Node<T>" as Node {
 
 class CollectionUtils {
   -CollectionUtils()
-  +{static} "<T extends Comparable<T>> max(list: List<T>): T"
+  +{static} <T extends Comparable<T>> max(list: List<T>): T
 }
 
 class EmptyCollectionException extends RuntimeException {
