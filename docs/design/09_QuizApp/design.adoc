@@ -1,0 +1,138 @@
+= 09_QuizApp 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-08-15
+:toc: left
+:toclevels: 2
+:sectnums:
+:pagenums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+NOTE: UML図は `diagrams/` 配下の `.puml` ファイルを https://asciidoctor.org/docs/asciidoctor-diagram/[asciidoctor-diagram] 経由でPlantUMLとして埋め込んでいる。拡張未導入の環境では、各 `.puml` を直接 https://www.plantuml.com/plantuml[PlantUMLオンラインサーバー] 等に読み込ませても図を確認できる。PDF化する場合は同フォルダの `generate-pdf.ps1` を実行する(`docs/design/fonts/`・`docs/design/themes/` の日本語フォント・テーマを用いて文字化けを回避している。詳細は `docs/design/README.md` を参照)。
+
+<<<
+
+== 概要
+
+=== 目的
+プロパティファイルから問題を読み込んで出題するCLIクイズアプリを提供する。全問終了後にスコア(正解数・正答率)を表示する。
+
+=== 主な機能
+* クラスパス上の `questions.properties` から問題を読み込む
+* 標準入力から回答を1問ずつ受け取り、正誤フィードバックを表示する
+* 全問終了後にスコア(正解数/出題数、正答率)を表示する
+
+=== 開発環境
+[cols="1,3", options="header"]
+|===
+| 項目 | 内容
+
+| 言語
+| Java 25
+
+| ビルドツール
+| Maven(フォルダ単位で独立した `pom.xml`)
+
+| テスト
+| JUnit 5(`junit-jupiter`)
+
+| 問題データ形式
+| `java.util.Properties`(`question.count`、`q<N>.question`/`q<N>.answer`)
+|===
+
+=== 実行方法
+[source,powershell]
+----
+cd 09_QuizApp
+.\mvnw.cmd compile
+.\mvnw.cmd test
+.\mvnw.cmd exec:java "-Dexec.mainClass=com.javalab.quiz.Main"
+----
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/9[Issue #9] / https://github.com/ExperimentalHobby/JavaLearningLab/pull/39[PR #39]
+
+<<<
+
+== ユースケース
+
+[cols="1,3,4", options="header"]
+|===
+| ID | ユースケース | 概要
+
+| UC-1
+| クイズに回答する
+| 出題された問題文に対し標準入力から回答し、正誤フィードバックを受け取る
+
+| UC-2
+| 最終スコアを確認する
+| 全問終了後、正解数・出題数・正答率を確認する
+
+| UC-3
+| 問題データ読み込みエラー(起動時)
+| プロパティファイルの必須キーが欠落している、またはファイルが見つからない場合、アプリの起動が失敗する
+|===
+
+<<<
+
+== シーケンス図
+
+=== クイズの実施(正常系)
+[plantuml, sequence-normal, svg]
+----
+include::diagrams/sequence-normal.puml[]
+----
+
+=== 問題データ読み込みエラー(起動時)
+[plantuml, sequence-error, svg]
+----
+include::diagrams/sequence-error.puml[]
+----
+
+<<<
+
+== クラス図
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+`Main` は起動時に `QuizLoader` で問題一覧を読み込み、`Question` のリストとして出題する。各問の正誤結果は `ScoreManager` に記録し、全問終了後に集計結果を取得する。
+
+<<<
+
+== アクティビティ図
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+<<<
+
+== 補足事項
+
+=== Propertiesファイルの採用理由
+問題データは `java.util.Properties` で読み込む形式にした(`question.count` で問題数、`q<N>.question`/`q<N>.answer` で各問を記述)。JSON解析ライブラリの導入は14_HttpClientToolで扱う予定のため、ここでは追加の依存関係が不要なProperties APIを採用している。
+
+=== 2種類の読み込み経路
+`QuizLoader` は `File` からの読み込み(`loadFromProperties`、テストで実ファイルを使用)と、クラスパスからの読み込み(`loadFromClasspath`、本番実行時にjar内蔵の `questions.properties` を読み込む)を用意し、パース処理自体は `loadFromReader` に共通化して重複を排除している。
+
+=== 入力揺れの許容とゼロ除算回避
+正解判定(`Question.isCorrect`)は前後の空白除去・大文字小文字の違いを無視することで、ユーザーの些細な入力揺れを許容している。`ScoreManager` は出題数0のときに `getPercentage()` がゼロ除算(NaN)にならないようガードしている。
+
+=== 他アプリとのエラーハンドリングの違い
+01〜08のREPL形式アプリと異なり、本アプリは対話ループを持たない1パスのバッチ処理であり、問題データ読み込みエラーは起動時に発生してそのままアプリが終了する(継続不可)。`QuizLoaderException` は `Main.main` でキャッチされていない。
+
+=== テスト方針(TDD)
+Red → Green → Refactor サイクルで実装した。
+
+* *単体テスト*: `Question.isCorrect` の入力揺れ許容、`QuizLoader` のパース(正常系・キー欠落エラー)、`ScoreManager` の集計とゼロ除算回避を検証
+* *結合テスト*(`MainTest`): `Scanner`/`PrintStream` を注入した出題ループに対して、全問正解・一部不正解それぞれのケースを検証
+
+=== 設計上の工夫
+* `Main` は01〜08と同じ設計パターンで、`Scanner`/`PrintStream` を引数に取る `run` 静的メソッドに分離している。

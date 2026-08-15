@@ -1,0 +1,55 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 09_QuizApp クラス図
+
+class Question {
+  -text: String
+  -answer: String
+  +Question(text: String, answer: String)
+  +getText(): String
+  +isCorrect(userAnswer: String): boolean
+}
+
+class QuizLoader {
+  +{static} loadFromProperties(file: File): List<Question>
+  +{static} loadFromClasspath(resourcePath: String): List<Question>
+  -{static} loadFromReader(reader: InputStreamReader, source: String): List<Question>
+}
+
+class QuizLoaderException extends RuntimeException {
+  +QuizLoaderException(message: String)
+}
+
+class ScoreManager {
+  -score: int
+  -total: int
+  +recordAnswer(correct: boolean): void
+  +getScore(): int
+  +getTotal(): int
+  +getPercentage(): double
+}
+
+class Main {
+  +main(args: String[]): void
+  ~run(scanner: Scanner, out: PrintStream, questions: List<Question>): void
+}
+
+Main "1" o-- "0..*" Question : 出題する
+Main "1" --> "1" ScoreManager : 利用する
+Main ..> QuizLoader : 起動時に利用する
+QuizLoader ..> Question : 生成する
+QuizLoader ..> QuizLoaderException : throwする
+
+note right of QuizLoader
+  loadFromProperties(実ファイル、テスト用)と
+  loadFromClasspath(jar内蔵、本番用)は
+  パース処理を loadFromReader に共通化している。
+end note
+
+note bottom of ScoreManager
+  出題数0のとき getPercentage() が
+  ゼロ除算(NaN)にならないようガードしている。
+end note
+
+@enduml

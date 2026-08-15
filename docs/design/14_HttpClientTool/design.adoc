@@ -1,0 +1,145 @@
+= 14_HttpClientTool 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-08-15
+:toc: left
+:toclevels: 2
+:sectnums:
+:pagenums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+NOTE: UML図は `diagrams/` 配下の `.puml` ファイルを https://asciidoctor.org/docs/asciidoctor-diagram/[asciidoctor-diagram] 経由でPlantUMLとして埋め込んでいる。拡張未導入の環境では、各 `.puml` を直接 https://www.plantuml.com/plantuml[PlantUMLオンラインサーバー] 等に読み込ませても図を確認できる。PDF化する場合は同フォルダの `generate-pdf.ps1` を実行する(`docs/design/fonts/`・`docs/design/themes/` の日本語フォント・テーマを用いて文字化けを回避している。詳細は `docs/design/README.md` を参照)。
+
+<<<
+
+== 概要
+
+=== 目的
+指定URLへHTTP GETを行い、JSONレスポンスを取得・表示する対話式CLIツールを提供する。`HttpClient`(Java 11+)とJSON解析(Jackson)の実践を目的とする。
+
+=== 主な機能
+* `fetch <URL>` で生JSONを取得・表示する
+* `fetchUser <URL>` でJSONを `User` レコードとして解析・表示する
+* `exit` によるアプリ終了
+
+=== 開発環境
+[cols="1,3", options="header"]
+|===
+| 項目 | 内容
+
+| 言語
+| Java 25
+
+| ビルドツール
+| Maven(フォルダ単位で独立した `pom.xml`)
+
+| テスト
+| JUnit 5(`junit-jupiter`。`com.sun.net.httpserver.HttpServer` をephemeralポートで起動する結合テスト)
+
+| HTTP通信
+| `java.net.http.HttpClient`
+
+| JSON解析
+| Jackson(`jackson-databind`)
+|===
+
+=== 実行方法
+[source,powershell]
+----
+cd 14_HttpClientTool
+.\mvnw.cmd compile
+.\mvnw.cmd test
+.\mvnw.cmd exec:java "-Dexec.mainClass=com.javalab.httpclient.Main"
+----
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/14[Issue #14] / https://github.com/ExperimentalHobby/JavaLearningLab/pull/44[PR #44]
+
+<<<
+
+== ユースケース
+
+[cols="1,3,4", options="header"]
+|===
+| ID | ユースケース | 概要
+
+| UC-1
+| 生JSONを取得する
+| `fetch <URL>` を入力し、レスポンス本文をそのまま表示する
+
+| UC-2
+| Userとして解析・表示する
+| `fetchUser <URL>` を入力し、JSONを `User` レコードへ変換して表示する
+
+| UC-3
+| 通信・解析エラー時にエラーを表示する
+| 接続失敗・異常なステータスコード・JSON形式不正の場合、エラーメッセージを表示しアプリを継続する
+
+| UC-4
+| アプリを終了する
+| `exit` を入力し、対話ループを終了する
+|===
+
+<<<
+
+== シーケンス図
+
+=== JSON取得(fetch / fetchUser)
+[plantuml, sequence-normal, svg]
+----
+include::diagrams/sequence-normal.puml[]
+----
+
+=== エラー処理
+[plantuml, sequence-error, svg]
+----
+include::diagrams/sequence-error.puml[]
+----
+
+<<<
+
+== クラス図
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+`JsonHttpFetcher` は `java.net.http.HttpClient` でHTTP GETを行い、`fetchUser` ではさらにJacksonの `ObjectMapper` でJSONを `User` レコードへ変換する。通信失敗・ステータス異常・JSON解析失敗はすべて `HttpClientException` に統一し、`Main` は単一のcatch節でまとめて処理する。
+
+<<<
+
+== アクティビティ図
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+<<<
+
+== 補足事項
+
+=== JSON解析ライブラリの選定
+JSON解析ライブラリは学習ポイント通りJacksonとGsonから選択可能とし、`jackson-databind` を採用している(`ObjectMapper.readValue` でJSON文字列を `User` レコードへ直接変換できる簡潔さを優先)。
+
+=== 例外の一本化
+HTTP通信・ステータス異常・JSON解析失敗はすべて `HttpClientException`(非チェック例外)に統一し、呼び出し側のcatch節を1つに集約している。
+
+=== JDK内蔵HttpServerによる結合テスト
+通信系のテストは実際の外部APIに依存せず、また既存exerciseの方針通りモックも使わず、JDK内蔵の `com.sun.net.httpserver.HttpServer` をephemeralポートで起動する結合テストとしている。
+
+=== 接続失敗テストの決定的な再現
+接続失敗ケースのテストでは、ローカルで起動直後に停止したサーバーへ接続する方式だとWindows環境でTCP接続拒否のタイミングが不安定になり、テストが無期限にハングする問題が発生した。`HttpClient` に `connectTimeout` を設定しても解消しなかったため、RFC 2606で名前解決が行われないことが保証された予約TLD `.invalid` への接続を試みる方式に変更し、高速かつ決定的にDNS解決失敗(`UnknownHostException`)を再現できるようにしている。
+
+=== テスト方針(TDD)
+Red → Green → Refactor サイクルで実装した。
+
+* *単体・結合テスト*(`JsonHttpFetcherTest`): 正常なJSON取得、`User`解析、異常ステータス、接続失敗(`.invalid`ドメイン)、JSON解析失敗を検証
+* *結合テスト*(`MainTest`): `fetchUser`コマンドの結果表示、および接続失敗時にクラッシュせずエラー表示してループを継続する動作を検証
+
+=== 設計上の工夫
+* `Main` は01〜13と同じ設計パターンで、`Scanner`/`PrintStream` を引数に取る `run` 静的メソッドに分離している。

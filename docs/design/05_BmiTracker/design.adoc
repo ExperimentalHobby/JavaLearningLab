@@ -1,0 +1,154 @@
+= 05_BmiTracker 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-08-15
+:toc: left
+:toclevels: 2
+:sectnums:
+:pagenums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+NOTE: UML図は `diagrams/` 配下の `.puml` ファイルを https://asciidoctor.org/docs/asciidoctor-diagram/[asciidoctor-diagram] 経由でPlantUMLとして埋め込んでいる。拡張未導入の環境では、各 `.puml` を直接 https://www.plantuml.com/plantuml[PlantUMLオンラインサーバー] 等に読み込ませても図を確認できる。PDF化する場合は同フォルダの `generate-pdf.ps1` を実行する(`docs/design/fonts/`・`docs/design/themes/` の日本語フォント・テーマを用いて文字化けを回避している。詳細は `docs/design/README.md` を参照)。
+
+<<<
+
+== 概要
+
+=== 目的
+身長・体重からBMIを計算し、判定結果とともに履歴をCSVファイルに保存・読込する対話式CLIツールを提供する。
+
+=== 主な機能
+* `add <身長cm> <体重kg>` でBMIを計算し測定記録として追加する
+* `list` で測定履歴を表示する
+* `save` / `load` で履歴をCSVファイル(`bmi.csv`)に保存・復元する
+* `exit` によるアプリ終了
+
+=== 開発環境
+[cols="1,3", options="header"]
+|===
+| 項目 | 内容
+
+| 言語
+| Java 25
+
+| ビルドツール
+| Maven(フォルダ単位で独立した `pom.xml`)
+
+| テスト
+| JUnit 5(`junit-jupiter`、ファイルI/Oは `@TempDir` を利用)
+
+| 履歴管理
+| `java.util.ArrayList`
+
+| ファイルI/O
+| `java.io`(CSV、`BufferedWriter`/`BufferedReader`)
+|===
+
+=== 実行方法
+[source,powershell]
+----
+cd 05_BmiTracker
+.\mvnw.cmd compile
+.\mvnw.cmd test
+.\mvnw.cmd exec:java "-Dexec.mainClass=com.javalab.bmi.Main"
+----
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/5[Issue #5] / https://github.com/ExperimentalHobby/JavaLearningLab/pull/35[PR #35]
+
+<<<
+
+== ユースケース
+
+[cols="1,3,4", options="header"]
+|===
+| ID | ユースケース | 概要
+
+| UC-1
+| BMIを測定・記録する
+| `add <身長cm> <体重kg>` を入力し、BMIと体格区分を算出して記録する
+
+| UC-2
+| 測定履歴を表示する
+| `list` を入力し、記録一覧を表示する
+
+| UC-3
+| 履歴をファイルに保存する
+| `save` を入力し、現在の履歴をCSVファイルに書き出す
+
+| UC-4
+| 履歴をファイルから読み込む
+| `load` を入力し、CSVファイルの内容で履歴を置き換える
+
+| UC-5
+| 不正な入力時にエラーを表示する
+| 不正な数値・引数個数・不明なコマンド・ファイル操作失敗時にエラーメッセージを表示しアプリを継続する
+
+| UC-6
+| アプリを終了する
+| `exit` を入力し、対話ループを終了する
+|===
+
+<<<
+
+== シーケンス図
+
+=== BMI測定・一覧表示(add / list)
+[plantuml, sequence-normal, svg]
+----
+include::diagrams/sequence-normal.puml[]
+----
+
+=== CSVファイル保存・読込(save / load)
+[plantuml, sequence-file, svg]
+----
+include::diagrams/sequence-file.puml[]
+----
+
+=== エラー処理
+[plantuml, sequence-error, svg]
+----
+include::diagrams/sequence-error.puml[]
+----
+
+<<<
+
+== クラス図
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+`Main` はエントリーポイントであり、`BmiHistory` に測定履歴の管理を委譲する。`BmiHistory` は複数の `BmiRecord` をコンポジションで管理し、記録追加時は `BmiCalculator`(状態を持たないロジッククラス)にBMI計算・区分判定を依頼する。
+
+<<<
+
+== アクティビティ図
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+<<<
+
+== 補足事項
+
+=== BMI判定基準
+`BmiCalculator` は日本肥満学会基準の4区分(低体重/普通体重/肥満(1度)/肥満(2度以上))で判定する。計算ロジックを `BmiHistory` から独立させ、単体で検証できるようにしている。
+
+=== CSVファイル形式
+学習ポイント通り、CSV読み書きは `java.nio.file` ではなく `java.io`(`BufferedWriter`+`FileWriter`、`BufferedReader`+`FileReader`)で実装している。1行目にヘッダ行(`date,height_cm,weight_kg,bmi,category`)を書き込み、読込時は最初の1行を読み飛ばす。`BmiRecord` に `toCsvLine()`/`fromCsvLine()` を持たせ、レコード1件の変換ロジックを `BmiHistory` のファイルI/Oから分離している。
+
+=== テスト方針(TDD)
+Red → Green → Refactor サイクルで実装した。
+
+* *単体テスト*: `BmiCalculator` のBMI計算・4区分判定、`BmiRecord` のCSV変換のラウンドトリップを検証
+* *結合テスト*(`MainTest`): `Scanner`/`PrintStream`/測定日 `Supplier<LocalDate>` を注入した対話ループに対して、`add`→`list`→`save` の一連の流れを決定的に検証
+
+=== 設計上の工夫
+* `Main` は測定日を `Supplier<LocalDate>` として注入可能にし(01〜04と同じ設計パターン)、テストでは固定日付を渡すことで結果を決定的に検証できるようにしている。

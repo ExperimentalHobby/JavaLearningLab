@@ -1,0 +1,60 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 24_SocketChatApp クラス図
+
+class Main {
+  -{static} DEFAULT_PORT: int
+  +main(args: String[]): void
+}
+
+class ChatClientMain {
+  +main(args: String[]): void
+}
+
+class ChatServer {
+  -requestedPort: int
+  -clients: List<ClientHandler>
+  -clientExecutor: ExecutorService
+  -serverSocket: ServerSocket
+  -acceptThread: Thread
+  +ChatServer(port: int)
+  +start(): void
+  -acceptLoop(): void
+  +port(): int
+  ~remove(handler: ClientHandler): void
+  ~broadcast(message: String, exclude: ClientHandler): void
+  +stop(): void
+}
+
+class ClientHandler implements Runnable {
+  -socket: Socket
+  -server: ChatServer
+  -out: PrintWriter
+  -username: String
+  ~ClientHandler(socket: Socket, server: ChatServer)
+  +run(): void
+  ~send(message: String): void
+  ~close(): void
+}
+
+Main ..> ChatServer : 起動する
+ChatClientMain ..> "java.net.Socket" : 直接利用する
+ChatServer "1" o-- "0..*" ClientHandler : 接続中クライアントとして管理する
+ClientHandler ..> ChatServer : broadcast/removeを呼び戻す
+
+note right of ChatServer
+  ServerSocket.accept() ループを専用スレッドで回し、
+  接続ごとに ClientHandler を
+  ExecutorService(newCachedThreadPool)へ投入する
+  1接続1スレッドモデル。
+  接続中クライアントは CopyOnWriteArrayList で管理し、
+  ブロードキャスト(読み取り頻度が高い)に適する。
+end note
+
+note right of ClientHandler
+  接続直後の最初の行をユーザー名として扱い、
+  以後の各行を他クライアントへブロードキャストする。
+end note
+
+@enduml

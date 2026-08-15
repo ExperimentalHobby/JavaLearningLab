@@ -1,0 +1,41 @@
+@startuml sequence-observer-strategy
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: Observer(weather)とStrategy(pay)
+
+actor 利用者
+participant "デモアプリ" as App
+participant "気象台(Subject)" as Station
+participant "登録済みObserver" as Observer
+participant "決済コンテキスト" as Checkout
+
+== Observer: 気温変化の通知(weather) ==
+利用者 -> App : 気温を入力する(weather <温度>)
+activate App
+App -> Station : 気温の更新を依頼する
+activate Station
+loop 登録済みの各Observerについて
+  Station -> Observer : 気温変化を通知する
+  activate Observer
+  Observer --> 利用者 : 「気温が変化しました」と表示する
+  deactivate Observer
+end
+deactivate Station
+deactivate App
+
+== Strategy: 決済方法の切り替えと支払い(pay) ==
+利用者 -> App : 決済方法と金額を入力する(pay <creditcard|paypal> <金額>)
+activate App
+App -> Checkout : 指定された決済方法へ切り替えるよう依頼する
+activate Checkout
+Checkout -> Checkout : 保持する決済戦略を差し替える
+deactivate Checkout
+App -> Checkout : 支払いを依頼する
+activate Checkout
+Checkout -> Checkout : 現在の決済戦略に処理を委譲する
+Checkout --> App : 決済結果を返す
+deactivate Checkout
+App --> 利用者 : 決済結果を表示する
+deactivate App
+
+@enduml

@@ -1,0 +1,47 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 14_HttpClientTool クラス図
+
+class JsonHttpFetcher {
+  -client: HttpClient
+  -objectMapper: ObjectMapper
+  +fetchJson(url: String): String
+  +fetchUser(url: String): User
+}
+
+class User << record >> {
+  +id: int
+  +name: String
+  +email: String
+}
+
+class HttpClientException extends RuntimeException {
+  +HttpClientException(message: String)
+  +HttpClientException(message: String, cause: Throwable)
+}
+
+class Main {
+  +main(args: String[]): void
+  ~run(scanner: Scanner, out: PrintStream): void
+}
+
+Main "1" --> "1" JsonHttpFetcher : 利用する
+Main ..> HttpClientException : catchする
+JsonHttpFetcher ..> User : 生成する
+JsonHttpFetcher ..> HttpClientException : throwする
+
+note right of JsonHttpFetcher
+  java.net.http.HttpClient(JDK標準)で通信し、
+  Jackson の ObjectMapper でJSONを
+  Userレコードへ変換する。
+  通信失敗・ステータス異常・JSON解析失敗は
+  すべて HttpClientException に統一する。
+end note
+
+note bottom of User
+  JSON APIから取得したユーザー情報を表す
+  イミュータブルな値オブジェクト(record)。
+end note
+
+@enduml

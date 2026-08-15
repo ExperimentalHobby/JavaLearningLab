@@ -1,0 +1,53 @@
+@startuml sequence-normal
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: 入出金・残高照会・履歴表示
+
+actor 利用者
+participant "口座アプリ" as App
+participant "口座" as Account
+
+== 入金(deposit) ==
+利用者 -> App : 入金額を入力する(deposit <金額>)
+activate App
+App -> Account : 入金を依頼する
+activate Account
+Account -> Account : 入金額が0より大きいことを検証する
+Account -> Account : 残高に加算する
+Account -> Account : 取引履歴に記録する
+deactivate Account
+deactivate App
+
+== 出金(withdraw) ==
+利用者 -> App : 出金額を入力する(withdraw <金額>)
+activate App
+App -> Account : 出金を依頼する
+activate Account
+Account -> Account : 出金額が0より大きいことを検証する
+Account -> Account : 残高が出金額以上であることを検証する
+Account -> Account : 残高から減算する
+Account -> Account : 取引履歴に記録する
+deactivate Account
+deactivate App
+
+== 残高照会(balance) ==
+利用者 -> App : 残高照会コマンドを入力する(balance)
+activate App
+App -> Account : 残高を問い合わせる
+activate Account
+Account --> App : 現在の残高を返す
+deactivate Account
+App --> 利用者 : 残高を画面に表示する
+deactivate App
+
+== 取引履歴表示(history) ==
+利用者 -> App : 履歴表示コマンドを入力する(history)
+activate App
+App -> Account : 取引履歴を問い合わせる
+activate Account
+Account --> App : 変更不可な取引履歴のコピーを返す
+deactivate Account
+App --> 利用者 : 取引履歴を画面に表示する
+deactivate App
+
+@enduml

@@ -1,0 +1,74 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 21_MazeSolverVisualizer クラス図
+
+class Cell << record >> {
+  +row: int
+  +col: int
+}
+
+class Maze {
+  -width: int
+  -height: int
+  -passages: Map<Cell, Set<Cell>>
+  -start: Cell
+  -goal: Cell
+  +Maze(width: int, height: int, start: Cell, goal: Cell)
+  +connect(a: Cell, b: Cell): void
+  +isConnected(a: Cell, b: Cell): boolean
+  +openNeighbors(cell: Cell): Set<Cell>
+  +passages(): Map<Cell, Set<Cell>>
+}
+
+class MazeGenerator {
+  +generate(width: int, height: int, seed: long): Maze
+}
+
+interface MazeSolver {
+  +solve(maze: Maze): List<Cell>
+}
+
+class BfsMazeSolver implements MazeSolver
+class DfsMazeSolver implements MazeSolver
+class AStarMazeSolver implements MazeSolver
+
+class Main {
+  +main(args: String[]): void
+}
+
+class MazeVisualizerApp extends Application {
+  -generator: MazeGenerator
+  -solvers: Map<String, MazeSolver>
+  -canvas: Canvas
+  -algorithmBox: ComboBox<String>
+  -maze: Maze
+  -animation: Timeline
+  +start(stage: Stage): void
+  -generateMaze(): void
+  -animateSolve(): void
+  -drawMaze(): void
+}
+
+Main ..> MazeVisualizerApp : Application.launchで起動する
+MazeVisualizerApp "1" --> "1" MazeGenerator : 利用する
+MazeVisualizerApp "1" --> "*" MazeSolver : アルゴリズムを切り替えて利用する
+MazeVisualizerApp "1" --> "1" Maze : 現在の迷路として保持する
+MazeGenerator ..> Maze : 生成する
+Maze "1" o-- "0..*" Cell : 通路として接続する
+
+note right of MazeSolver
+  BFS/DFS/A* いずれも同じインターフェースを実装し、
+  再帰的バックトラック法で生成された迷路
+  (全域木のため経路が一意)では
+  探索順序は異なるが同じ経路を返す。
+end note
+
+note bottom of MazeVisualizerApp
+  main メソッドを持つクラスが直接
+  javafx.application.Application を継承すると
+  クラスパス実行時にエラーになるため、
+  エントリーポイント(Main)を分離している。
+end note
+
+@enduml

@@ -1,0 +1,59 @@
+@startuml sequence-memory
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: メモリ操作(M+ / M- / MR / MC)
+
+actor 利用者
+participant "電卓アプリ" as App
+participant "演算ロジック" as Logic
+
+== メモリへの加算(M+) ==
+利用者 -> App : メモリ加算コマンドを入力する(M+)
+activate App
+App -> Logic : 直前の計算結果をメモリに加算するよう依頼する
+activate Logic
+Logic -> Logic : 保持しているメモリ値に加算する
+deactivate Logic
+App -> Logic : 更新後のメモリ値を問い合わせる
+activate Logic
+Logic --> App : メモリ値を返す
+deactivate Logic
+App --> 利用者 : メモリ値を画面に表示する
+deactivate App
+
+== メモリからの減算(M-) ==
+利用者 -> App : メモリ減算コマンドを入力する(M-)
+activate App
+App -> Logic : 直前の計算結果をメモリから減算するよう依頼する
+activate Logic
+Logic -> Logic : 保持しているメモリ値から減算する
+deactivate Logic
+App -> Logic : 更新後のメモリ値を問い合わせる
+activate Logic
+Logic --> App : メモリ値を返す
+deactivate Logic
+App --> 利用者 : メモリ値を画面に表示する
+deactivate App
+
+== メモリ値の呼び出し(MR) ==
+利用者 -> App : メモリ呼び出しコマンドを入力する(MR)
+activate App
+App -> Logic : 現在のメモリ値を問い合わせる
+activate Logic
+Logic --> App : メモリ値を返す
+deactivate Logic
+App -> App : 呼び出したメモリ値を次の計算にも使えるよう保持する
+App --> 利用者 : メモリ値を画面に表示する
+deactivate App
+
+== メモリのクリア(MC) ==
+利用者 -> App : メモリクリアコマンドを入力する(MC)
+activate App
+App -> Logic : メモリを初期値に戻すよう依頼する
+activate Logic
+Logic -> Logic : メモリ値を0にリセットする
+deactivate Logic
+App --> 利用者 : メモリをクリアした旨を画面に表示する
+deactivate App
+
+@enduml

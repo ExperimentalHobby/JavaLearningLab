@@ -1,0 +1,36 @@
+@startuml sequence-normal
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: 図形の登録と一覧表示
+
+actor 利用者
+participant "図形計算アプリ" as App
+participant "図形(実際の種類は\n円/長方形/三角形のいずれか)" as Shape
+
+== 図形の登録 ==
+利用者 -> App : 図形の種類と寸法を入力する\n(例: "circle 5")
+activate App
+App -> App : コマンドから種類と寸法を読み取る
+App -> Shape : 指定された種類・寸法で図形を生成する
+activate Shape
+Shape -> Shape : 寸法が図形として成立するか検証する
+Shape --> App : 生成した図形を返す
+deactivate Shape
+App -> App : 図形一覧に追加する
+deactivate App
+
+== 一覧表示(list) ==
+利用者 -> App : 一覧表示コマンドを入力する(list)
+activate App
+loop 登録済みの図形それぞれについて
+  App -> Shape : 説明文字列を問い合わせる
+  activate Shape
+  Shape -> Shape : 自身の種類に応じた計算方法で\n面積・周囲長を算出する
+  Shape --> App : 「種類: 面積=…, 周囲=…」を返す
+  deactivate Shape
+  App --> 利用者 : 説明文字列を画面に表示する
+end
+App --> 利用者 : 合計面積を画面に表示する
+deactivate App
+
+@enduml

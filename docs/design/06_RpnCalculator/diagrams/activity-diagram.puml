@@ -1,0 +1,45 @@
+@startuml activity-diagram
+skinparam defaultFontName VL Gothic
+
+title アクティビティ図: RPN式評価ループの流れ
+
+start
+:操作方法を案内する;
+while (次の入力行があるか?) is (ある)
+  :1行分の入力を受け取る;
+  if (空行か?) then (yes)
+  elseif (終了コマンドか?) then (yes)
+    break
+  else (no)
+    :式を空白区切りのトークンに分解する;
+    :スタックを空の状態で用意する;
+    repeat
+      :次のトークンを取り出す;
+      if (トークンは演算子か?) then (yes)
+        if (スタックに2つ以上の値があるか?) then (yes)
+          :直近2つの値を取り出して計算し、\n結果をスタックに積む;
+        else (no)
+          #pink:エラー: オペランド不足;
+          end
+        endif
+      else (no)
+        if (トークンは数値として解釈できるか?) then (yes)
+          :値をスタックに積む;
+        else (no)
+          #pink:エラー: 不正なトークン;
+          end
+        endif
+      endif
+    repeat while (未処理のトークンが残っているか?) is (yes)
+    ->no;
+    if (スタックの値が1つだけか?) then (yes)
+      :評価結果を表示する;
+    else (no)
+      :エラー: 不正な式であることを表示する;
+    endif
+  endif
+endwhile (ない)
+:終了する;
+stop
+
+@enduml

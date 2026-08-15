@@ -1,0 +1,40 @@
+@startuml activity-diagram
+skinparam defaultFontName VL Gothic
+
+title アクティビティ図: 対話ループ全体の流れ
+
+start
+:データベース接続を開き、テーブルを初期化する;
+:操作方法を案内する;
+while (次の入力行があるか?) is (ある)
+  :1行分の入力を受け取る;
+  if (空行か?) then (yes)
+  elseif (終了コマンドか?) then (yes)
+    break
+  else (no)
+    switch (コマンドの種類は?)
+    case (add)
+      :タスクをデータベースに登録する;
+    case (list)
+      :タスク一覧を取得し表示する;
+    case (done)
+      if (IDは正しく数値として解釈でき、\n該当タスクが存在するか?) then (yes)
+        :完了状態を更新する;
+      else (no)
+        :エラー内容を表示する;
+      endif
+    case (delete)
+      if (IDは正しく数値として解釈でき、\n該当タスクが存在するか?) then (yes)
+        :タスクを削除する;
+      else (no)
+        :エラー内容を表示する;
+      endif
+    case (不明なコマンド)
+      :エラー内容を表示する;
+    endswitch
+  endif
+endwhile (ない)
+:データベース接続を閉じ、アプリを終了する;
+stop
+
+@enduml

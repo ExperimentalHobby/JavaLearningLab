@@ -1,0 +1,140 @@
+= 03_UnitConverter 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-08-15
+:toc: left
+:toclevels: 2
+:sectnums:
+:pagenums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+NOTE: UML図は `diagrams/` 配下の `.puml` ファイルを https://asciidoctor.org/docs/asciidoctor-diagram/[asciidoctor-diagram] 経由でPlantUMLとして埋め込んでいる。拡張未導入の環境では、各 `.puml` を直接 https://www.plantuml.com/plantuml[PlantUMLオンラインサーバー] 等に読み込ませても図を確認できる。PDF化する場合は同フォルダの `generate-pdf.ps1` を実行する(`docs/design/fonts/`・`docs/design/themes/` の日本語フォント・テーマを用いて文字化けを回避している。詳細は `docs/design/README.md` を参照)。
+
+<<<
+
+== 概要
+
+=== 目的
+数値と単位を入力すると変換する対話式CLIツールを提供する。長さ(m, km, cm, mm)と重さ(g, kg, mg)の2カテゴリに対応する。
+
+=== 主な機能
+* `"数値 変換元単位 変換先単位"` 形式の1行入力を解析して単位変換する(例: `5 km m`)
+* 不明な単位、異なるカテゴリ間の変換(例: kmをgに変換)をエラー表示し、アプリを継続する
+* `exit` によるアプリ終了
+
+=== 開発環境
+[cols="1,3", options="header"]
+|===
+| 項目 | 内容
+
+| 言語
+| Java 25
+
+| ビルドツール
+| Maven(フォルダ単位で独立した `pom.xml`)
+
+| テスト
+| JUnit 5(`junit-jupiter`)
+
+| 変換テーブル
+| `java.util.Map`(カテゴリごとの単位→基準単位換算係数を管理)
+|===
+
+=== 実行方法
+[source,powershell]
+----
+cd 03_UnitConverter
+.\mvnw.cmd compile
+.\mvnw.cmd test
+.\mvnw.cmd exec:java "-Dexec.mainClass=com.javalab.unitconverter.Main"
+----
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/3[Issue #3] / https://github.com/ExperimentalHobby/JavaLearningLab/pull/33[PR #33]
+
+<<<
+
+== ユースケース
+
+[cols="1,3,4", options="header"]
+|===
+| ID | ユースケース | 概要
+
+| UC-1
+| 単位を変換する
+| `"数値 変換元単位 変換先単位"` 形式で入力し、変換結果を受け取る
+
+| UC-2
+| 不正な入力時にエラーを表示する
+| 数値として解釈できない入力をした場合、エラーメッセージを表示しアプリを継続する
+
+| UC-3
+| 不明な単位時にエラーを表示する
+| 変換元単位がどのカテゴリにも属さない場合、エラーメッセージを表示しアプリを継続する
+
+| UC-4
+| カテゴリ不一致時にエラーを表示する
+| 変換元単位と変換先単位が異なるカテゴリの場合、エラーメッセージを表示しアプリを継続する
+
+| UC-5
+| アプリを終了する
+| `exit` を入力し、対話ループを終了する
+|===
+
+<<<
+
+== シーケンス図
+
+=== 単位変換(正常系)
+[plantuml, sequence-normal, svg]
+----
+include::diagrams/sequence-normal.puml[]
+----
+
+=== エラー処理
+[plantuml, sequence-error, svg]
+----
+include::diagrams/sequence-error.puml[]
+----
+
+<<<
+
+== クラス図
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+`Main` はエントリーポイントであり、`UnitConverter` に単位変換を委譲する。`UnitConverter` はカテゴリ(長さ・重さ)ごとの換算表を保持し、不明な単位・カテゴリ不一致の場合は `UnitConverterException` をスローする。`Main` がこれをキャッチしてエラーメッセージを表示する。
+
+<<<
+
+== アクティビティ図
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+<<<
+
+== 補足事項
+
+=== カテゴリ管理の設計
+各カテゴリの「単位→基準単位への換算係数」を `Map<String, Double>` で管理し(長さ→メートル、重さ→グラム)、`convert` は `value * fromFactor / toFactor` で計算する。複数カテゴリを `List<Map<String, Double>>` にまとめ、`fromUnit` がどのカテゴリに属するかを Stream API で検索する設計にしている。これにより新しいカテゴリ(例: 温度)を追加する際もリストに1つ追加するだけで済む。
+
+=== カテゴリ不一致の防止
+`toUnit` が `fromUnit` と異なるカテゴリの場合は `UnitConverterException` をスローし、意味のない変換(例: kmをgに変換)を防いでいる。
+
+=== テスト方針(TDD)
+Red → Green → Refactor サイクルで実装した。
+
+* *単体テスト*(`UnitConverterTest`): 長さ・重さそれぞれの変換、不明な単位、カテゴリ不一致を検証
+* *結合テスト*(`MainTest`): `Scanner`/`PrintStream` を注入した対話ループに対して、不正入力時にクラッシュせず継続すること、正しい変換結果が表示されることを検証
+
+=== 設計上の工夫
+* `Main` は01_Calculatorと同じ設計パターンで、`Scanner`/`PrintStream` を引数に取る `run` 静的メソッドに分離し、結合テストを可能にしている。

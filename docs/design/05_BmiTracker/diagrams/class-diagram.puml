@@ -1,0 +1,55 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 05_BmiTracker クラス図
+
+class Main {
+  +main(args: String[]): void
+  ~run(scanner: Scanner, out: PrintStream, file: File, dateSupplier: Supplier<LocalDate>): void
+  -handleCommand(history: BmiHistory, line: String, out: PrintStream, file: File, dateSupplier: Supplier<LocalDate>): void
+  -printRecords(history: BmiHistory, out: PrintStream): void
+}
+
+class BmiHistory {
+  -{static} CSV_HEADER: String
+  -records: List<BmiRecord>
+  +add(date: LocalDate, heightCm: double, weightKg: double): void
+  +getRecords(): List<BmiRecord>
+  +saveTo(file: File): void
+  +loadFrom(file: File): void
+}
+
+class BmiRecord {
+  -date: LocalDate
+  -heightCm: double
+  -weightKg: double
+  -bmi: double
+  -category: String
+  +BmiRecord(date, heightCm, weightKg, bmi, category)
+  +toCsvLine(): String
+  +{static} fromCsvLine(line: String): BmiRecord
+}
+
+class BmiCalculator {
+  +{static} calculate(heightCm: double, weightKg: double): double
+  +{static} classify(bmi: double): String
+}
+
+Main "1" --> "1" BmiHistory : 利用する
+Main ..> BmiRecord : 表示に利用する
+BmiHistory "1" *-- "0..*" BmiRecord : 管理する
+BmiHistory ..> BmiCalculator : 計算を依頼する
+
+note bottom of BmiCalculator
+  日本肥満学会基準の4区分
+  (低体重/普通体重/肥満(1度)/肥満(2度以上))
+  で判定する、状態を持たないロジッククラス。
+end note
+
+note right of BmiHistory
+  CSV読み書きは java.nio.file ではなく
+  java.io(BufferedWriter/BufferedReader)。
+  1行目はヘッダ行、読込時は1行読み飛ばす。
+end note
+
+@enduml

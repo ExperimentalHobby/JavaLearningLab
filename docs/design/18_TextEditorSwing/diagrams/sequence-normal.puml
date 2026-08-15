@@ -1,0 +1,55 @@
+@startuml sequence-normal
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: ファイルを開く・保存する(正常系)
+
+actor 利用者
+participant "メインウィンドウ" as Frame
+participant "ファイルI/Oロジック" as Service
+participant "ファイルシステム" as FS
+
+== ファイルを開く ==
+利用者 -> Frame : 「ファイル」→「開く」を選択する
+activate Frame
+Frame --> 利用者 : ファイル選択ダイアログを表示する
+利用者 -> Frame : 開くファイルを選び決定する
+Frame -> Service : ファイル内容の読み込みを依頼する
+activate Service
+Service -> FS : UTF-8でファイル内容を読み込む
+activate FS
+FS --> Service : ファイル内容を返す
+deactivate FS
+Service --> Frame : 読み込んだ文字列を返す
+deactivate Service
+Frame -> Frame : テキストエリアに反映し、\nウィンドウタイトルをファイル名で更新する
+deactivate Frame
+
+== 名前を付けて保存する ==
+利用者 -> Frame : 「ファイル」→「名前を付けて保存」を選択する
+activate Frame
+Frame --> 利用者 : 保存先選択ダイアログを表示する
+利用者 -> Frame : 保存先を選び決定する
+Frame -> Service : テキスト内容の書き込みを依頼する
+activate Service
+Service -> FS : UTF-8でファイルへ書き込む
+activate FS
+FS --> Service : 書き込み完了を通知する
+deactivate FS
+deactivate Service
+Frame -> Frame : 保存先を現在のファイルとして記憶し、\nウィンドウタイトルを更新する
+deactivate Frame
+
+== 保存(2回目以降) ==
+利用者 -> Frame : 「ファイル」→「保存」を選択する
+activate Frame
+Frame -> Frame : 現在開いているファイルがあることを確認する
+Frame -> Service : 現在のファイルへの書き込みを依頼する
+activate Service
+Service -> FS : UTF-8でファイルへ上書きする
+activate FS
+FS --> Service : 書き込み完了を通知する
+deactivate FS
+deactivate Service
+deactivate Frame
+
+@enduml

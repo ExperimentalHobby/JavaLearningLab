@@ -1,0 +1,21 @@
+@startuml sequence-category
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: カテゴリ別集計の表示(byCategory)
+
+actor 利用者
+participant "集計アプリ" as App
+participant "集計ロジック" as Agg
+
+利用者 -> App : カテゴリ別集計コマンドを入力する(byCategory)
+activate App
+App -> Agg : カテゴリ別の金額合計を依頼する
+activate Agg
+Agg -> Agg : カテゴリをキーにグルーピングする
+Agg -> Agg : グループごとに金額を合算する
+Agg --> App : カテゴリ名と合計金額の対応を返す
+deactivate Agg
+App --> 利用者 : カテゴリごとの合計金額を画面に表示する
+deactivate App
+
+@enduml

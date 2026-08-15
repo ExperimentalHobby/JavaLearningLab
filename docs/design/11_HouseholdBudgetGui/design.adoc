@@ -1,0 +1,146 @@
+= 11_HouseholdBudgetGui 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-08-15
+:toc: left
+:toclevels: 2
+:sectnums:
+:pagenums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+NOTE: UML図は `diagrams/` 配下の `.puml` ファイルを https://asciidoctor.org/docs/asciidoctor-diagram/[asciidoctor-diagram] 経由でPlantUMLとして埋め込んでいる。拡張未導入の環境では、各 `.puml` を直接 https://www.plantuml.com/plantuml[PlantUMLオンラインサーバー] 等に読み込ませても図を確認できる。PDF化する場合は同フォルダの `generate-pdf.ps1` を実行する(`docs/design/fonts/`・`docs/design/themes/` の日本語フォント・テーマを用いて文字化けを回避している。詳細は `docs/design/README.md` を参照)。
+
+<<<
+
+== 概要
+
+=== 目的
+収入・支出を入力し、一覧表示と収支サマリー(収入・支出・残高)を表示するSwing GUIアプリを提供する。GUI基礎・イベントリスナー・レイアウト管理の練習を目的とする。
+
+=== 主な機能
+* 種別(`INCOME`/`EXPENSE`)・カテゴリ・金額を入力し「追加」ボタンで取引を登録する
+* 取引一覧をテーブルで表示する
+* 収支サマリー(収入・支出・残高)を表示する
+* 不正な入力時はエラーダイアログを表示する
+
+=== 開発環境
+[cols="1,3", options="header"]
+|===
+| 項目 | 内容
+
+| 言語
+| Java 25
+
+| ビルドツール
+| Maven(フォルダ単位で独立した `pom.xml`)
+
+| テスト
+| JUnit 5(`junit-jupiter`。GUI描画・イベント配線は自動テスト対象外)
+
+| GUIフレームワーク
+| Swing(`JFrame`/`JTable`/`AbstractTableModel`)
+
+| レイアウト
+| `BorderLayout` + `FlowLayout`(入力欄) + `GridLayout`(サマリー)
+|===
+
+=== 実行方法
+[source,powershell]
+----
+cd 11_HouseholdBudgetGui
+.\mvnw.cmd compile
+.\mvnw.cmd test
+.\mvnw.cmd exec:java "-Dexec.mainClass=com.javalab.budget.Main"
+----
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/11[Issue #11] / https://github.com/ExperimentalHobby/JavaLearningLab/pull/41[PR #41]
+
+<<<
+
+== ユースケース
+
+[cols="1,3,4", options="header"]
+|===
+| ID | ユースケース | 概要
+
+| UC-1
+| 取引を追加する
+| 種別・カテゴリ・金額を入力し追加ボタンをクリックして、取引を一覧に登録する
+
+| UC-2
+| 取引一覧を確認する
+| テーブルに表示された登録済み取引を確認する
+
+| UC-3
+| 収支サマリーを確認する
+| 収入合計・支出合計・残高を確認する
+
+| UC-4
+| 不正な入力時にエラーを表示する
+| 金額が数値として解釈できない、または0以下の場合、エラーダイアログを表示する
+|===
+
+<<<
+
+== シーケンス図
+
+=== 取引の追加(正常系)
+[plantuml, sequence-normal, svg]
+----
+include::diagrams/sequence-normal.puml[]
+----
+
+=== 不正な入力時のエラーダイアログ表示
+[plantuml, sequence-error, svg]
+----
+include::diagrams/sequence-error.puml[]
+----
+
+<<<
+
+== クラス図
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+`BudgetFrame`(`JFrame` を継承したメインウィンドウ)は `BudgetManager`(収支管理ロジック)と `BudgetTableModel`(`AbstractTableModel` を継承したテーブル表示用モデル)を保持する。`BudgetManager` は複数の `BudgetEntry`(record)をコンポジションで管理し、金額が0以下の場合は `BudgetException` をスローする。
+
+<<<
+
+== アクティビティ図
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+<<<
+
+== 補足事項
+
+=== テスト方針の分離
+GUIの描画・実際のボタンクリックといったイベント発火は、追加のUIテストライブラリ(AssertJ-Swing等)なしには自動テストが困難なため、テスト方針を明確に分離した。収支計算ロジック(`BudgetManager`)とJTable用データモデル(`BudgetTableModel`)はTDDで自動テストし、`BudgetFrame`(実際のウィンドウ・レイアウト・イベントリスナー配線)は実装後に実機で起動して手動確認した。
+
+=== ロジックとGUIの分離
+`BudgetManager` は `balance` 計算やエントリ管理を `BudgetFrame` から独立させることで、画面表示なしにJUnitでテストできるようにしている(01〜10で培ったカプセル化パターンをGUIアプリにも適用)。`BudgetTableModel` は `AbstractTableModel` を継承しているが、`getRowCount`/`getColumnCount`/`getValueAt` はいずれも画面描画を伴わない純粋なロジックのため、`JTable` を実際に表示せずにテストできた。
+
+=== レイアウトとイベント配線
+`BudgetFrame` は `BorderLayout` を軸に、北側の入力フォームは `FlowLayout`、南側のサマリーは `GridLayout` と、配置したい内容に応じてレイアウトマネージャを使い分けた。追加ボタンには `ActionListener` をラムダで登録し、クリック時に入力値を読み取って `BudgetManager.addEntry()` を呼び出し、失敗時は `JOptionPane` でエラーダイアログを表示する。
+
+=== 手動確認での知見
+実際にWindows上でアプリを起動し、キー操作でフォーム入力→追加→テーブル反映→サマリー更新→入力欄クリアの一連の流れをスクリーンショットで検証した。Swingの `JButton` は既定でSPACEキーが操作キーであり、ENTERキーでは反応しない(ルートペインのデフォルトボタンに設定した場合を除く)という挙動も実機確認で把握した。
+
+=== テスト方針(TDD)
+Red → Green → Refactor サイクルで実装した。
+
+* *単体テスト*: `BudgetManager` の追加・不正な金額・収支集計、`BudgetTableModel` の行/列データ取得を検証
+* *手動確認*: `BudgetFrame` のウィンドウ表示・入力→追加→テーブル反映→サマリー更新・エラーダイアログ表示を実機で確認
+
+=== 設計上の工夫
+* `Main` はSwingのイベントディスパッチスレッド(EDT)上でウィンドウ生成・表示を行うため、`SwingUtilities.invokeLater` を使用している。

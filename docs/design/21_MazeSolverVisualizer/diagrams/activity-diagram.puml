@@ -1,0 +1,34 @@
+@startuml activity-diagram
+skinparam defaultFontName VL Gothic
+
+title アクティビティ図: ボタン操作時の処理フロー
+
+start
+:ウィンドウを表示し、初期迷路を生成・描画する;
+while (アプリを終了していないか?) is (継続)
+  :利用者の操作を待つ;
+  switch (操作の種類は?)
+  case (迷路生成ボタン)
+    if (探索アニメーションが実行中か?) then (yes)
+      :アニメーションを停止する;
+    else (no)
+    endif
+    :新しい迷路を生成する;
+    :キャンバスに迷路を再描画する;
+  case (探索アニメーション開始ボタン)
+    :選択中のアルゴリズムで経路を探索する;
+    if (経路が見つかったか?) then (yes)
+      while (未描画の経路マスが残っているか?) is (yes)
+        :次のマスを塗りつぶす;
+      endwhile (no)
+    else (no)
+      :何も塗りつぶさず終了する;
+    endif
+  case (アルゴリズム選択)
+    :選択中のアルゴリズムを切り替える;
+  endswitch
+endwhile (ウィンドウを閉じた)
+:アプリを終了する;
+stop
+
+@enduml

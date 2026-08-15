@@ -1,0 +1,41 @@
+@startuml sequence-file
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: CSVファイル保存・読込(save / load)
+
+actor 利用者
+participant "BMIトラッカー" as App
+participant "測定履歴" as History
+participant "CSVファイル" as File
+
+== 保存(save) ==
+利用者 -> App : 保存コマンドを入力する(save)
+activate App
+App -> History : ファイルへの保存を依頼する
+activate History
+History -> File : ヘッダ行と各記録を1行ずつ書き込む
+activate File
+File --> History : 書き込み完了を通知する
+deactivate File
+History --> App : 保存完了を返す
+deactivate History
+App --> 利用者 : 「保存しました」と表示する
+deactivate App
+
+== 読込(load) ==
+利用者 -> App : 読込コマンドを入力する(load)
+activate App
+App -> History : ファイルからの読込を依頼する
+activate History
+History -> History : 現在の記録一覧をクリアする
+History -> File : ヘッダ行を読み飛ばし、以降を1行ずつ読み込む
+activate File
+File --> History : 読み込んだ内容を返す
+deactivate File
+History -> History : 読み込んだ各行から記録を復元する
+History --> App : 読込完了を返す
+deactivate History
+App --> 利用者 : 「読み込みました」と表示する
+deactivate App
+
+@enduml

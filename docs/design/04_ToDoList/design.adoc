@@ -1,0 +1,164 @@
+= 04_ToDoList 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-08-15
+:toc: left
+:toclevels: 2
+:sectnums:
+:pagenums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+NOTE: UML図は `diagrams/` 配下の `.puml` ファイルを https://asciidoctor.org/docs/asciidoctor-diagram/[asciidoctor-diagram] 経由でPlantUMLとして埋め込んでいる。拡張未導入の環境では、各 `.puml` を直接 https://www.plantuml.com/plantuml[PlantUMLオンラインサーバー] 等に読み込ませても図を確認できる。PDF化する場合は同フォルダの `generate-pdf.ps1` を実行する(`docs/design/fonts/`・`docs/design/themes/` の日本語フォント・テーマを用いて文字化けを回避している。詳細は `docs/design/README.md` を参照)。
+
+<<<
+
+== 概要
+
+=== 目的
+タスクを追加・完了・削除・一覧表示できる対話式CLI ToDoリストを提供する。ファイルへの保存・復元にも対応する。
+
+=== 主な機能
+* `add <説明>` でタスクを追加する
+* `done <番号>` でタスクを完了にする
+* `remove <番号>` でタスクを削除する
+* `list` でタスク一覧を表示する
+* `save` / `load` でタスクをファイル(`todo.txt`)に保存・復元する
+* `exit` によるアプリ終了
+
+=== 開発環境
+[cols="1,3", options="header"]
+|===
+| 項目 | 内容
+
+| 言語
+| Java 25
+
+| ビルドツール
+| Maven(フォルダ単位で独立した `pom.xml`)
+
+| テスト
+| JUnit 5(`junit-jupiter`、ファイルI/Oは `@TempDir` を利用)
+
+| タスク管理
+| `java.util.ArrayList`
+
+| ファイルI/O
+| `java.io`(`BufferedWriter`/`BufferedReader`)
+|===
+
+=== 実行方法
+[source,powershell]
+----
+cd 04_ToDoList
+.\mvnw.cmd compile
+.\mvnw.cmd test
+.\mvnw.cmd exec:java "-Dexec.mainClass=com.javalab.todo.Main"
+----
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/4[Issue #4] / https://github.com/ExperimentalHobby/JavaLearningLab/pull/34[PR #34]
+
+<<<
+
+== ユースケース
+
+[cols="1,3,4", options="header"]
+|===
+| ID | ユースケース | 概要
+
+| UC-1
+| タスクを追加する
+| `add <説明>` を入力し、未完了タスクを末尾に追加する
+
+| UC-2
+| タスクを完了にする
+| `done <番号>` を入力し、指定タスクを完了状態にする
+
+| UC-3
+| タスクを削除する
+| `remove <番号>` を入力し、指定タスクを削除する
+
+| UC-4
+| タスク一覧を表示する
+| `list` を入力し、番号付きでタスク一覧を表示する
+
+| UC-5
+| タスクをファイルに保存する
+| `save` を入力し、現在のタスク一覧をファイルに書き出す
+
+| UC-6
+| タスクをファイルから読み込む
+| `load` を入力し、ファイルの内容でタスク一覧を置き換える
+
+| UC-7
+| 不正な入力時にエラーを表示する
+| 不明なコマンド・不正な番号・ファイル操作失敗時にエラーメッセージを表示しアプリを継続する
+
+| UC-8
+| アプリを終了する
+| `exit` を入力し、対話ループを終了する
+|===
+
+<<<
+
+== シーケンス図
+
+=== タスク管理(add / done / remove / list)
+[plantuml, sequence-normal, svg]
+----
+include::diagrams/sequence-normal.puml[]
+----
+
+=== ファイル保存・読込(save / load)
+[plantuml, sequence-file, svg]
+----
+include::diagrams/sequence-file.puml[]
+----
+
+=== エラー処理
+[plantuml, sequence-error, svg]
+----
+include::diagrams/sequence-error.puml[]
+----
+
+<<<
+
+== クラス図
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+`Main` はエントリーポイントであり、`ToDoList` にタスク管理を委譲する。`ToDoList` は複数の `Task` をコンポジションで管理し(`ToDoList` が破棄されれば `Task` も一緒に破棄される)、番号が範囲外の場合は `ToDoListException` をスローする。`Task` は自身のファイル形式変換(`toFileLine`/`fromFileLine`)を担う。
+
+<<<
+
+== アクティビティ図
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+<<<
+
+== 補足事項
+
+=== インデックス検証の共通化
+`complete`/`remove` はインデックス検証(`validateIndex`)を共通化し、範囲外アクセスは `ToDoListException` として扱う。
+
+=== ファイル形式とラウンドトリップ
+ファイル保存は学習ポイント通り `java.nio.file` ではなく `java.io`(`BufferedWriter`+`FileWriter`、`BufferedReader`+`FileReader`)で実装した。1タスク1行、`"[x] 説明"`/`"[ ] 説明"` 形式にすることで、保存・読込のラウンドトリップをテストで検証できるようにしている。`Task.fromFileLine` は `"[x] "`/`"[ ] "` がどちらも4文字であることを利用し、共通のオフセットで説明部分を取り出している。
+
+=== テスト方針(TDD)
+Red → Green → Refactor サイクルで実装した。
+
+* *単体テスト*: `ToDoList` の追加・完了・削除・範囲外インデックス、`Task` のファイル形式変換(`toFileLine`/`fromFileLine`)のラウンドトリップを検証
+* *結合テスト*(`MainTest`): `Scanner`/`PrintStream` を注入した対話ループに対して、不正なコマンド・番号でクラッシュせず継続すること、`@TempDir` を用いた実ファイルI/Oを含めた `save`/`load` の一連の流れを検証
+
+=== 設計上の工夫
+* `Main` は01〜03と同じ設計パターンで、保存先ファイルも引数として注入可能にし、テストでは一時ディレクトリ(`@TempDir`)を使って実ファイルI/Oを含めて結合テストできるようにしている。

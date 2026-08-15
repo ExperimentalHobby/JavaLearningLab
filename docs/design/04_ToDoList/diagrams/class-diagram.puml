@@ -1,0 +1,58 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 04_ToDoList クラス図
+
+class Main {
+  +main(args: String[]): void
+  ~run(scanner: Scanner, out: PrintStream, file: File): void
+  -handleCommand(toDoList: ToDoList, line: String, out: PrintStream, file: File): void
+  -parseIndex(indexText: String): int
+  -printTasks(toDoList: ToDoList, out: PrintStream): void
+}
+
+class ToDoList {
+  -tasks: List<Task>
+  +add(description: String): void
+  +complete(index: int): void
+  +remove(index: int): void
+  +saveTo(file: File): void
+  +loadFrom(file: File): void
+  +getTasks(): List<Task>
+  -validateIndex(index: int): void
+}
+
+class Task {
+  -description: String
+  -done: boolean
+  +Task(description: String)
+  +getDescription(): String
+  +isDone(): boolean
+  +markDone(): void
+  +toFileLine(): String
+  +{static} fromFileLine(line: String): Task
+}
+
+class ToDoListException extends RuntimeException {
+  +ToDoListException(message: String)
+}
+
+Main "1" --> "1" ToDoList : 利用する
+Main ..> Task : 表示に利用する
+Main ..> ToDoListException : catchする
+ToDoList "1" *-- "0..*" Task : 管理する
+ToDoList ..> ToDoListException : throwする
+
+note right of ToDoList
+  タスクは ArrayList<Task> で管理する。
+  complete/remove はインデックス検証を
+  validateIndex に共通化している。
+end note
+
+note bottom of Task
+  toFileLine/fromFileLine で
+  「[x] 説明」「[ ] 説明」形式との
+  相互変換を自身が担う。
+end note
+
+@enduml

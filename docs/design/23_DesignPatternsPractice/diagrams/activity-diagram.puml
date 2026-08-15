@@ -1,0 +1,39 @@
+@startuml activity-diagram
+skinparam defaultFontName VL Gothic
+
+title アクティビティ図: 対話ループ全体の流れ
+
+start
+:操作方法を案内する;
+while (次の入力行があるか?) is (ある)
+  :1行分の入力を受け取る;
+  if (空行か?) then (yes)
+  elseif (終了コマンドか?) then (yes)
+    break
+  else (no)
+    switch (コマンドの種類は?)
+    case (log)
+      :Singletonのログにメッセージを記録する;
+    case (shape)
+      if (図形の種類・パラメータは正しいか?) then (yes)
+        :Factoryで図形を生成し面積を表示する;
+      else (no)
+        :エラー内容を表示する;
+      endif
+    case (weather)
+      :Observer(気象台)の気温を更新し\n登録済み全員に通知する;
+    case (pay)
+      if (決済方法・金額は正しいか?) then (yes)
+        :Strategyを切り替えて決済し結果を表示する;
+      else (no)
+        :エラー内容を表示する;
+      endif
+    case (不明なコマンド)
+      :エラー内容を表示する;
+    endswitch
+  endif
+endwhile (ない)
+:終了する;
+stop
+
+@enduml

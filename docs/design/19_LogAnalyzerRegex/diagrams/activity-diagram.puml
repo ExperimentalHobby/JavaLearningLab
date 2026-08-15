@@ -1,0 +1,36 @@
+@startuml activity-diagram
+skinparam defaultFontName VL Gothic
+
+title アクティビティ図: 対話ループ全体の流れ
+
+start
+:操作方法を案内する;
+while (次の入力行があるか?) is (ある)
+  :1行分の入力を受け取る;
+  if (空行か?) then (yes)
+  elseif (終了コマンドか?) then (yes)
+    break
+  else (no)
+    if (loadコマンドか?) then (yes)
+      if (ファイルの読み込みに成功したか?) then (yes)
+        while (未処理の行が残っているか?) is (yes)
+          if (正規表現の形式に合致するか?) then (yes)
+            :タイムスタンプ・レベル・メッセージを\n抽出し結果に加える;
+          else (no)
+            :その行をスキップする;
+          endif
+        endwhile (no)
+        :レベルごとの件数を集計する;
+        :解析成功件数・スキップ件数・\nレベル別集計を表示する;
+      else (no)
+        :エラー内容を表示する;
+      endif
+    else (no)
+      :「不明なコマンドです」と表示する;
+    endif
+  endif
+endwhile (ない)
+:終了する;
+stop
+
+@enduml

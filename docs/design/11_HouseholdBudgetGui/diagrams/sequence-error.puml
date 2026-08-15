@@ -1,0 +1,29 @@
+@startuml sequence-error
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: 不正な入力時のエラーダイアログ表示
+
+actor 利用者
+participant "メインウィンドウ" as Frame
+participant "収支管理ロジック" as Manager
+
+利用者 -> Frame : 不正な入力のまま追加ボタンをクリックする
+activate Frame
+
+alt 金額が数値として解釈できない場合
+  Frame -> Frame : 金額欄の数値変換に失敗したことを検知する
+  Frame --> 利用者 : 「金額は数値で入力してください」というエラーダイアログを表示する
+
+else 金額が0以下の場合
+  Frame -> Manager : 取引の追加を依頼する
+  activate Manager
+  Manager -> Manager : 金額が0より大きくないことを検知する
+  Manager --> Frame : 不正な金額であることを通知する
+  deactivate Manager
+  Frame --> 利用者 : エラー内容をダイアログで表示する
+end
+
+Frame -> Frame : 入力欄・一覧・サマリーは変更しない\n(ウィンドウは閉じずに操作を継続できる)
+deactivate Frame
+
+@enduml

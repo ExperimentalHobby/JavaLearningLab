@@ -1,0 +1,30 @@
+@startuml sequence-error
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: 探索アニメーション中の再生成
+
+actor 利用者
+participant "メインウィンドウ" as App
+participant "アニメーション\nタイムライン" as Timeline
+participant "迷路生成ロジック" as Generator
+
+利用者 -> App : 探索アニメーション実行中に\n「迷路生成」ボタンをクリックする
+activate App
+App -> Timeline : 実行中のアニメーションがあれば停止する
+activate Timeline
+Timeline --> App : 停止完了を返す
+deactivate Timeline
+App -> Generator : 新しい迷路の生成を依頼する
+activate Generator
+Generator --> App : 新しい迷路を返す
+deactivate Generator
+App -> App : キャンバスを新しい迷路で再描画する
+deactivate App
+
+note over App
+  探索到達不可能なケース(通路が繋がっていない)では
+  ソルバーは空リストを返す。この場合アニメーションは
+  1マスも塗りつぶさずに終了する(異常終了ではない)。
+end note
+
+@enduml

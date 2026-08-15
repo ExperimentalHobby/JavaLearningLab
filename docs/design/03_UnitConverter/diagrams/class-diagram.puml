@@ -1,0 +1,35 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 03_UnitConverter クラス図
+
+class Main {
+  +main(args: String[]): void
+  ~run(scanner: Scanner, out: PrintStream): void
+}
+
+class UnitConverter {
+  -lengthFactors: Map<String, Double>
+  -weightFactors: Map<String, Double>
+  -categories: List<Map<String, Double>>
+  +convert(value: double, fromUnit: String, toUnit: String): double
+  -findTableContaining(unit: String): Map<String, Double>
+}
+
+class UnitConverterException extends RuntimeException {
+  +UnitConverterException(message: String)
+}
+
+Main "1" --> "1" UnitConverter : 利用する
+Main ..> UnitConverterException : catchする
+UnitConverter ..> UnitConverterException : throwする
+
+note right of UnitConverter
+  カテゴリ(長さ・重さ)ごとに
+  「単位 → 基準単位への換算係数」を
+  Map<String, Double> で保持する。
+  categories はカテゴリの一覧であり、
+  新カテゴリ追加時はここに1つ足すだけでよい。
+end note
+
+@enduml

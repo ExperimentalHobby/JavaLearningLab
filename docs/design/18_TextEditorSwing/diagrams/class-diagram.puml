@@ -1,0 +1,51 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 18_TextEditorSwing クラス図
+
+class Main {
+  +main(args: String[]): void
+}
+
+class TextEditorFrame extends JFrame {
+  -fileService: TextFileService
+  -textArea: JTextArea
+  -currentFile: Path
+  +TextEditorFrame()
+  -buildMenuBar(): JMenuBar
+  -onOpen(): void
+  -onSave(): void
+  -onSaveAs(): void
+  -saveTo(path: Path): void
+  -updateTitle(): void
+}
+
+class TextFileService {
+  +load(path: Path): String
+  +save(path: Path, content: String): void
+}
+
+class TextFileException extends RuntimeException {
+  +TextFileException(message: String, cause: Throwable)
+}
+
+Main ..> TextEditorFrame : 起動する
+TextEditorFrame "1" --> "1" TextFileService : 利用する
+TextEditorFrame ..> TextFileException : catchしダイアログ表示する
+TextFileService ..> TextFileException : throwする
+
+note right of TextFileService
+  Files.readString/Files.writeString(UTF-8)を使い、
+  GUIに依存しない純粋なロジックとして実装。
+  読み込み/書き込みの失敗は
+  TextFileException に統一している。
+end note
+
+note bottom of TextEditorFrame
+  中央にJTextArea、上部にファイル操作用の
+  JMenuBar(開く/保存/名前を付けて保存/終了)を配置。
+  「保存」はcurrentFileがあれば上書き、
+  なければ「名前を付けて保存」と同じ動作になる。
+end note
+
+@enduml

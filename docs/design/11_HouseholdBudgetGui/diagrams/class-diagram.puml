@@ -1,0 +1,89 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 11_HouseholdBudgetGui クラス図
+
+class Main {
+  +main(args: String[]): void
+}
+
+class BudgetFrame extends JFrame {
+  -manager: BudgetManager
+  -tableModel: BudgetTableModel
+  -typeCombo: JComboBox<EntryType>
+  -categoryField: JTextField
+  -amountField: JTextField
+  -incomeLabel: JLabel
+  -expenseLabel: JLabel
+  -balanceLabel: JLabel
+  +BudgetFrame()
+  -buildInputPanel(): JPanel
+  -buildSummaryPanel(): JPanel
+  -onAddButtonClicked(): void
+  -refreshSummary(): void
+}
+
+class BudgetManager {
+  -entries: List<BudgetEntry>
+  +addEntry(entry: BudgetEntry): void
+  +getEntries(): List<BudgetEntry>
+  +getTotalIncome(): BigDecimal
+  +getTotalExpense(): BigDecimal
+  +getBalance(): BigDecimal
+  -totalOf(type: EntryType): BigDecimal
+}
+
+class BudgetTableModel extends AbstractTableModel {
+  -{static} COLUMN_NAMES: String[]
+  -manager: BudgetManager
+  +BudgetTableModel(manager: BudgetManager)
+  +getRowCount(): int
+  +getColumnCount(): int
+  +getColumnName(column: int): String
+  +getValueAt(rowIndex: int, columnIndex: int): Object
+}
+
+class BudgetEntry << record >> {
+  +date: LocalDate
+  +category: String
+  +amount: BigDecimal
+  +type: EntryType
+}
+
+enum EntryType {
+  INCOME
+  EXPENSE
+}
+
+class BudgetException extends RuntimeException {
+  +BudgetException(message: String)
+}
+
+Main ..> BudgetFrame : 起動する
+BudgetFrame "1" --> "1" BudgetManager : 利用する
+BudgetFrame "1" --> "1" BudgetTableModel : 利用する
+BudgetFrame ..> BudgetException : catchしダイアログ表示する
+BudgetTableModel "1" --> "1" BudgetManager : 参照する
+BudgetManager "1" o-- "0..*" BudgetEntry : 管理する
+BudgetManager ..> BudgetException : throwする
+BudgetEntry --> EntryType
+
+note right of BudgetManager
+  BudgetFrame から独立した純粋なロジックとして
+  実装することで、画面描画なしにテストできる。
+end note
+
+note right of BudgetTableModel
+  getRowCount/getColumnCount/getValueAt は
+  画面描画を伴わない純粋なロジックのため、
+  JTable を実際に表示せずにテストできる。
+end note
+
+note bottom of BudgetFrame
+  BorderLayout を軸に、北側の入力フォームは
+  FlowLayout、南側のサマリーは GridLayout。
+  GUI描画・イベント配線自体は自動テスト対象外で
+  あり、実機起動による手動確認としている。
+end note
+
+@enduml

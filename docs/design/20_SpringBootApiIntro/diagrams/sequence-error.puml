@@ -1,0 +1,25 @@
+@startuml sequence-error
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: 存在しないIDへのアクセス(404)
+
+actor 利用者
+participant "REST API\n(BookController)" as Controller
+participant "書籍管理ロジック\n(BookService)" as Service
+participant "Spring MVC" as MVC
+
+利用者 -> Controller : 存在しないIDで単一取得/削除を要求する
+activate Controller
+Controller -> Service : IDに一致する書籍を問い合わせる/削除を依頼する
+activate Service
+Service -> Service : インメモリの一覧に該当IDが\ないことを検知する
+Service --> Controller : 書籍が見つからないことを通知する\n(BookNotFoundExceptionをスロー)
+deactivate Service
+deactivate Controller
+Controller -> MVC : 例外がそのまま伝播する
+activate MVC
+MVC -> MVC : @ResponseStatus(NOT_FOUND) の指定を読み取る
+MVC --> 利用者 : HTTP 404を返す(コントローラー側での\n個別のtry-catchは不要)
+deactivate MVC
+
+@enduml

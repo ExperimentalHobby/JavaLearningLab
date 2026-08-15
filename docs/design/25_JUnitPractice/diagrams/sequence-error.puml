@@ -1,0 +1,41 @@
+@startuml sequence-error
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: 送信スキップとエラー処理
+
+actor 利用者
+participant "注文通知デモアプリ" as App
+participant "注文通知サービス" as Service
+participant "メール送信" as Sender
+
+利用者 -> App : 注文情報を入力する
+activate App
+
+alt 合計金額が0円以下の場合
+  App -> Service : 注文確認メールの送信を依頼する
+  activate Service
+  Service -> Service : 合計金額が0円以下であることを検知する
+  Service --> App : 何もせず処理を終える(送信をスキップ)
+  deactivate Service
+
+else メール送信に失敗した場合
+  App -> Service : 注文確認メールの送信を依頼する
+  activate Service
+  Service -> Sender : メール送信を依頼する
+  activate Sender
+  Sender --> Service : 送信エラーを通知する
+  deactivate Sender
+  Service -> Service : 送信失敗を検知する
+  Service --> App : メール送信失敗であることを通知する
+  deactivate Service
+  App --> 利用者 : エラー内容を表示する
+
+else 不明なコマンドの場合
+  App -> App : orderでもexitでもないことを検知する
+  App --> 利用者 : 「不明なコマンドです」と表示する
+end
+
+App -> App : 入力受付を継続する(アプリは終了しない)
+deactivate App
+
+@enduml

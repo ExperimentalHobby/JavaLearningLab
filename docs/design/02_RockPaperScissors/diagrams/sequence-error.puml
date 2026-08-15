@@ -1,0 +1,17 @@
+@startuml sequence-error
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: 不正な入力
+
+actor 利用者
+participant "じゃんけんアプリ" as App
+
+利用者 -> App : 手を入力する
+activate App
+App -> App : 入力を手に変換しようと試みる
+App -> App : 「グー」「チョキ」「パー」のいずれにも該当しないことを検知する
+App --> 利用者 : 「グー・チョキ・パーのいずれかを入力してください」と表示する
+App -> App : 入力受付を継続する(アプリは終了しない)
+deactivate App
+
+@enduml

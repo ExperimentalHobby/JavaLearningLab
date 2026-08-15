@@ -1,0 +1,33 @@
+@startuml sequence-error
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: ファイル操作エラー時のダイアログ表示
+
+actor 利用者
+participant "メインウィンドウ" as Frame
+participant "ファイルI/Oロジック" as Service
+
+利用者 -> Frame : ファイル操作を行う
+activate Frame
+
+alt 読み込みに失敗した場合(存在しないファイル等)
+  Frame -> Service : ファイル内容の読み込みを依頼する
+  activate Service
+  Service -> Service : 入出力エラーを検知する
+  Service --> Frame : 読み込み失敗であることを通知する
+  deactivate Service
+  Frame --> 利用者 : 「読み込みエラー」ダイアログを表示する
+
+else 保存に失敗した場合(存在しないディレクトリ等)
+  Frame -> Service : ファイルへの書き込みを依頼する
+  activate Service
+  Service -> Service : 入出力エラーを検知する
+  Service --> Frame : 保存失敗であることを通知する
+  deactivate Service
+  Frame --> 利用者 : 「保存エラー」ダイアログを表示する
+end
+
+Frame -> Frame : 編集中の内容・ウィンドウ状態は変更しない\n(ウィンドウは閉じずに操作を継続できる)
+deactivate Frame
+
+@enduml

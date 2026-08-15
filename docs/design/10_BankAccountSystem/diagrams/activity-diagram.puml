@@ -1,0 +1,42 @@
+@startuml activity-diagram
+skinparam defaultFontName VL Gothic
+
+title アクティビティ図: 対話ループ全体の流れ
+
+start
+:口座名義人名を入力させ口座を開設する;
+:操作方法を案内する;
+while (次の入力行があるか?) is (ある)
+  :1行分の入力を受け取る;
+  if (空行か?) then (yes)
+  elseif (終了コマンドか?) then (yes)
+    break
+  else (no)
+    switch (コマンドの種類は?)
+    case (balance)
+      :残高を表示する;
+    case (history)
+      :取引履歴を表示する;
+    case (deposit/withdraw)
+      if (金額が正しく数値として解釈できるか?) then (yes)
+        if (金額は0より大きいか?) then (yes)
+          if (出金の場合、残高は足りているか?) then (yes)
+            :残高を更新し取引履歴に記録する;
+          else (no)
+            :エラー内容を表示する;
+          endif
+        else (no)
+          :エラー内容を表示する;
+        endif
+      else (no)
+        :エラー内容を表示する;
+      endif
+    case (不明なコマンド)
+      :エラー内容を表示する;
+    endswitch
+  endif
+endwhile (ない)
+:終了する;
+stop
+
+@enduml

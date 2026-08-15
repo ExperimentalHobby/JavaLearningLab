@@ -1,0 +1,44 @@
+@startuml sequence-error
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: 一部ダウンロードの失敗と不明なコマンド
+
+actor 利用者
+participant "ダウンローダーアプリ" as App
+participant "並行ダウンロード\n管理ロジック" as Downloader
+participant "外部サーバー" as Server
+
+== 一部URLのダウンロードが失敗する場合 ==
+利用者 -> App : 複数URLを入力する(1件は不正なURL・異常なサーバーを含む)
+activate App
+App -> Downloader : 全件の並行ダウンロードを依頼する
+activate Downloader
+
+par 正常なURLの処理
+  Downloader -> Server : HTTP GETリクエストを送信する
+  activate Server
+  Server --> Downloader : 正常なレスポンスを返す
+  deactivate Server
+  Downloader -> Downloader : ファイルに保存し成功として記録する
+else 異常なURLの処理
+  Downloader -> Server : HTTP GETリクエストを送信する
+  activate Server
+  Server --> Downloader : 通信エラーまたは異常なステータスを返す
+  deactivate Server
+  Downloader -> Downloader : 例外を投げず失敗として記録する\n(他のダウンロードには影響させない)
+end
+
+Downloader --> App : 成功・失敗が混在した結果一覧を返す
+deactivate Downloader
+App --> 利用者 : 成功した項目と失敗した項目をそれぞれ表示する
+deactivate App
+
+== 不明なコマンドの場合 ==
+利用者 -> App : downloadでもexitでもないコマンドを入力する
+activate App
+App -> App : いずれのコマンドにも該当しないことを検知する
+App --> 利用者 : 「不明なコマンドです」と表示する
+App -> App : 入力受付を継続する(アプリは終了しない)
+deactivate App
+
+@enduml

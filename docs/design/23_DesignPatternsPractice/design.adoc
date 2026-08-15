@@ -1,0 +1,161 @@
+= 23_DesignPatternsPractice 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-08-15
+:toc: left
+:toclevels: 2
+:sectnums:
+:pagenums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+NOTE: UML図は `diagrams/` 配下の `.puml` ファイルを https://asciidoctor.org/docs/asciidoctor-diagram/[asciidoctor-diagram] 経由でPlantUMLとして埋め込んでいる。拡張未導入の環境では、各 `.puml` を直接 https://www.plantuml.com/plantuml[PlantUMLオンラインサーバー] 等に読み込ませても図を確認できる。PDF化する場合は同フォルダの `generate-pdf.ps1` を実行する(`docs/design/fonts/`・`docs/design/themes/` の日本語フォント・テーマを用いて文字化けを回避している。詳細は `docs/design/README.md` を参照)。
+
+<<<
+
+== 概要
+
+=== 目的
+Singleton/Factory/Observer/Strategyの4つの代表的なデザインパターンを、それぞれ独立したミニアプリとして実装し、`Main` のCLIから体験できるツールを提供する。
+
+=== 主な機能
+* `log <メッセージ>` — Singleton(`AppLogger`)にメッセージを記録する
+* `shape <circle|rectangle> <params...>` — Factory(`ShapeFactory`)で図形を生成する
+* `weather <温度>` — Observer(`WeatherStation`)の気温を更新し登録済み全員に通知する
+* `pay <creditcard|paypal> <金額>` — Strategy(`Checkout`)で決済方法を切り替えて支払う
+* `exit` によるアプリ終了
+
+=== 開発環境
+[cols="1,3", options="header"]
+|===
+| 項目 | 内容
+
+| 言語
+| Java 25
+
+| ビルドツール
+| Maven(フォルダ単位で独立した `pom.xml`)
+
+| テスト
+| JUnit 5(`junit-jupiter`。外部リソースに依存しない純粋な単体テスト)
+
+| パッケージ構成
+| `singleton`/`factory`/`observer`/`strategy` に分離
+|===
+
+=== 実行方法
+[source,powershell]
+----
+cd 23_DesignPatternsPractice
+.\mvnw.cmd compile
+.\mvnw.cmd test
+.\mvnw.cmd exec:java "-Dexec.mainClass=com.javalab.designpatterns.Main"
+----
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/23[Issue #23] / https://github.com/ExperimentalHobby/JavaLearningLab/pull/53[PR #53]
+
+<<<
+
+== ユースケース
+
+[cols="1,3,4", options="header"]
+|===
+| ID | ユースケース | 概要
+
+| UC-1
+| ログを記録する(Singleton)
+| `log <メッセージ>` を入力し、唯一のインスタンスにメッセージを記録する
+
+| UC-2
+| 図形を生成する(Factory)
+| `shape <circle\|rectangle> <params...>` を入力し、種類に応じた図形を生成する
+
+| UC-3
+| 気温変化を通知する(Observer)
+| `weather <温度>` を入力し、登録済みの全Observerに変化を通知する
+
+| UC-4
+| 決済方法を切り替えて支払う(Strategy)
+| `pay <creditcard\|paypal> <金額>` を入力し、決済方法を切り替えて支払う
+
+| UC-5
+| 不正な入力時にエラーを表示する
+| 未知の図形タイプ・不正な値・不明なコマンド時にエラーメッセージを表示しアプリを継続する
+
+| UC-6
+| アプリを終了する
+| `exit` を入力し、対話ループを終了する
+|===
+
+<<<
+
+== シーケンス図
+
+=== Singleton(log)とFactory(shape)
+[plantuml, sequence-singleton-factory, svg]
+----
+include::diagrams/sequence-singleton-factory.puml[]
+----
+
+=== Observer(weather)とStrategy(pay)
+[plantuml, sequence-observer-strategy, svg]
+----
+include::diagrams/sequence-observer-strategy.puml[]
+----
+
+=== エラー処理
+[plantuml, sequence-error, svg]
+----
+include::diagrams/sequence-error.puml[]
+----
+
+<<<
+
+== クラス図
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+`AppLogger`(Singleton)は `static final` フィールドで唯一のインスタンスを保証する。`ShapeFactory`(Factory)はタイプ文字列から具象 `Shape` を生成する。`WeatherStation`(Observer)は複数の `WeatherObserver` に通知する。`Checkout`(Strategy)は `PaymentStrategy` を実行時に差し替えられる。
+
+<<<
+
+== アクティビティ図
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+<<<
+
+== 補足事項
+
+=== パッケージ分離とテスト方針
+パターンごとにパッケージを分離した(`singleton`/`factory`/`observer`/`strategy`)。各パターンの本質的なロジックはフレームワークに依存しない独立クラスとし、外部リソースに依存しない純粋なユニットテストのみで構成している(Issue #17と同様の方針)。
+
+=== Singleton: eager initialization
+`AppLogger` は `static final` フィールドによるeager initializationを採用した。JVMのクラス初期化はスレッドセーフに1度だけ行われるため、`synchronized` やダブルチェックロッキングを使わずシンプルに安全なSingletonを実現できる。
+
+=== Factory: Simple Factory
+`ShapeFactory` はタイプ文字列(`"circle"`/`"rectangle"`)から具象 `Shape`(`Circle`/`Rectangle` のrecord実装)を生成するSimple Factoryとして実装した。未知のタイプは `IllegalArgumentException` とした。
+
+=== Observer: SubjectとObserverの関係
+`WeatherStation`(Subject)が `WeatherObserver`(Observer)を `subscribe`/`unsubscribe` で管理し、`setTemperature` で登録済み全員に通知する。テストでは `List::add` をメソッド参照で渡す軽量なテスト用Observerを使い、モックフレームワークなしで検証した。
+
+=== Strategy: 実行時の戦略切り替え
+`Checkout`(Context)がコンストラクタで `PaymentStrategy` を受け取り、`setStrategy` で実行時に決済方法を切り替えられることをテストで確認した。
+
+=== TDDサイクルの順序についての例外
+`Main` は各パターンの主要クラスを配線するだけの薄いレイヤーであり、個々のロジックは既にTDDで検証済みだったため、結合テスト(`MainTest`)は実装後に追加する順序になった(通常のRed→Green順とは異なるが、配線ミスがないことを結合テストで別途保証している)。
+
+=== テスト方針(TDD)
+Red → Green → Refactor サイクルで実装した。
+
+* *単体テスト*: 各パターンのパッケージごとに独立したテスト(`AppLoggerTest`/`ShapeFactoryTest`/`WeatherStationTest`/`CheckoutTest`)
+* *結合テスト*(`MainTest`): 各コマンドの結果表示、および不正なコマンド入力時にエラー表示してループを継続する動作を検証

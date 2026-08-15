@@ -1,0 +1,35 @@
+@startuml activity-diagram
+skinparam defaultFontName VL Gothic
+
+title アクティビティ図: 対話ループ全体の流れ
+
+start
+:操作方法を案内する;
+while (次の入力行があるか?) is (ある)
+  :1行分の入力を受け取る;
+  if (空行か?) then (yes)
+  elseif (終了コマンドか?) then (yes)
+    break
+  else (no)
+    switch (コマンドの種類は?)
+    case (fetch <URL>)
+      if (HTTP通信・レスポンスは正常か?) then (yes)
+        :取得したJSONをそのまま表示する;
+      else (no)
+        :エラー内容を表示する;
+      endif
+    case (fetchUser <URL>)
+      if (HTTP通信・レスポンス・JSON解析は\nすべて正常か?) then (yes)
+        :Userとして解析し表示する;
+      else (no)
+        :エラー内容を表示する;
+      endif
+    case (不明なコマンド)
+      :「不明なコマンドです」と表示する;
+    endswitch
+  endif
+endwhile (ない)
+:終了する;
+stop
+
+@enduml

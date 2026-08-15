@@ -1,0 +1,47 @@
+@startuml activity-diagram
+skinparam defaultFontName VL Gothic
+
+title アクティビティ図: メニュー操作時の処理フロー
+
+start
+:ウィンドウを表示する(テキストエリア/メニューバー);
+while (アプリを終了していないか?) is (継続)
+  :利用者のメニュー操作を待つ;
+  switch (選択されたメニュー項目は?)
+  case (開く)
+    :ファイル選択ダイアログを表示する;
+    if (ファイルを選択したか?) then (yes)
+      if (読み込みに成功したか?) then (yes)
+        :テキストエリアに反映し\nタイトルを更新する;
+      else (no)
+        :エラーダイアログを表示する;
+      endif
+    else (no)
+    endif
+  case (保存)
+    if (現在開いているファイルがあるか?) then (yes)
+      if (書き込みに成功したか?) then (yes)
+      else (no)
+        :エラーダイアログを表示する;
+      endif
+    else (no)
+      :「名前を付けて保存」と同じ処理を行う;
+    endif
+  case (名前を付けて保存)
+    :保存先選択ダイアログを表示する;
+    if (保存先を選択したか?) then (yes)
+      if (書き込みに成功したか?) then (yes)
+        :現在のファイルとして記憶し\nタイトルを更新する;
+      else (no)
+        :エラーダイアログを表示する;
+      endif
+    else (no)
+    endif
+  case (終了)
+    :ウィンドウを閉じる;
+  endswitch
+endwhile (ウィンドウを閉じた)
+:アプリを終了する;
+stop
+
+@enduml

@@ -1,0 +1,41 @@
+@startuml activity-diagram
+skinparam defaultFontName VL Gothic
+
+title アクティビティ図: 対話ループ全体の流れ
+
+start
+:操作方法を案内する;
+while (次の入力行があるか?) is (ある)
+  :1行分の入力を受け取る;
+  if (空行か?) then (yes)
+  elseif (終了コマンドか?) then (yes)
+    break
+  else (no)
+    switch (コマンドの種類は?)
+    case (register)
+      :入力された名前ごとにプレイヤーを登録する;
+    case (start)
+      if (参加人数は2以上かつ2のべき乗か?) then (yes)
+        while (参加者が1人になるまで) is (継続)
+          :現在のラウンドを先頭から2人ずつペアにする;
+          while (未処理のペアが残っているか?) is (yes)
+            :ペアを対戦させる;
+            while (あいこか?) is (yes)
+              :再戦する;
+            endwhile (決着)
+            :勝者を次ラウンドの参加者に加える;
+          endwhile (no)
+        endwhile (1人)
+        :優勝者を表示する;
+      else (no)
+        :エラー内容を表示する;
+      endif
+    case (不明なコマンド)
+      :エラー内容を表示する;
+    endswitch
+  endif
+endwhile (ない)
+:終了する;
+stop
+
+@enduml

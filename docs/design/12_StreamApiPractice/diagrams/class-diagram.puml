@@ -1,0 +1,43 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 12_StreamApiPractice クラス図
+
+class SalesRecord << record >> {
+  +product: String
+  +category: String
+  +amount: BigDecimal
+  +quantity: int
+}
+
+class SalesAggregator {
+  +{static} totalSales(records: List<SalesRecord>): BigDecimal
+  +{static} totalQuantity(records: List<SalesRecord>): int
+  +{static} totalByCategory(records: List<SalesRecord>): Map<String, BigDecimal>
+  +{static} filterByCategory(records: List<SalesRecord>, category: String): List<SalesRecord>
+  +{static} filterAboveAmount(records: List<SalesRecord>, threshold: BigDecimal): List<SalesRecord>
+  +{static} averageAmount(records: List<SalesRecord>): double
+  +{static} maxByAmount(records: List<SalesRecord>): Optional<SalesRecord>
+  +{static} productNamesSorted(records: List<SalesRecord>): List<String>
+}
+
+class Main {
+  +main(args: String[]): void
+  ~run(scanner: Scanner, out: PrintStream): void
+  -handleCommand(records: List<SalesRecord>, line: String, out: PrintStream): void
+  -printList(records: List<SalesRecord>, out: PrintStream): void
+  -printByCategory(records: List<SalesRecord>, out: PrintStream): void
+}
+
+Main "1" o-- "0..*" SalesRecord : 登録する
+Main ..> SalesAggregator : 集計を依頼する
+SalesAggregator ..> SalesRecord : 集計する
+
+note right of SalesAggregator
+  すべて副作用のない static メソッドとして実装。
+  List<SalesRecord> を受け取り結果を返すのみで、
+  GUI/CLIから独立しているため
+  画面表示なしにテストできる。
+end note
+
+@enduml

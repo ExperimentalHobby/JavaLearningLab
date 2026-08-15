@@ -1,0 +1,130 @@
+= 02_RockPaperScissors 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-08-15
+:toc: left
+:toclevels: 2
+:sectnums:
+:pagenums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+NOTE: UML図は `diagrams/` 配下の `.puml` ファイルを https://asciidoctor.org/docs/asciidoctor-diagram/[asciidoctor-diagram] 経由でPlantUMLとして埋め込んでいる。拡張未導入の環境では、各 `.puml` を直接 https://www.plantuml.com/plantuml[PlantUMLオンラインサーバー] 等に読み込ませても図を確認できる。PDF化する場合は同フォルダの `generate-pdf.ps1` を実行する(`docs/design/fonts/`・`docs/design/themes/` の日本語フォント・テーマを用いて文字化けを回避している。詳細は `docs/design/README.md` を参照)。
+
+<<<
+
+== 概要
+
+=== 目的
+プレイヤー(標準入力)とコンピュータ(`Random`)でじゃんけんを行う対話式CLIアプリを提供する。
+
+=== 主な機能
+* 「グー」「チョキ」「パー」のいずれかを入力し、コンピュータと対戦する
+* 不正な入力(上記3語以外)をエラー表示し、アプリを継続する
+* `exit` によるアプリ終了
+
+=== 開発環境
+[cols="1,3", options="header"]
+|===
+| 項目 | 内容
+
+| 言語
+| Java 25
+
+| ビルドツール
+| Maven(フォルダ単位で独立した `pom.xml`)
+
+| テスト
+| JUnit 5(`junit-jupiter`)
+
+| 乱数
+| `java.util.Random`(コンピュータの手の抽選に使用)
+|===
+
+=== 実行方法
+[source,powershell]
+----
+cd 02_RockPaperScissors
+.\mvnw.cmd compile
+.\mvnw.cmd test
+.\mvnw.cmd exec:java "-Dexec.mainClass=com.javalab.rps.Main"
+----
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/2[Issue #2] / https://github.com/ExperimentalHobby/JavaLearningLab/pull/32[PR #32]
+
+<<<
+
+== ユースケース
+
+[cols="1,3,4", options="header"]
+|===
+| ID | ユースケース | 概要
+
+| UC-1
+| じゃんけんで対戦する
+| 「グー」「チョキ」「パー」のいずれかを入力し、コンピュータの手と勝敗を受け取る
+
+| UC-2
+| 不正な入力時にエラーを表示する
+| 上記3語のいずれにも該当しない入力をした場合、エラーメッセージを表示しアプリを継続する
+
+| UC-3
+| アプリを終了する
+| `exit` を入力し、対話ループを終了する
+|===
+
+<<<
+
+== シーケンス図
+
+=== じゃんけん対戦(正常系)
+[plantuml, sequence-normal, svg]
+----
+include::diagrams/sequence-normal.puml[]
+----
+
+=== 不正な入力
+[plantuml, sequence-error, svg]
+----
+include::diagrams/sequence-error.puml[]
+----
+
+<<<
+
+== クラス図
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+`Main` は `RockPaperScissorsGame` の static メソッドを利用して勝敗を判定する。`RockPaperScissorsGame` はインスタンス状態を持たないステートレスなロジッククラスであり、`Hand`(三すくみの勝敗ロジックを持つ列挙型)と `Result`(勝敗結果の列挙型)に依存する。
+
+<<<
+
+== アクティビティ図
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+<<<
+
+== 補足事項
+
+=== Handへの勝敗ロジックの内包
+`Hand` enum自身に `beats(Hand other)` を持たせ、グー→チョキ→パー→グーの三すくみ判定をenumに閉じ込めている。列挙順(ROCK → SCISSORS → PAPER)は `RockPaperScissorsGame.randomHand` の乱数マッピング(`Random.nextInt(3)`)にもそのまま利用される。
+
+=== テスト方針(TDD)
+Red → Green → Refactor サイクルで実装した。
+
+* *単体テスト*: `Hand.beats` の三すくみ全パターン、`RockPaperScissorsGame.judge` の勝ち/負け/引き分け、`randomHand` の `nextInt` 戻り値マッピングを検証
+* *結合テスト*(`MainTest`): 不正入力時にクラッシュせず継続すること、コンピュータの手を `Supplier<Hand>` で固定注入し正しい勝敗が表示されることを検証
+
+=== 設計上の工夫
+* `RockPaperScissorsGame.randomHand` は `Random` を引数で受け取り、テストでは `nextInt` が固定値を返す匿名サブクラスを注入することで、乱数に依存せず決定的に検証できるようにしている。
+* `Main` はコンピュータの手を `Supplier<Hand>` として注入可能にし、01_Calculatorと同じ設計パターン(`Scanner`/`PrintStream` の注入による結合テスト)を踏襲している。

@@ -1,0 +1,141 @@
+= 15_MultiThreadDownloader 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-08-15
+:toc: left
+:toclevels: 2
+:sectnums:
+:pagenums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+NOTE: UML図は `diagrams/` 配下の `.puml` ファイルを https://asciidoctor.org/docs/asciidoctor-diagram/[asciidoctor-diagram] 経由でPlantUMLとして埋め込んでいる。拡張未導入の環境では、各 `.puml` を直接 https://www.plantuml.com/plantuml[PlantUMLオンラインサーバー] 等に読み込ませても図を確認できる。PDF化する場合は同フォルダの `generate-pdf.ps1` を実行する(`docs/design/fonts/`・`docs/design/themes/` の日本語フォント・テーマを用いて文字化けを回避している。詳細は `docs/design/README.md` を参照)。
+
+<<<
+
+== 概要
+
+=== 目的
+複数のURLを `ExecutorService` で並行ダウンロードし、それぞれ指定先ファイルに保存する対話式CLIツールを提供する。`Thread`/`ExecutorService` と並行処理の基礎を目的とする。
+
+=== 主な機能
+* `download <URL1,URL2,...> <保存先ディレクトリ>` で複数URLを並行ダウンロードし、結果を表示する
+* `exit` によるアプリ終了
+
+=== 開発環境
+[cols="1,3", options="header"]
+|===
+| 項目 | 内容
+
+| 言語
+| Java 25
+
+| ビルドツール
+| Maven(フォルダ単位で独立した `pom.xml`)
+
+| テスト
+| JUnit 5(`junit-jupiter`。`com.sun.net.httpserver.HttpServer` をephemeralポートで起動する結合テスト)
+
+| 並行処理
+| `java.util.concurrent.ExecutorService`(`Executors.newFixedThreadPool`)+ `Future`
+
+| HTTP通信
+| `java.net.http.HttpClient`
+|===
+
+=== 実行方法
+[source,powershell]
+----
+cd 15_MultiThreadDownloader
+.\mvnw.cmd compile
+.\mvnw.cmd test
+.\mvnw.cmd exec:java "-Dexec.mainClass=com.javalab.downloader.Main"
+----
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/15[Issue #15] / https://github.com/ExperimentalHobby/JavaLearningLab/pull/45[PR #45]
+
+<<<
+
+== ユースケース
+
+[cols="1,3,4", options="header"]
+|===
+| ID | ユースケース | 概要
+
+| UC-1
+| 複数URLを並行ダウンロードする
+| `download <URL1,URL2,...> <保存先ディレクトリ>` を入力し、全URLを並行に取得・保存する
+
+| UC-2
+| 一部失敗しても他のダウンロードを継続する
+| 一部URLの通信エラー・異常ステータスは失敗として記録され、他のダウンロードには影響しない
+
+| UC-3
+| 不明なコマンド時にエラーを表示する
+| `download`/`exit` 以外のコマンドを入力した場合、エラーメッセージを表示しアプリを継続する
+
+| UC-4
+| アプリを終了する
+| `exit` を入力し、対話ループを終了する
+|===
+
+<<<
+
+== シーケンス図
+
+=== 複数URLの並行ダウンロード(正常系)
+[plantuml, sequence-normal, svg]
+----
+include::diagrams/sequence-normal.puml[]
+----
+
+=== 一部ダウンロードの失敗と不明なコマンド
+[plantuml, sequence-error, svg]
+----
+include::diagrams/sequence-error.puml[]
+----
+
+<<<
+
+== クラス図
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+`MultiThreadDownloader` は `DownloadRequest`(URLと保存先の組)の一覧を受け取り、`ExecutorService` で並行にダウンロードして `DownloadResult`(成功可否・バイト数・エラーメッセージ)の一覧を返す。個々の失敗は例外として伝播させず、結果オブジェクトに記録することで他のダウンロードへの影響を防ぐ。
+
+<<<
+
+== アクティビティ図
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+<<<
+
+== 補足事項
+
+=== Future経由での結果回収
+`MultiThreadDownloader.downloadAll` は `Executors.newFixedThreadPool(threadCount)` でダウンロードを並行実行し、`Future` 経由でリクエストと同じ順序の結果を回収する。1件の失敗(通信エラー・異常ステータス)は例外を投げず `DownloadResult(success=false)` として記録し、他のダウンロードを止めない設計にしている。
+
+=== JDK内蔵HttpServerによる結合テスト
+通信系のテストは実際の外部APIに依存せず、14_HttpClientToolと同じ方針でモックも使わず、JDK内蔵の `com.sun.net.httpserver.HttpServer` をephemeralポートで起動する結合テストとしている。
+
+=== 並行性検証で遭遇した想定外のRed
+並行実行を検証するテスト(各エンドポイントに300msの遅延を入れ、3件の合計処理時間が逐次実行より明らかに短いことをアサート)を書いた際、想定外のRedに遭遇した。原因は `MultiThreadDownloader` 側ではなく、`HttpServer.create()` のデフォルトexecutorがリクエストを単一スレッドで直列処理してしまう点だった。クライアント側は並行にリクエストを送っていても、サーバー側が直列処理では並行性を正しく検証できないため、テスト用サーバーに `server.setExecutor(Executors.newFixedThreadPool(4))` を設定して解消した。
+
+=== テスト方針(TDD)
+Red → Green → Refactor サイクルで実装した。
+
+* *単体・結合テスト*(`MultiThreadDownloaderTest`): 複数URLの並行ダウンロード、並行性の検証(処理時間比較)、一部失敗時の他への非影響を検証
+* *結合テスト*(`MainTest`): `download`コマンドの結果表示(成功/失敗を1件ずつ表示)、および不正なコマンド入力時にエラー表示してループを継続する動作を検証
+
+=== 設計上の工夫
+* `Main` は01〜14と同じ設計パターンで、`Scanner`/`PrintStream` を引数に取る `run` 静的メソッドに分離している。

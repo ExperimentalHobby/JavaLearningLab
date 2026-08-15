@@ -55,11 +55,18 @@ desktop.ini
 # Development artifacts
 COMPLETION_REPORT.md
 
-# Documentation (local work)
-docs/
-
 # Editor temp files (Claude Code)
 *.tmp.*
 
-# 
+#
 *.local.*
+
+# Documentation (local work) - design配下のみGit管理対象
+docs/*
+!docs/design/
+
+# design配下の生成物(.puml/.adocから再生成可能なため対象外)
+docs/design/*/diagrams/*.svg
+docs/design/*/design.pdf
+docs/design/*/design.html
+docs/design/*/.asciidoctor/

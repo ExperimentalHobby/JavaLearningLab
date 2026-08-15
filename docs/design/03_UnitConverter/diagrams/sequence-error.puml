@@ -1,0 +1,38 @@
+@startuml sequence-error
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: エラー処理
+
+actor 利用者
+participant "単位変換アプリ" as App
+participant "変換ロジック" as Logic
+
+利用者 -> App : 入力する
+activate App
+App -> App : 入力を数値・変換元単位・変換先単位に分解しようと試みる
+
+alt 数値として解釈できない入力の場合
+  App -> App : 数値への変換に失敗したことを検知する
+  App --> 利用者 : 「数値の形式が不正です」と表示する
+
+else 変換元単位がどのカテゴリにも属さない場合
+  App -> Logic : 単位変換を依頼する
+  activate Logic
+  Logic -> Logic : 変換元単位を含む換算表を探すが見つからない
+  Logic --> App : 不明な単位であることを通知する
+  deactivate Logic
+  App --> 利用者 : エラー内容を表示する
+
+else 変換先単位が変換元と異なるカテゴリの場合
+  App -> Logic : 単位変換を依頼する
+  activate Logic
+  Logic -> Logic : 変換元単位のカテゴリに変換先単位が無いことを検知する
+  Logic --> App : カテゴリが異なることを通知する
+  deactivate Logic
+  App --> 利用者 : エラー内容を表示する
+end
+
+App -> App : 入力受付を継続する(アプリは終了しない)
+deactivate App
+
+@enduml

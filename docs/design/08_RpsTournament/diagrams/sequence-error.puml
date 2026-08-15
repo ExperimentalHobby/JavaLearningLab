@@ -1,0 +1,29 @@
+@startuml sequence-error
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: エラー処理
+
+actor 利用者
+participant "大会アプリ" as App
+participant "トーナメント" as Tournament
+
+利用者 -> App : コマンドを入力する
+activate App
+
+alt 参加人数が2以上かつ2のべき乗でない場合
+  App -> Tournament : 登録済みプレイヤーでトーナメントを生成するよう依頼する
+  activate Tournament
+  Tournament -> Tournament : 参加人数がトーナメント表を組めない人数であることを検知する
+  Tournament --> App : 不正な参加人数であることを通知する
+  deactivate Tournament
+  App --> 利用者 : エラー内容を表示する
+
+else 不明なコマンドの場合
+  App -> App : いずれのコマンドにも該当しないことを検知する
+  App --> 利用者 : 「不明なコマンドです」と表示する
+end
+
+App -> App : 入力受付を継続する(アプリは終了しない)
+deactivate App
+
+@enduml

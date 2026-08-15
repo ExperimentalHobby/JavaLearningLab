@@ -1,0 +1,51 @@
+@startuml sequence-normal
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: スタック・キューの操作
+
+actor 利用者
+participant "デモアプリ" as App
+participant "汎用スタック" as Stack
+participant "汎用キュー" as Queue
+
+== スタック操作(push / pop / peek / size) ==
+利用者 -> App : 値を入力する(stack push <値>)
+activate App
+App -> Stack : 先頭に積むよう依頼する
+activate Stack
+Stack -> Stack : 新しいノードを先頭に連結する
+deactivate Stack
+App --> 利用者 : 積んだ値を表示する
+deactivate App
+
+利用者 -> App : 取り出しを依頼する(stack pop)
+activate App
+App -> Stack : 先頭要素の取り出しを依頼する
+activate Stack
+Stack -> Stack : 先頭ノードの値を取り出し、\nポインタを次のノードへ進める
+Stack --> App : 取り出した値を返す
+deactivate Stack
+App --> 利用者 : 取り出した値を表示する
+deactivate App
+
+== キュー操作(enqueue / dequeue / peek / size) ==
+利用者 -> App : 値を入力する(queue enqueue <値>)
+activate App
+App -> Queue : 末尾に追加するよう依頼する
+activate Queue
+Queue -> Queue : 新しいノードを末尾に連結する
+deactivate Queue
+App --> 利用者 : 追加した値を表示する
+deactivate App
+
+利用者 -> App : 取り出しを依頼する(queue dequeue)
+activate App
+App -> Queue : 先頭要素の取り出しを依頼する
+activate Queue
+Queue -> Queue : 先頭ノードの値を取り出し、\nポインタを次のノードへ進める
+Queue --> App : 取り出した値を返す
+deactivate Queue
+App --> 利用者 : 取り出した値を表示する
+deactivate App
+
+@enduml

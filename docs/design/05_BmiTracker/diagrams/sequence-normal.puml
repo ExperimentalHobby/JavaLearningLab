@@ -1,0 +1,37 @@
+@startuml sequence-normal
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: BMI測定・一覧表示(add / list)
+
+actor 利用者
+participant "BMIトラッカー" as App
+participant "測定履歴" as History
+participant "BMI計算ロジック" as Calc
+
+== 測定の記録(add) ==
+利用者 -> App : 身長・体重を入力する(add <身長cm> <体重kg>)
+activate App
+App -> App : 入力を身長・体重に分解する
+App -> History : 記録の追加を依頼する
+activate History
+History -> Calc : BMIの計算を依頼する
+activate Calc
+Calc -> Calc : 身長・体重からBMIを算出する
+Calc -> Calc : BMIから体格区分を判定する
+Calc --> History : BMIと体格区分を返す
+deactivate Calc
+History -> History : 測定日・身長・体重・BMI・区分を記録として追加する
+deactivate History
+deactivate App
+
+== 履歴一覧の表示(list) ==
+利用者 -> App : 一覧表示コマンドを入力する(list)
+activate App
+App -> History : 記録一覧を問い合わせる
+activate History
+History --> App : 記録一覧を返す
+deactivate History
+App --> 利用者 : 記録一覧を画面に表示する
+deactivate App
+
+@enduml

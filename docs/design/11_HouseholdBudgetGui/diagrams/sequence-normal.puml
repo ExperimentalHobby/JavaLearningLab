@@ -1,0 +1,34 @@
+@startuml sequence-normal
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: 取引の追加(正常系)
+
+actor 利用者
+participant "メインウィンドウ" as Frame
+participant "収支管理ロジック" as Manager
+participant "取引一覧テーブル" as Table
+
+利用者 -> Frame : 種別・カテゴリ・金額を入力し、追加ボタンをクリックする
+activate Frame
+Frame -> Frame : 入力欄から種別・カテゴリ・金額を読み取る
+Frame -> Manager : 取引の追加を依頼する
+activate Manager
+Manager -> Manager : 金額が0より大きいことを検証する
+Manager -> Manager : 取引一覧に追加する
+deactivate Manager
+Frame -> Table : 表示内容の再描画を通知する
+activate Table
+Table -> Manager : 最新の取引一覧を問い合わせる
+activate Manager
+Manager --> Table : 取引一覧を返す
+deactivate Manager
+deactivate Table
+Frame -> Manager : 収入・支出・残高の合計を問い合わせる
+activate Manager
+Manager --> Frame : 収入・支出・残高を返す
+deactivate Manager
+Frame --> 利用者 : サマリー表示を更新する
+Frame --> 利用者 : カテゴリ・金額の入力欄をクリアする
+deactivate Frame
+
+@enduml

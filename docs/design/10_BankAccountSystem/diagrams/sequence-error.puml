@@ -1,0 +1,41 @@
+@startuml sequence-error
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: エラー処理
+
+actor 利用者
+participant "口座アプリ" as App
+participant "口座" as Account
+
+利用者 -> App : コマンドを入力する
+activate App
+
+alt 金額が数値として解釈できない場合
+  App -> App : 金額の数値変換に失敗したことを検知する
+  App --> 利用者 : 「数値の形式が不正です」と表示する
+
+else 入出金額が0以下の場合
+  App -> Account : 入金/出金を依頼する
+  activate Account
+  Account -> Account : 金額が0より大きくないことを検知する
+  Account --> App : 不正な金額であることを通知する
+  deactivate Account
+  App --> 利用者 : エラー内容を表示する
+
+else 出金額が残高を超える場合
+  App -> Account : 出金を依頼する
+  activate Account
+  Account -> Account : 出金額が残高を超えることを検知する
+  Account --> App : 残高不足であることを通知する
+  deactivate Account
+  App --> 利用者 : エラー内容を表示する
+
+else 不明なコマンドの場合
+  App -> App : いずれのコマンドにも該当しないことを検知する
+  App --> 利用者 : 「不明なコマンドです」と表示する
+end
+
+App -> App : 入力受付を継続する(アプリは終了しない)
+deactivate App
+
+@enduml

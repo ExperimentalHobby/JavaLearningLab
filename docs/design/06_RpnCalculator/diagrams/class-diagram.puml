@@ -1,0 +1,35 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 06_RpnCalculator クラス図
+
+class Main {
+  +main(args: String[]): void
+  ~run(scanner: Scanner, out: PrintStream): void
+}
+
+class RpnCalculator {
+  -{static} DIVISION_SCALE: int
+  +{static} evaluate(expression: String): BigDecimal
+  -{static} parseOperand(token: String): BigDecimal
+  -{static} popOperand(stack: Stack<BigDecimal>): BigDecimal
+  -{static} isOperator(token: String): boolean
+  -{static} applyOperator(operator: String, a: BigDecimal, b: BigDecimal): BigDecimal
+}
+
+class RpnCalculatorException extends RuntimeException {
+  +RpnCalculatorException(message: String)
+}
+
+Main ..> RpnCalculator : 利用する
+Main ..> RpnCalculatorException : catchする
+RpnCalculator ..> RpnCalculatorException : throwする
+
+note right of RpnCalculator
+  すべてのメソッドがstaticであり、
+  インスタンス状態を持たない。
+  評価中は java.util.Stack<BigDecimal> を
+  メソッド内のローカル変数として使用する。
+end note
+
+@enduml

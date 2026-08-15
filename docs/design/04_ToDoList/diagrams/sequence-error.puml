@@ -1,0 +1,40 @@
+@startuml sequence-error
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: エラー処理
+
+actor 利用者
+participant "ToDoアプリ" as App
+participant "タスクリスト" as List
+
+利用者 -> App : コマンドを入力する
+activate App
+
+alt 不明なコマンドの場合
+  App -> App : いずれのコマンドにも該当しないことを検知する
+  App --> 利用者 : 「不明なコマンドです」と表示する
+
+else タスク番号が不正な形式の場合
+  App -> App : 番号部分の数値変換に失敗したことを検知する
+  App --> 利用者 : 「番号の形式が不正です」と表示する
+
+else タスク番号が範囲外の場合
+  App -> List : 指定番号のタスクを操作するよう依頼する
+  activate List
+  List -> List : 番号がタスク件数の範囲外であることを検知する
+  List --> App : 不正なタスク番号であることを通知する
+  deactivate List
+  App --> 利用者 : エラー内容を表示する
+
+else ファイル操作に失敗した場合
+  App -> List : ファイルへの保存/読込を依頼する
+  activate List
+  List --> App : 入出力エラーを通知する
+  deactivate List
+  App --> 利用者 : 「ファイル操作に失敗しました」と表示する
+end
+
+App -> App : 入力受付を継続する(アプリは終了しない)
+deactivate App
+
+@enduml

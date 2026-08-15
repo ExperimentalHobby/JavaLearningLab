@@ -1,0 +1,49 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 19_LogAnalyzerRegex クラス図
+
+class LogEntry << record >> {
+  +timestamp: LocalDateTime
+  +level: String
+  +message: String
+}
+
+class LogParser {
+  -{static} LOG_PATTERN: Pattern
+  -{static} TIMESTAMP_FORMAT: DateTimeFormatter
+  +parse(line: String): LogEntry
+  +parseAll(lines: List<String>): List<LogEntry>
+  +countByLevel(entries: List<LogEntry>): Map<String, Long>
+}
+
+class LogParseException extends RuntimeException {
+  +LogParseException(message: String)
+}
+
+class Main {
+  +main(args: String[]): void
+  ~run(scanner: Scanner, out: PrintStream): void
+  -{static} handleLoad(parser: LogParser, filePath: String, out: PrintStream): void
+}
+
+Main "1" --> "1" LogParser : 利用する
+Main ..> LogEntry : 集計表示に利用する
+LogParser ..> LogEntry : 生成する
+LogParser ..> LogParseException : throwする(parseのみ)
+
+note right of LogParser
+  Pattern.compile で正規表現をコンパイルし、
+  Matcher でマッチさせて group(1)〜(3) から
+  タイムスタンプ・レベル・メッセージを抽出する。
+  parseAll は1行の解析失敗で全体を止めず、
+  その行だけスキップして処理を継続する。
+end note
+
+note bottom of LogParseException
+  parse は形式不正を例外として明確に返すが、
+  parseAll は内部でこの例外を捕捉し、
+  呼び出し元には伝播させない。
+end note
+
+@enduml

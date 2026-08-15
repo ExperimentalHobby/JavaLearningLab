@@ -1,0 +1,53 @@
+@startuml sequence-normal
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: タスクのCRUD操作
+
+actor 利用者
+participant "DBアプリ" as App
+participant "タスクリポジトリ" as Repo
+participant "SQLiteデータベース" as DB
+
+== 登録(add) ==
+利用者 -> App : タイトルを入力する(add <タイトル>)
+activate App
+App -> Repo : タスクの登録を依頼する
+activate Repo
+Repo -> DB : INSERT文を実行する
+activate DB
+DB --> Repo : 採番されたIDを返す
+deactivate DB
+Repo --> App : タスクIDを返す
+deactivate Repo
+App --> 利用者 : 「追加しました」と表示する
+deactivate App
+
+== 一覧表示(list) ==
+利用者 -> App : 一覧表示コマンドを入力する(list)
+activate App
+App -> Repo : タスク一覧を問い合わせる
+activate Repo
+Repo -> DB : SELECT文を実行する
+activate DB
+DB --> Repo : 全タスクの行を返す
+deactivate DB
+Repo --> App : タスク一覧を返す
+deactivate Repo
+App --> 利用者 : タスク一覧を画面に表示する
+deactivate App
+
+== 完了・削除(done / delete) ==
+利用者 -> App : 対象IDを入力する(done <id> または delete <id>)
+activate App
+App -> Repo : 完了状態の更新/削除を依頼する
+activate Repo
+Repo -> DB : UPDATE文またはDELETE文を実行する
+activate DB
+DB --> Repo : 更新/削除された行数を返す
+deactivate DB
+Repo --> App : 対象が存在したかを返す
+deactivate Repo
+App --> 利用者 : 結果(成功/該当なし)を表示する
+deactivate App
+
+@enduml

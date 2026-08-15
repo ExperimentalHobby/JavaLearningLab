@@ -1,0 +1,43 @@
+@startuml sequence-normal
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: 売上登録と集計表示(add / list)
+
+actor 利用者
+participant "集計アプリ" as App
+participant "集計ロジック" as Agg
+
+== 売上の登録(add) ==
+利用者 -> App : 商品名・カテゴリ・金額・数量を入力する(add ...)
+activate App
+App -> App : 入力を4項目に分解する
+App -> App : 売上レコードとして一覧に追加する
+deactivate App
+
+== 一覧・集計の表示(list) ==
+利用者 -> App : 一覧表示コマンドを入力する(list)
+activate App
+App --> 利用者 : 登録済みレコードを1件ずつ表示する
+App -> Agg : 合計金額の算出を依頼する
+activate Agg
+Agg -> Agg : 各レコードの金額をmap/reduceで合算する
+Agg --> App : 合計金額を返す
+deactivate Agg
+App -> Agg : 合計数量の算出を依頼する
+activate Agg
+Agg -> Agg : 各レコードの数量をIntStreamで合算する
+Agg --> App : 合計数量を返す
+deactivate Agg
+App -> Agg : 平均金額の算出を依頼する
+activate Agg
+Agg --> App : 平均金額を返す
+deactivate Agg
+App -> Agg : 最高額のレコードを問い合わせる
+activate Agg
+Agg -> Agg : Comparatorで金額最大のレコードを求める
+Agg --> App : 最高額のレコードを返す(存在する場合)
+deactivate Agg
+App --> 利用者 : 合計・平均・最高額を画面に表示する
+deactivate App
+
+@enduml
