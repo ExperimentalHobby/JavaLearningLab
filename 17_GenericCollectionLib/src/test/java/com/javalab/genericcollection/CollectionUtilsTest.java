@@ -7,6 +7,11 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+/**
+ * {@link CollectionUtils#max(List)} の境界型パラメータ({@code T extends Comparable<T>})を
+ * 使ったジェネリックメソッドを検証するテスト。Integer/Stringという異なる型に対して
+ * 同じmax()メソッドが型安全に動作することを確認する。
+ */
 class CollectionUtilsTest {
 
     @Test
@@ -18,6 +23,7 @@ class CollectionUtilsTest {
 
     @Test
     void maxReturnsLargestStringInList() {
+        // Stringの自然順序(辞書順)で最大の"cherry"が選ばれることを確認する。
         String result = CollectionUtils.max(List.of("banana", "apple", "cherry"));
 
         assertEquals("cherry", result);
