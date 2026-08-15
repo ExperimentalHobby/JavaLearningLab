@@ -16,6 +16,9 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * {@link Main#run(Scanner, PrintStream, PriceComparisonService, List)} のREPLループを結合テストするクラス。
+ */
 class MainTest {
 
     private ExecutorService executor;

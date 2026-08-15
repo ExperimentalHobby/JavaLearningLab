@@ -5,6 +5,9 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+/**
+ * {@link SimulatedShopPriceFetcher} の遅延シミュレート・失敗シミュレートを検証するテスト。
+ */
 class SimulatedShopPriceFetcherTest {
 
     @Test
