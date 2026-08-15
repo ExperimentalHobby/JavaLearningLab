@@ -31,15 +31,13 @@ public class MazeVisualizerApp extends Application {
     private static final int ROWS = 15;
     private static final int CELL_SIZE = 28;
 
-    private final MazeGenerator generator = new MazeGenerator();
-    private final Map<String, MazeSolver> solvers = Map.of(
+    private final MazeVisualizerState state = new MazeVisualizerState(new MazeGenerator(), Map.of(
             "BFS", new BfsMazeSolver(),
             "DFS", new DfsMazeSolver(),
-            "A*", new AStarMazeSolver());
+            "A*", new AStarMazeSolver()));
 
     private final Canvas canvas = new Canvas(COLS * CELL_SIZE, ROWS * CELL_SIZE);
     private final ComboBox<String> algorithmBox = new ComboBox<>();
-    private Maze maze;
     private Timeline animation;
 
     @Override
@@ -71,7 +69,7 @@ public class MazeVisualizerApp extends Application {
         if (animation != null) {
             animation.stop();
         }
-        maze = generator.generate(COLS, ROWS, System.nanoTime());
+        state.generateMaze(COLS, ROWS, System.nanoTime());
         drawMaze();
     }
 
@@ -79,14 +77,13 @@ public class MazeVisualizerApp extends Application {
      * 選択中のアルゴリズムで経路を探索し、{@link Timeline}で経路上のマスを1つずつ塗りつぶしていく。
      */
     private void animateSolve() {
-        if (maze == null) {
+        if (state.currentMaze() == null) {
             return;
         }
         if (animation != null) {
             animation.stop();
         }
-        MazeSolver solver = solvers.get(algorithmBox.getValue());
-        List<Cell> path = solver.solve(maze);
+        List<Cell> path = state.startAnimation(algorithmBox.getValue());
 
         drawMaze();
         animation = new Timeline();
@@ -99,6 +96,7 @@ public class MazeVisualizerApp extends Application {
     }
 
     private void drawMaze() {
+        Maze maze = state.currentMaze();
         GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.setFill(Color.WHITE);
         gc.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());

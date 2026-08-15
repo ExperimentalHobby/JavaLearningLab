@@ -109,7 +109,7 @@ include::diagrams/sequence-error.puml[]
 include::diagrams/class-diagram.puml[]
 ----
 
-`MazeVisualizerApp`(`Application` を継承したJavaFXメインウィンドウ)は `MazeGenerator` で迷路を生成し、選択されたアルゴリズムに対応する `MazeSolver`(`BfsMazeSolver`/`DfsMazeSolver`/`AStarMazeSolver`)で経路を探索する。`Maze` は `Cell` 同士の接続をグラフとして保持する。
+`MazeVisualizerApp`(`Application` を継承したJavaFXメインウィンドウ)はアルゴリズム選択・アニメーション実行中状態という状態遷移を `MazeVisualizerState` に委譲し、自身はCanvas描画とタイマー操作のみを担当する。`MazeVisualizerState` は `MazeGenerator` で迷路を生成し、選択されたアルゴリズムに対応する `MazeSolver`(`BfsMazeSolver`/`DfsMazeSolver`/`AStarMazeSolver`)で経路を探索する。`Maze` は `Cell` 同士の接続をグラフとして保持する。
 
 <<<
 
@@ -124,7 +124,12 @@ include::diagrams/activity-diagram.puml[]
 == 補足事項
 
 === テスト方針の分離
-Issue #11/#18と同じ方針で、Canvas描画・アニメーション自体は自動テストが困難なため、`MazeGenerator` と各 `MazeSolver` はJavaFXに依存しない純粋なロジックとしてTDDし、GUI(`MazeVisualizerApp`)は実装後に実機起動・スクリーンショットで手動確認した。
+Issue #11/#18と同じ方針で、Canvas描画・アニメーション自体は自動テストが困難なため、`MazeGenerator` と各 `MazeSolver` はJavaFXに依存しない純粋なロジックとしてTDDし、GUI(`MazeVisualizerApp`)は実装後に実機起動・スクリーンショットで手動確認した。この判断はIssue #85で別途追跡している。
+
+=== アルゴリズム選択・アニメーション状態の切り出し
+当初「アルゴリズムに応じたソルバーの選択」「アニメーション実行中に迷路を再生成しても安全に停止・リセットされること」(UC-2〜4)が `MazeVisualizerApp` に直接実装されており、`Timeline`/`Canvas` に依存するためテストで検証できていなかった。特にUC-4(アニメーション中の再生成)は実行中タイマーの停止と状態リセットという非自明な挙動で、退行しても検出できない状態だった。
+
+この状態遷移を `MazeVisualizerState` として切り出すことで、`Timeline`/`Canvas`/`ComboBox` に依存せずUC-2〜4をTDDで検証できるようにした。11_HouseholdBudgetGuiの `BudgetTableModel`、18_TextEditorSwingの `EditorDocument` 分離と同じ考え方を踏襲している。
 
 === 接続グラフとしての迷路表現
 迷路は `Map<Cell, Set<Cell>>` で「通路として繋がっているマス」を表現している(壁の2次元配列ではなく接続グラフとして持つことで、生成・探索の両方をシンプルなグラフアルゴリズムとして実装できる)。
@@ -145,4 +150,5 @@ Issue #11/#18と同じ方針で、Canvas描画・アニメーション自体は�
 Red → Green → Refactor サイクルで実装した。
 
 * *単体テスト*: `MazeGenerator` の同一seedでの再現性、各 `MazeSolver` の経路探索(手動迷路)・到達不可能ケースを検証
-* *手動確認*: `MazeVisualizerApp` のウィンドウ表示・迷路生成・探索アニメーション表示を実機で確認(ソフトウェアレンダリングでスクリーンショット取得)
+* *単体テスト*(`MazeVisualizerStateTest`): アルゴリズム名から対応するソルバーが選択されること・未知の名前で例外を送出すること、`startAnimation`が経路を返しアニメーション実行中状態になること、`generateMaze`がアニメーション中でも実行中状態をリセットすること(UC-4の核心)を検証
+* *手動確認*: `MazeVisualizerApp` のウィンドウ表示・Canvas描画・探索アニメーション表示を実機で確認(ソフトウェアレンダリングでスクリーンショット取得)

@@ -38,11 +38,9 @@ class Main {
 }
 
 class MazeVisualizerApp extends Application {
-  -generator: MazeGenerator
-  -solvers: Map<String, MazeSolver>
+  -state: MazeVisualizerState
   -canvas: Canvas
   -algorithmBox: ComboBox<String>
-  -maze: Maze
   -animation: Timeline
   +start(stage: Stage): void
   -generateMaze(): void
@@ -50,10 +48,24 @@ class MazeVisualizerApp extends Application {
   -drawMaze(): void
 }
 
+class MazeVisualizerState {
+  -generator: MazeGenerator
+  -solvers: Map<String, MazeSolver>
+  -maze: Maze
+  -animating: boolean
+  +MazeVisualizerState(generator: MazeGenerator, solvers: Map<String, MazeSolver>)
+  +generateMaze(width: int, height: int, seed: long): Maze
+  +currentMaze(): Maze
+  +isAnimating(): boolean
+  +solverFor(algorithmName: String): MazeSolver
+  +startAnimation(algorithmName: String): List<Cell>
+}
+
 Main ..> MazeVisualizerApp : Application.launchで起動する
-MazeVisualizerApp "1" --> "1" MazeGenerator : 利用する
-MazeVisualizerApp "1" --> "*" MazeSolver : アルゴリズムを切り替えて利用する
-MazeVisualizerApp "1" --> "1" Maze : 現在の迷路として保持する
+MazeVisualizerApp "1" --> "1" MazeVisualizerState : 状態遷移を委譲する
+MazeVisualizerState "1" --> "1" MazeGenerator : 利用する
+MazeVisualizerState "1" --> "*" MazeSolver : アルゴリズムを切り替えて利用する
+MazeVisualizerState "1" --> "1" Maze : 現在の迷路として保持する
 MazeGenerator ..> Maze : 生成する
 Maze "1" o-- "0..*" Cell : 通路として接続する
 
@@ -62,6 +74,16 @@ note right of MazeSolver
   再帰的バックトラック法で生成された迷路
   (全域木のため経路が一意)では
   探索順序は異なるが同じ経路を返す。
+end note
+
+note right of MazeVisualizerState
+  アルゴリズム選択とアニメーション実行中状態を
+  MazeVisualizerAppから切り出したクラス。
+  Timeline/Canvas等のJavaFX描画要素に依存しないため、
+  GUIを起動せずに単体テストできる。
+  generateMaze()は実行中のアニメーションが
+  あってもanimatingをfalseにリセットする
+  (再生成でアニメーションが必ず止まる保証)。
 end note
 
 note bottom of MazeVisualizerApp
