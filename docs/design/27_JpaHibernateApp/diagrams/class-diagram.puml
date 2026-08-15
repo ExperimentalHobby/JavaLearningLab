@@ -1,0 +1,49 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 27_JpaHibernateApp クラス図
+
+class Main {
+  +main(args: String[]): void
+  ~run(scanner: Scanner, out: PrintStream, repository: ProductRepository): void
+}
+
+class ProductRepository {
+  -entityManager: EntityManager
+  +ProductRepository(entityManager: EntityManager)
+  +save(product: Product): Product
+  +findById(id: Long): Optional<Product>
+  +findAll(): List<Product>
+  +update(product: Product): Product
+  +deleteById(id: Long): boolean
+}
+
+class Product << Entity >> {
+  -id: Long
+  -name: String
+  -price: int
+  -stock: int
+  #Product()
+  +Product(name: String, price: int, stock: int)
+}
+
+interface EntityManager << jakarta.persistence >>
+
+Main "1" --> "1" ProductRepository : 利用する
+ProductRepository "1" --> "1" EntityManager : コンストラクタ注入で利用する
+ProductRepository ..> Product : 生成・更新・削除する
+
+note right of Product
+  @Entity/@Table/@Id/@GeneratedValue/@Columnを
+  フィールドに直接付与するアノテーションベースの
+  マッピング。JPA仕様上、引数無しコンストラクタ
+  (protected)が必須。
+end note
+
+note bottom of ProductRepository
+  save/update/deleteByIdでは明示的にトランザクションを
+  開始・コミットする(persistence.xmlのRESOURCE_LOCALのため
+  コンテナ管理トランザクションではなく手動管理が必要)。
+end note
+
+@enduml

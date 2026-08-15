@@ -1,0 +1,44 @@
+@startuml sequence-error
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: タイムアウト・失敗の個別処理
+
+actor 利用者
+participant "並行処理デモREPL" as App
+participant "PriceComparisonService" as Service
+participant "ShopB(タイムアウト)" as ShopB
+participant "ShopC(失敗)" as ShopC
+
+利用者 -> App : compare <商品名>
+activate App
+App -> Service : 全店舗へ並行して価格を問い合わせる
+activate Service
+
+par ShopBへの問い合わせ
+  Service -> ShopB : supplyAsyncで価格取得を依頼する
+  activate ShopB
+  Service -> Service : orTimeoutで応答時間を監視する
+  Service -> Service : タイムアウトを検知しexceptionallyでTIMEOUT状態に変換する
+  deactivate ShopB
+else ShopCへの問い合わせ
+  Service -> ShopC : supplyAsyncで価格取得を依頼する
+  activate ShopC
+  ShopC --> Service : ShopUnavailableExceptionを送出する
+  deactivate ShopC
+  Service -> Service : exceptionallyでFAILED状態に変換する
+end
+
+Service -> Service : allOfで全店舗の完了を待ち合わせる(1店舗の失敗は全体に波及しない)
+Service --> App : 見積もり一覧(TIMEOUT/FAILEDを含む)を返す
+deactivate Service
+App --> 利用者 : 「タイムアウト」「取得失敗」を含む結果一覧を表示する
+deactivate App
+
+note over Service
+  全店舗がFAILED/TIMEOUTの場合、cheapestOf()は
+  空のOptionalを返す。findCheapestAsync()を使う場合は
+  NoAvailablePriceExceptionがスローされ、join()経由では
+  CompletionExceptionでラップされる。
+end note
+
+@enduml

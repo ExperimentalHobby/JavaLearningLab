@@ -1,0 +1,51 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 28_LoggingTool クラス図
+
+class Main {
+  +main(args: String[]): void
+  ~run(scanner: Scanner, out: PrintStream, jobRunner: BatchJobRunner, levelController: LogLevelController): void
+}
+
+class BatchJobRunner {
+  -logger: Logger
+  +run(jobNames: List<String>): BatchResult
+}
+
+class BatchResult << record >> {
+  +succeeded: int
+  +failed: int
+  +skipped: int
+}
+
+class JobExecutionException extends RuntimeException {
+  +JobExecutionException(jobName: String)
+}
+
+class LogLevelController {
+  +setLevel(loggerName: String, level: Level): void
+  +getLevel(loggerName: String): Level
+}
+
+Main "1" --> "1" BatchJobRunner : 利用する
+Main "1" --> "1" LogLevelController : 利用する
+BatchJobRunner ..> BatchResult : 生成する
+BatchJobRunner ..> JobExecutionException : throwする(ログにのみ記録)
+LogLevelController ..> "ch.qos.logback.classic.Logger" : キャストして操作する
+
+note right of BatchJobRunner
+  SLF4Jの Logger のみに依存する。
+  開始/完了はINFO、処理経過はDEBUG、
+  空文字ジョブのスキップはWARN、
+  FAIL_始まりのジョブ失敗は例外情報付きでERROR。
+end note
+
+note right of LogLevelController
+  SLF4Jではなくch.qos.logback.classic.Logger/Levelを
+  直接扱う。SLF4Jのファサードだけでは実行時の
+  ログレベル変更ができないため、Logback固有の
+  機能をあえて切り出している。
+end note
+
+@enduml

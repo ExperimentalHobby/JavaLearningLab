@@ -1,0 +1,35 @@
+@startuml activity-diagram
+skinparam defaultFontName VL Gothic
+
+title アクティビティ図: 対話ループ全体の流れ
+
+start
+:操作方法を案内する;
+while (次の入力行があるか?) is (ある)
+  :1行分の入力を受け取る;
+  if (空行か?) then (yes)
+  elseif (終了コマンドか?) then (yes)
+    break
+  elseif (runコマンドか?) then (yes)
+    :カンマ区切りのジョブ名一覧に分割する;
+    partition "各ジョブについて" {
+      if (ジョブ名が空か?) then (yes)
+        :WARNでスキップを記録する;
+      elseif (FAIL_で始まるか?) then (yes)
+        :ERRORで失敗を記録する;
+      else (no)
+        :成功として扱う;
+      endif
+    }
+    :成功/失敗/スキップの件数サマリーを表示する;
+  elseif (levelコマンドか?) then (yes)
+    :指定ロガーのログレベルを変更する;
+    :変更結果を表示する;
+  else (no)
+    :「不明なコマンドです」と表示する;
+  endif
+endwhile (ない)
+:終了する;
+stop
+
+@enduml

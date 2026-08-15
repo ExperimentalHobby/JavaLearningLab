@@ -1,0 +1,44 @@
+@startuml sequence-error
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: エラー処理(必須項目未入力・明細なしのbuild)
+
+actor 利用者
+participant "注文管理REPL" as App
+participant "Order.Builder" as Builder
+
+alt 顧客名または配送先住所が空の場合
+  利用者 -> App : start (空の顧客名)
+  activate App
+  App -> Builder : Builderを生成しようとする
+  activate Builder
+  Builder --> App : IllegalArgumentExceptionを送出する
+  deactivate Builder
+  App --> 利用者 : 「エラー: 顧客名は必須です」と表示する
+
+else Builder開始前にitem等を使った場合
+  利用者 -> App : item <商品名> <数量> <単価>
+  App --> 利用者 : 「エラー: 先にstartで注文を開始してください」と表示する
+
+else 明細が1件も無い状態でbuildした場合
+  利用者 -> App : start <顧客名> <配送先住所>
+  App -> Builder : Builderを生成する
+  activate Builder
+  Builder --> App : 生成したBuilderを返す
+  利用者 -> App : build (明細を追加していない)
+  App -> Builder : Orderを確定しようとする
+  Builder --> App : IllegalStateExceptionを送出する
+  App --> 利用者 : 「エラー: 商品が1件も追加されていません」と表示する
+  note right of App
+    例外を捕捉してもBuilderは
+    破棄されない(builder変数を
+    nullにしない)ため、入力途中の
+    内容を失わずに操作を継続できる。
+  end note
+end
+
+App -> App : 入力受付を継続する(アプリは終了しない)
+deactivate Builder
+deactivate App
+
+@enduml

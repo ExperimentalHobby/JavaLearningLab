@@ -1,0 +1,33 @@
+@startuml activity-diagram
+skinparam defaultFontName VL Gothic
+
+title アクティビティ図: 対話ループ全体の流れ
+
+start
+:操作方法を案内する;
+while (次の入力行があるか?) is (ある)
+  :1行分の入力を受け取る;
+  if (空行か?) then (yes)
+  elseif (終了コマンドか?) then (yes)
+    break
+  else (no)
+    if (addコマンドか?) then (yes)
+      :商品を新規登録する;
+    elseif (listコマンドか?) then (yes)
+      :全商品を取得し一覧表示する;
+    elseif (find/update/deleteコマンドか?) then (yes)
+      :IDを指定して商品を検索する;
+      if (該当商品が見つかったか?) then (yes)
+        :find/update/deleteに応じた処理を行う;
+      else (no)
+        :「該当する商品が見つかりません」と表示する;
+      endif
+    else (no)
+      :「不明なコマンドです」と表示する;
+    endif
+  endif
+endwhile (ない)
+:EntityManager/EntityManagerFactoryをクローズして終了する;
+stop
+
+@enduml

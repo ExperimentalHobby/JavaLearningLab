@@ -1,0 +1,63 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 26_BuilderPatternOrderApp クラス図
+
+class Main {
+  +main(args: String[]): void
+  ~run(scanner: Scanner, out: PrintStream): void
+}
+
+class "Order.Builder" as Builder {
+  -customerName: String
+  -shippingAddress: String
+  -items: List<OrderItem>
+  -paymentMethod: String
+  -giftWrapping: boolean
+  -note: String
+  +Builder(customerName: String, shippingAddress: String)
+  +addItem(productName: String, quantity: int, unitPrice: int): Builder
+  +paymentMethod(paymentMethod: String): Builder
+  +giftWrap(giftWrapping: boolean): Builder
+  +note(note: String): Builder
+  +build(): Order
+}
+
+class Order {
+  -customerName: String
+  -shippingAddress: String
+  -items: List<OrderItem>
+  -paymentMethod: String
+  -giftWrapping: boolean
+  -note: String
+  +totalAmount(): int
+  +toSummary(): String
+}
+
+class OrderItem << record >> {
+  +productName: String
+  +quantity: int
+  +unitPrice: int
+  +subtotal(): int
+}
+
+Main "1" --> "1" Builder : 利用する
+Builder "1" *-- "0..*" OrderItem : 明細を蓄積する
+Builder ..> Order : build()で生成する
+Order "1" *-- "0..*" OrderItem : 確定した明細を保持する(不変)
+
+note right of Builder
+  顧客名・配送先住所は必須項目として
+  コンストラクタで受け取り、空ならその場で
+  IllegalArgumentExceptionを送出する。
+  支払方法/ギフトラッピング/メモは
+  未指定時の既定値をフィールド初期値として持つ。
+end note
+
+note bottom of Order
+  Orderは不変オブジェクト。生成は必ず
+  Order.Builder経由に限定し、items()は
+  List.copyOf()による不変リストを返す。
+end note
+
+@enduml

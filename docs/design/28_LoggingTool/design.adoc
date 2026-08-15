@@ -1,0 +1,151 @@
+= 28_LoggingTool 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-08-15
+:toc: left
+:toclevels: 2
+:sectnums:
+:pagenums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+NOTE: UML図は `diagrams/` 配下の `.puml` ファイルを https://asciidoctor.org/docs/asciidoctor-diagram/[asciidoctor-diagram] 経由でPlantUMLとして埋め込んでいる。拡張未導入の環境では、各 `.puml` を直接 https://www.plantuml.com/plantuml[PlantUMLオンラインサーバー] 等に読み込ませても図を確認できる。PDF化する場合は同フォルダの `generate-pdf.ps1` を実行する(`docs/design/fonts/`・`docs/design/themes/` の日本語フォント・テーマを用いて文字化けを回避している。詳細は `docs/design/README.md` を参照)。
+
+<<<
+
+== 概要
+
+=== 目的
+SLF4Jの薄いAPIとLogback実装固有のログレベル管理機能を対比しながら体験するコンソールアプリを提供する。19_LogAnalyzerRegex(既存ログファイルのテキスト解析)とは逆に、アプリ自身が設計に沿ってログを出力し、そのレベルを実行時に制御する側に焦点を当てる(ロギング設計・ログレベル管理)。
+
+=== 主な機能
+* `run <job1,job2,...>` によるカンマ区切りジョブ名のバッチ処理と、成功/失敗/スキップ件数のサマリー表示
+* `level <ロガー名> <LEVEL>` による指定ロガーのログレベルの実行時変更
+* `exit` によるアプリ終了
+
+=== 開発環境
+[cols="1,3", options="header"]
+|===
+| 項目 | 内容
+
+| 言語
+| Java 25
+
+| ビルドツール
+| Maven(フォルダ単位で独立した `pom.xml`)
+
+| テスト
+| JUnit 5(`junit-jupiter` 5.11.3)
+
+| ロギング
+| SLF4J(ファサードAPI) + Logback(`logback-classic` 1.5.37、実装固有のログレベル管理)
+|===
+
+=== 実行方法
+[source,powershell]
+----
+cd 28_LoggingTool
+.\mvnw.cmd compile
+.\mvnw.cmd test
+.\mvnw.cmd exec:java "-Dexec.mainClass=com.javalab.loggingtool.Main"
+----
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/28[Issue #28] / https://github.com/ExperimentalHobby/JavaLearningLab/pull/63[PR #63]
+
+<<<
+
+== ユースケース
+
+[cols="1,3,4", options="header"]
+|===
+| ID | ユースケース | 概要
+
+| UC-1
+| ジョブをバッチ処理する
+| `run <job1,job2,...>` を入力し、カンマ区切りのジョブ名を順に処理する
+
+| UC-2
+| 空ジョブ名をスキップする
+| 空文字のジョブ名はWARNログを記録し、スキップ件数に加算する
+
+| UC-3
+| ジョブ失敗を記録する
+| `FAIL_`で始まるジョブ名は例外情報付きでERRORログを記録し、失敗件数に加算する
+
+| UC-4
+| 処理結果のサマリーを表示する
+| バッチ処理完了後、成功/失敗/スキップの件数を表示する
+
+| UC-5
+| ログレベルを変更する
+| `level <ロガー名> <LEVEL>` を入力し、指定ロガーのログレベルを実行時に変更する
+
+| UC-6
+| 不明なコマンド時にエラーを表示する
+| `run`/`level`/`exit`以外のコマンドを入力した場合、エラーメッセージを表示する
+
+| UC-7
+| アプリを終了する
+| `exit` を入力し、対話ループを終了する
+|===
+
+<<<
+
+== シーケンス図
+
+=== バッチジョブ処理(成功・スキップ・失敗の混在)
+[plantuml, sequence-run, svg]
+----
+include::diagrams/sequence-run.puml[]
+----
+
+=== ログレベルの実行時変更
+[plantuml, sequence-level, svg]
+----
+include::diagrams/sequence-level.puml[]
+----
+
+<<<
+
+== クラス図
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+`Main` は `BatchJobRunner` と `LogLevelController` の両方を利用する。`BatchJobRunner` はSLF4Jの`Logger`のみに依存しログレベルの使い分けを実践し、`LogLevelController` はLogback実装固有の`Logger`/`Level`を直接扱うことで両者の役割の違いを明示している。
+
+<<<
+
+== アクティビティ図
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+<<<
+
+== 補足事項
+
+=== ログレベルの使い分け
+`BatchJobRunner`はSLF4Jの`Logger`のみに依存し、ログレベルの使い分けを実践した: 開始/完了は`INFO`、各ジョブの処理経過は`DEBUG`、空文字ジョブのスキップは`WARN`、`FAIL_`始まりのジョブ失敗は例外情報付きで`ERROR`。
+
+=== SLF4JとLogbackの役割の違い
+`LogLevelController`はSLF4Jではなく`ch.qos.logback.classic.Logger`/`Level`を直接扱う。SLF4JのAPIだけでは実行時のログレベル変更ができない(ファサードとしてバインディングの詳細を隠しているため)ことを踏まえ、Logback固有の機能をあえて切り出すことで両者の役割の違いを明示した。
+
+=== getLevel()とgetEffectiveLevel()の違い
+`Logger.getLevel()`は「そのロガー自身に明示設定された」レベルのみを返し、親から継承した実効レベルは含まない(継承分は`getEffectiveLevel()`が担う)。この違いを`LogLevelControllerTest`で明示的に検証した。
+
+=== ログ出力構成
+`logback.xml`はコンソールAppenderと日次ローリングのファイルAppender(`logs/app.log`)を併用する構成にした。`logs/`はビルド成果物と同様に`.gitignore`対象に追加した。
+
+=== テスト方針(TDD)
+Red → Green → Refactor サイクルで実装した。テストは全てLogback標準の`ListAppender`を実際のLoggerに取り付けて実ログイベントを検証しており、モックは使用していない(他の学習フォルダと同じ「実リソースで確認する」方針を踏襲)。
+
+* *単体テスト*(`BatchJobRunnerTest` / `LogLevelControllerTest`): ジョブ処理の成功/スキップ/失敗ログの出力内容、ログレベルの設定・取得(`getLevel`と`getEffectiveLevel`の違い含む)を検証
+* *結合テスト*(`MainTest`): `run`/`level`コマンドの結果表示、不明なコマンド入力時にエラー表示してループを継続する動作を検証
