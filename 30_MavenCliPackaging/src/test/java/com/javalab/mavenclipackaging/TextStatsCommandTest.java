@@ -83,4 +83,19 @@ class TextStatsCommandTest {
         // ${project.version}(1.0-SNAPSHOT)へ置換されてビルドされる。
         assertTrue(out.toString().contains("1.0-SNAPSHOT"));
     }
+
+    @Test
+    void executePrintsUsageForHelpOption() {
+        CommandLine cmd = new CommandLine(new TextStatsCommand());
+        StringWriter out = new StringWriter();
+        cmd.setOut(new PrintWriter(out));
+
+        int exitCode = cmd.execute("--help");
+
+        assertEquals(0, exitCode);
+        String result = out.toString();
+        assertTrue(result.contains("Usage: textstat"));
+        assertTrue(result.contains("--format"));
+        assertTrue(result.contains("出力形式"));
+    }
 }
