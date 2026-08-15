@@ -38,7 +38,7 @@ Java学習用のアプリ・技術トピックを30個作成するプロジェ�
 - [x] [27_JpaHibernateApp](27_JpaHibernateApp/README.md) - 簡易ORM/DB操作アプリ(JPA/Hibernate)
 - [x] [28_LoggingTool](28_LoggingTool/README.md) - ログ収集&解析ツール(SLF4J+Logback)
 - [x] [29_CompletableFutureDemo](29_CompletableFutureDemo/README.md) - 並行処理デモ(CompletableFuture)
-- [ ] [30_MavenCliPackaging](30_MavenCliPackaging/README.md) - CLIパッケージ化&配布(Mavenプロジェクト)
+- [x] [30_MavenCliPackaging](30_MavenCliPackaging/README.md) - CLIパッケージ化&配布(Mavenプロジェクト)
 
 ## フォルダ構成
 各フォルダは独立したMaven/Gradleプロジェクトとして管理します(必要に応じてpom.xml/build.gradleを配置)。
