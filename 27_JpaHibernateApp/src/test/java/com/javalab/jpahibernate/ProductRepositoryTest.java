@@ -14,6 +14,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * {@link ProductRepository} のJPA/HibernateによるCRUD操作を検証するテスト。
+ * モックは使わず、実際に起動したH2インメモリDBに対してEntityManager経由でSQLを発行する。
+ * テストごとに{@code @BeforeEach}で新しい{@link EntityManagerFactory}を生成することで、
+ * DBの状態がテスト間で持ち越されないようにしている。
+ */
 class ProductRepositoryTest {
 
     private EntityManagerFactory entityManagerFactory;

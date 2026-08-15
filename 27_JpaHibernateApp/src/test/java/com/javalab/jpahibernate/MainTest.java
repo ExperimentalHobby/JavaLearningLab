@@ -14,6 +14,9 @@ import java.util.Scanner;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * {@link Main#run(Scanner, PrintStream, ProductRepository)} のREPLループを結合テストするクラス。
+ */
 class MainTest {
 
     private EntityManagerFactory entityManagerFactory;
