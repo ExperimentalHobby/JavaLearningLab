@@ -9,6 +9,12 @@ import java.util.Scanner;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * {@link Main#run(Scanner, PrintStream)} のREPLループを結合テストするクラス。
+ * {@link OrderNotificationServiceTest}とは対照的に、{@link EmailSender}はモックせず
+ * 実際の{@link ConsoleEmailSender}を使い、標準出力への出力内容をそのまま検証する
+ * (実オブジェクトによる統合テストの例)。
+ */
 class MainTest {
 
     @Test
