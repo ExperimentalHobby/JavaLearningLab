@@ -13,6 +13,9 @@ public class AStarMazeSolver implements MazeSolver {
 
     @Override
     public List<Cell> solve(Maze maze) {
+        // A*はBFSの「これまでのコスト」に加え、ゴールまでの推定距離(ヒューリスティック)を
+        // 優先度に組み込むことで、ゴール方向を優先的に探索し無駄な探索を減らす。
+        // ヒューリスティックが実際の距離を過大評価しない限り、最短経路が保証される。
         Cell goal = maze.goal();
         Map<Cell, Cell> cameFrom = new HashMap<>();
         Map<Cell, Integer> costSoFar = new HashMap<>();

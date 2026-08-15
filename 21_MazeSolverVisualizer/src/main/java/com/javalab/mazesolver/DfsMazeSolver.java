@@ -16,6 +16,8 @@ public class DfsMazeSolver implements MazeSolver {
 
     @Override
     public List<Cell> solve(Maze maze) {
+        // DFSはLIFOスタックを使い、行けるところまで一方向に深く進んでから引き返す。
+        // BFSと異なり見つかる経路は最短とは限らないが、メモリ効率がよく実装もシンプルになる。
         Set<Cell> visited = new HashSet<>();
         Map<Cell, Cell> cameFrom = new HashMap<>();
         Deque<Cell> stack = new ArrayDeque<>();

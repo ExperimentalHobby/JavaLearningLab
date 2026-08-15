@@ -6,6 +6,12 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * {@link BfsMazeSolver} の経路探索を検証するテスト。
+ * 一直線につながった単純な迷路(a-b-c)を使い、経路発見と到達不能時の挙動を確認する。
+ * BFS/DFS/A*の3クラスとも同一構造の迷路でテストしており、
+ * アルゴリズムが違っても同じ入出力仕様({@link MazeSolver}インターフェース)を満たすことを示している。
+ */
 class BfsMazeSolverTest {
 
     private final BfsMazeSolver solver = new BfsMazeSolver();
