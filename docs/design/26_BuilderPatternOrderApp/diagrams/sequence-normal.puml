@@ -1,0 +1,43 @@
+@startuml sequence-normal
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: 注文の組み立てから確定まで(正常系)
+
+actor 利用者
+participant "注文管理REPL" as App
+participant "Order.Builder" as Builder
+participant "Order" as Order
+
+利用者 -> App : start <顧客名> <配送先住所>
+activate App
+App -> Builder : Builderを生成する(顧客名, 配送先住所)
+activate Builder
+Builder --> App : 生成したBuilderを返す
+App --> 利用者 : 「注文を開始しました」と表示する
+
+利用者 -> App : item <商品名> <数量> <単価>
+App -> Builder : 商品明細を追加する
+App --> 利用者 : 「商品を追加しました」と表示する
+
+利用者 -> App : payment <方法>
+App -> Builder : 支払方法を設定する
+App --> 利用者 : 「支払方法を設定しました」と表示する
+
+利用者 -> App : wrap on
+App -> Builder : ギフトラッピングを設定する
+App --> 利用者 : 「ギフトラッピングを設定しました」と表示する
+
+利用者 -> App : build
+App -> Builder : これまでの内容からOrderを確定する
+Builder -> Order : 不変オブジェクトとして生成する
+activate Order
+Order --> Builder : 生成したOrderを返す
+deactivate Builder
+Builder --> App : 確定したOrderを返す
+App -> Order : サマリー文字列を組み立てる
+Order --> App : サマリーを返す
+deactivate Order
+App --> 利用者 : 注文サマリーを表示する
+deactivate App
+
+@enduml

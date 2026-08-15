@@ -15,7 +15,7 @@ base:
   border_radius: 4
   border_width: 0.5
   font_color: 333333
-  font_family: VL Gothic
+  font_family: Noto Sans JP
   font_size: 11pt
   font_style: normal
   line_height_length: 17.325
@@ -27,7 +27,7 @@ base:
 heading:
   text_align: left
   font_color: C0392B
-  font_family: VL Gothic
+  font_family: Noto Sans JP
   font_style: bold
   h1_font_size: 20pt
   h2_font_size: 16pt
@@ -46,7 +46,7 @@ title-page:
   align: center
   background-color: FFFFFF
   font-color: 000000
-  font-family: VL Gothic
+  font-family: Noto Sans JP
   font-size: 24pt
   font-weight: bold
   line-height: 1.15
@@ -56,7 +56,7 @@ title:
   align: center
   bottom: 0
   font-color: 000000
-  font-family: VL Gothic
+  font-family: Noto Sans JP
   font-size: 24pt
   font-weight: bold
   line-height: 1.15
@@ -64,7 +64,7 @@ title:
 
 subtitle:
   font-color: 666666
-  font-family: VL Gothic
+  font-family: Noto Sans JP
   font-size: 14pt
   font-style: normal
   font-weight: normal
@@ -76,7 +76,7 @@ toc:
   border-color: E0E0E0
   border-style: solid
   border-width: 1
-  font-family: VL Gothic
+  font-family: Noto Sans JP
   font-size: 10pt
   font-weight: normal
   line-height: 1.15
@@ -85,14 +85,14 @@ toc:
 
 toc-title:
   font-color: 000000
-  font-family: VL Gothic
+  font-family: Noto Sans JP
   font-size: 12pt
   font-weight: bold
   line-height: 1.15
   margin-bottom: 8pt
 
 paragraph:
-  font-family: VL Gothic
+  font-family: Noto Sans JP
   font-size: 11pt
   line-height: 1.15
   margin-bottom: 0
@@ -108,7 +108,7 @@ link:
   font-color: 0066CC
 
 list:
-  font-family: VL Gothic
+  font-family: Noto Sans JP
   font-size: 11pt
   line-height: 1.15
   margin-top: 0
@@ -135,12 +135,12 @@ table:
 
 codespan:
   font_color: 0066CC
-  font_family: VL Gothic
+  font_family: Noto Sans JP
   font_style: normal
 
 code:
   font_color: 333333
-  font_family: VL Gothic
+  font_family: Noto Sans JP
   font_size: 10pt
   padding: 5pt
   line_height: 1.25
@@ -153,7 +153,7 @@ footer:
   border_color: DDDDDD
   border_width: 0.25
   font_color: 666666
-  font_family: VL Gothic
+  font_family: Noto Sans JP
   font_size: 9pt
   height: 24pt
   line_height: 1
@@ -168,9 +168,9 @@ footer:
 
 font:
   catalog:
-    VL Gothic:
-      normal: VL-Gothic-Regular.ttf
-      bold: VL-Gothic-Regular.ttf
-      italic: VL-Gothic-Regular.ttf
-      bold_italic: VL-Gothic-Regular.ttf
-  fallbacks: [VL Gothic]
+    Noto Sans JP:
+      normal: NotoSansJP-Regular.ttf
+      bold: NotoSansJP-Black.ttf
+      italic: NotoSansJP-Regular.ttf
+      bold_italic: NotoSansJP-Black.ttf
+  fallbacks: [Noto Sans JP]

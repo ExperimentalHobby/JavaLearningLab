@@ -1,0 +1,35 @@
+@startuml sequence-run
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: バッチジョブ処理(成功・スキップ・失敗の混在)
+
+actor 利用者
+participant "ログ収集&解析ツール" as App
+participant "BatchJobRunner" as Runner
+participant "SLF4J Logger" as Log
+
+利用者 -> App : run job1,,FAIL_job2
+activate App
+App -> Runner : ジョブ名一覧を渡して処理を依頼する
+activate Runner
+Runner -> Log : バッチ処理開始をINFOで記録する
+
+loop 各ジョブ名について
+  alt ジョブ名が空の場合
+    Runner -> Log : スキップをWARNで記録する
+  else FAIL_で始まる場合
+    Runner -> Log : ジョブ処理開始をDEBUGで記録する
+    Runner -> Log : 失敗を例外情報付きでERRORで記録する
+  else 通常のジョブ名の場合
+    Runner -> Log : ジョブ処理開始をDEBUGで記録する
+    Runner -> Runner : 成功件数を加算する
+  end
+end
+
+Runner -> Log : バッチ処理完了(成功/失敗/スキップ件数)をINFOで記録する
+Runner --> App : 件数集計(BatchResult)を返す
+deactivate Runner
+App --> 利用者 : 「成功=... 失敗=... スキップ=...」と表示する
+deactivate App
+
+@enduml

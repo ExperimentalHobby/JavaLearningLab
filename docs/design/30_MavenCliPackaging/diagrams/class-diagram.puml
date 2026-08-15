@@ -1,0 +1,50 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 30_MavenCliPackaging クラス図
+
+class Main {
+  +main(args: String[]): void
+}
+
+class TextStatsCommand << Command >> {
+  -file: Path
+  -format: String
+  -spec: CommandSpec
+  -calculator: TextStatisticsCalculator
+  +call(): Integer
+}
+
+class TextStatisticsCalculator {
+  +calculate(content: String): TextStatistics
+}
+
+class TextStatistics << record >> {
+  +lines: int
+  +words: int
+  +chars: int
+}
+
+class AppVersionProvider << IVersionProvider >> {
+  +getVersion(): String[]
+}
+
+Main "1" --> "1" TextStatsCommand : CommandLineに包んで実行する
+TextStatsCommand "1" --> "1" TextStatisticsCalculator : 利用する
+TextStatsCommand ..> TextStatistics : 取得する
+TextStatsCommand ..> AppVersionProvider : @CommandのversionProviderとして参照する
+
+note right of TextStatsCommand
+  --versionオプションはmixinStandardHelpOptions=trueと
+  versionProvider=AppVersionProvider.classの指定により
+  picocliが自動提供する(TextStatsCommand自身は
+  versionオプションを実装しない)。
+end note
+
+note right of AppVersionProvider
+  ビルド時にresource filteringで
+  ${project.version}へ置換されたapp.propertiesから
+  バージョン文字列を読み込む。
+end note
+
+@enduml

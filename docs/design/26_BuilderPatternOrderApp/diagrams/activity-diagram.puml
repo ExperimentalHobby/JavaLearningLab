@@ -1,0 +1,41 @@
+@startuml activity-diagram
+skinparam defaultFontName VL Gothic
+
+title アクティビティ図: 対話ループ全体の流れ
+
+start
+:操作方法を案内する;
+while (次の入力行があるか?) is (ある)
+  :1行分の入力を受け取る;
+  if (空行か?) then (yes)
+  elseif (終了コマンドか?) then (yes)
+    break
+  elseif (startコマンドか?) then (yes)
+    if (顧客名・配送先住所は空でないか?) then (yes)
+      :新しいBuilderを生成し保持する;
+    else (no)
+      :エラー内容を表示する(前のBuilderは変更しない);
+    endif
+  else (no)
+    if (Builderが開始済みか?) then (no)
+      :「先にstartで注文を開始してください」と表示する;
+    else (yes)
+      if (item/payment/wrap/noteコマンドか?) then (yes)
+        :Builderの内容を更新する;
+      elseif (buildコマンドか?) then (yes)
+        if (明細が1件以上あるか?) then (yes)
+          :Orderを確定しBuilderを破棄する;
+          :注文サマリーを表示する;
+        else (no)
+          :「商品が1件も追加されていません」と表示する(Builderは維持);
+        endif
+      else (no)
+        :「不明なコマンドです」と表示する;
+      endif
+    endif
+  endif
+endwhile (ない)
+:終了する;
+stop
+
+@enduml

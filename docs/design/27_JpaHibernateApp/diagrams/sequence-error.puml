@@ -1,0 +1,44 @@
+@startuml sequence-error
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: 更新・削除処理と該当商品なしエラー
+
+actor 利用者
+participant "簡易ORM/DB操作REPL" as App
+participant "商品リポジトリ" as Repo
+database "H2インメモリDB" as DB
+
+alt 更新対象が存在する場合
+  利用者 -> App : update <id> <価格> <在庫数>
+  activate App
+  App -> Repo : IDを指定して商品を取得する
+  activate Repo
+  Repo -> DB : SELECT(主キー検索)する
+  DB --> Repo : 該当商品を返す
+  Repo --> App : 商品を返す
+  App -> App : 価格・在庫数を書き換える
+  App -> Repo : 商品を更新する
+  Repo -> DB : トランザクションを開始しUPDATEする
+  Repo --> App : 更新後の商品を返す
+  deactivate Repo
+  App --> 利用者 : 「更新しました: id=...」と表示する
+
+else 更新・削除対象が存在しない場合
+  利用者 -> App : delete <存在しないid>
+  App -> Repo : IDを指定して商品を削除する
+  activate Repo
+  Repo -> DB : SELECT(主キー検索)する
+  DB --> Repo : 該当なし(null)を返す
+  Repo --> App : falseを返す
+  deactivate Repo
+  App --> 利用者 : 「該当する商品が見つかりません: id=...」と表示する
+
+else 不明なコマンドの場合
+  利用者 -> App : 不明なコマンド
+  App --> 利用者 : 「不明なコマンドです」と表示する
+end
+
+App -> App : 入力受付を継続する(アプリは終了しない)
+deactivate App
+
+@enduml

@@ -1,0 +1,31 @@
+@startuml sequence-version
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: バージョン表示(--version)
+
+actor "利用者(OSシェル)" as 利用者
+participant "java -jar 実行" as Main
+participant "picocli CommandLine" as CmdLine
+participant "AppVersionProvider" as Provider
+
+利用者 -> Main : java -jar textstat.jar --version
+activate Main
+Main -> CmdLine : 引数を渡して実行する(execute)
+activate CmdLine
+CmdLine -> CmdLine : --versionオプションを検出する(mixinStandardHelpOptions)
+CmdLine -> Provider : バージョン文字列を要求する(getVersion)
+activate Provider
+Provider -> Provider : app.propertiesを読み込む
+note right
+  ビルド時にresource filteringで
+  pom.xmlの<version>(1.0-SNAPSHOT)へ
+  置換されたapp.propertiesを読み込む。
+end note
+Provider --> CmdLine : バージョン文字列を返す
+deactivate Provider
+CmdLine --> Main : バージョン文字列を標準出力へ書き込み、終了コード0を返す
+deactivate CmdLine
+Main -> Main : System.exit(0)
+deactivate Main
+
+@enduml

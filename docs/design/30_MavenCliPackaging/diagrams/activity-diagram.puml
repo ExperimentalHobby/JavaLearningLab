@@ -1,0 +1,32 @@
+@startuml activity-diagram
+skinparam defaultFontName VL Gothic
+
+title アクティビティ図: CLIコマンド1回分の実行フロー
+
+start
+:java -jar textstat.jar でJVMを起動する;
+:picocliが引数をパースする;
+if (--versionが指定されたか?) then (yes)
+  :app.propertiesからバージョンを読み込み表示する;
+elseif (--helpが指定されたか?) then (yes)
+  :ヘルプを表示する;
+else (no)
+  if (指定ファイルが存在するか?) then (yes)
+    :ファイル内容を読み込む;
+    :行数・単語数・文字数を計算する;
+    if (--format json が指定されたか?) then (yes)
+      :JSON形式で整形する;
+    else (no)
+      :text形式で整形する;
+    endif
+    :標準出力に結果を表示する;
+    :終了コード0を設定する;
+  else (no)
+    :「ファイルが見つかりません」を標準エラーに表示する;
+    :終了コード1を設定する;
+  endif
+endif
+:System.exit(終了コード)でJVMを終了する;
+stop
+
+@enduml

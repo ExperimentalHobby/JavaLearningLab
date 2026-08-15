@@ -1,0 +1,146 @@
+= 29_CompletableFutureDemo 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-08-15
+:toc: left
+:toclevels: 2
+:sectnums:
+:pagenums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+NOTE: UML図は `diagrams/` 配下の `.puml` ファイルを https://asciidoctor.org/docs/asciidoctor-diagram/[asciidoctor-diagram] 経由でPlantUMLとして埋め込んでいる。拡張未導入の環境では、各 `.puml` を直接 https://www.plantuml.com/plantuml[PlantUMLオンラインサーバー] 等に読み込ませても図を確認できる。PDF化する場合は同フォルダの `generate-pdf.ps1` を実行する(`docs/design/fonts/`・`docs/design/themes/` の日本語フォント・テーマを用いて文字化けを回避している。詳細は `docs/design/README.md` を参照)。
+
+<<<
+
+== 概要
+
+=== 目的
+複数店舗へ並行して価格問い合わせを行い、結果を集約する価格比較コンソールアプリを提供する。`supplyAsync`・`orTimeout`・`exceptionally`・`allOf`・`thenApply`という主要なCompletableFuture APIを一通り実践し、非同期処理チェーンとFuture/CompletableFutureの活用を学ぶことを目的とする。
+
+=== 主な機能
+* `compare <商品名>` による固定3店舗(正常応答/タイムアウト/失敗をそれぞれ含む構成)への並行問い合わせと、各店舗の結果一覧・最安値の表示
+* `exit` によるアプリ終了
+
+=== 開発環境
+[cols="1,3", options="header"]
+|===
+| 項目 | 内容
+
+| 言語
+| Java 25
+
+| ビルドツール
+| Maven(フォルダ単位で独立した `pom.xml`)
+
+| テスト
+| JUnit 5(`junit-jupiter` 5.11.3)
+
+| 並行処理API
+| `java.util.concurrent.CompletableFuture`(`supplyAsync`/`orTimeout`/`exceptionally`/`allOf`/`thenApply`)
+|===
+
+=== 実行方法
+[source,powershell]
+----
+cd 29_CompletableFutureDemo
+.\mvnw.cmd compile
+.\mvnw.cmd test
+.\mvnw.cmd exec:java "-Dexec.mainClass=com.javalab.completablefuturedemo.Main"
+----
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/29[Issue #29] / https://github.com/ExperimentalHobby/JavaLearningLab/pull/64[PR #64]
+
+<<<
+
+== ユースケース
+
+[cols="1,3,4", options="header"]
+|===
+| ID | ユースケース | 概要
+
+| UC-1
+| 複数店舗へ並行して価格を問い合わせる
+| `compare <商品名>` を入力し、固定3店舗へ並行して価格問い合わせを行う
+
+| UC-2
+| 各店舗の結果一覧を表示する
+| 正常取得・失敗・タイムアウトを含む全店舗の結果を一覧表示する
+
+| UC-3
+| 最安値を表示する
+| 正常取得できた見積もりの中から最安値を表示する
+
+| UC-4
+| 入手可能な価格が無い場合にメッセージを表示する
+| 全店舗が失敗・タイムアウトだった場合、その旨のメッセージを表示する
+
+| UC-5
+| 不明なコマンド時にエラーを表示する
+| `compare`/`exit`以外のコマンドを入力した場合、エラーメッセージを表示する
+
+| UC-6
+| アプリを終了する
+| `exit` を入力し、対話ループを終了する
+|===
+
+<<<
+
+== シーケンス図
+
+=== 複数店舗への並行価格問い合わせ(正常系)
+[plantuml, sequence-normal, svg]
+----
+include::diagrams/sequence-normal.puml[]
+----
+
+=== タイムアウト・失敗の個別処理
+[plantuml, sequence-error, svg]
+----
+include::diagrams/sequence-error.puml[]
+----
+
+<<<
+
+== クラス図
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+`Main` は `PriceComparisonService` に価格比較を委譲する。`PriceComparisonService` は各 `ShopPriceFetcher` を `CompletableFuture.supplyAsync` で並行実行し、`orTimeout`/`exceptionally` により1店舗の失敗・タイムアウトが全体に波及しないよう `PriceQuote` の状態(`OK`/`FAILED`/`TIMEOUT`)に変換する。
+
+<<<
+
+== アクティビティ図
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+<<<
+
+== 補足事項
+
+=== 1店舗の失敗を全体に波及させない設計
+`PriceComparisonService.compareAsync`は各店舗の問い合わせを`CompletableFuture.supplyAsync`で並行実行し、`orTimeout`でタイムアウトを検出、`exceptionally`で失敗・タイムアウトを`PriceQuote`の`FAILED`/`TIMEOUT`状態に変換することで、1店舗の失敗が全体の失敗に波及しないようにした。最後に`allOf`で全完了を待ち合わせ`thenApply`で結果一覧に集約している。
+
+=== 二重実行を避けるための純粋関数への切り出し
+`findCheapestAsync`は`compareAsync().thenApply(...)`で素直にチェーンできる設計にした。ただし`Main`のREPLでは、見積もり一覧の表示と最安値表示の両方が必要なため`findCheapestAsync`を再度呼ぶと問い合わせが二重実行されてしまう。そこで最安値選定ロジックを`cheapestOf(List<PriceQuote>)`として純粋関数に切り出し、`compareAsync`の結果に対して同期的に適用することで二重実行を避けた。
+
+=== 並行実行の効果の実測検証
+並行実行の効果は`PriceComparisonServiceTest`で実測時間により検証している(3店舗×200ms遅延でも合計500ms未満で完了することを確認し、逐次実行(600ms以上)との違いを示した)。実際のスレッドで待機させており、モックやタイマー操作は使用していない。
+
+=== CompletionExceptionのラップ
+`join()`でラップされた例外は`CompletionException`でくるまれるため、`findCheapestAsync`の全滅ケースのテストでは`getCause()`から`NoAvailablePriceException`を検証している。
+
+=== テスト方針(TDD)
+Red → Green → Refactor サイクルで実装した。
+
+* *単体テスト*(`PriceComparisonServiceTest` / `SimulatedShopPriceFetcherTest`): 並行実行の所要時間、正常/失敗/タイムアウトの状態変換、`cheapestOf`の最安値選定、`findCheapestAsync`の全滅時の例外を検証
+* *結合テスト*(`MainTest`): `compare`コマンドの結果一覧・最安値表示、不明なコマンド入力時にエラー表示してループを継続する動作を検証

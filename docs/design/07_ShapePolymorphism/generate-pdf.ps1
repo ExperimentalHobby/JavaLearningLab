@@ -6,7 +6,7 @@
 #   - Ruby + asciidoctor-pdf
 #   - asciidoctor-diagram
 #   - PlantUML
-#   - VL-Gothic フォント (../fonts/VL-Gothic-Regular.ttf)
+#   - Noto Sans JP フォント (../fonts/NotoSansJP-Regular.ttf)
 
 # カレントディレクトリ確認
 Write-Host "現在のディレクトリ: $(Get-Location)"

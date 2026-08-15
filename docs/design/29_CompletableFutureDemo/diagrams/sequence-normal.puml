@@ -1,0 +1,40 @@
+@startuml sequence-normal
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: 複数店舗への並行価格問い合わせ(正常系)
+
+actor 利用者
+participant "並行処理デモREPL" as App
+participant "PriceComparisonService" as Service
+participant "ShopA" as ShopA
+participant "ShopB" as ShopB
+
+利用者 -> App : compare <商品名>
+activate App
+App -> Service : 全店舗へ並行して価格を問い合わせる
+activate Service
+
+par ShopAへの問い合わせ
+  Service -> ShopA : supplyAsyncで価格取得を依頼する
+  activate ShopA
+  ShopA --> Service : 価格を返す(OK)
+  deactivate ShopA
+else ShopBへの問い合わせ
+  Service -> ShopB : supplyAsyncで価格取得を依頼する
+  activate ShopB
+  ShopB --> Service : 価格を返す(OK)
+  deactivate ShopB
+end
+
+Service -> Service : allOfで全店舗の完了を待ち合わせる
+Service -> Service : thenApplyで見積もり一覧に集約する
+Service --> App : 見積もり一覧を返す
+deactivate Service
+App -> Service : 正常取得分から最安値を選ぶ(cheapestOf)
+activate Service
+Service --> App : 最安値の見積もりを返す
+deactivate Service
+App --> 利用者 : 各店舗の結果一覧と最安値を表示する
+deactivate App
+
+@enduml

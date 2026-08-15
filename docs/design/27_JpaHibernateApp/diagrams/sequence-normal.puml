@@ -1,0 +1,40 @@
+@startuml sequence-normal
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: 商品の登録・一覧・取得(正常系)
+
+actor 利用者
+participant "簡易ORM/DB操作REPL" as App
+participant "商品リポジトリ" as Repo
+database "H2インメモリDB" as DB
+
+利用者 -> App : add <商品名> <価格> <在庫数>
+activate App
+App -> Repo : 商品を新規登録する
+activate Repo
+Repo -> DB : トランザクションを開始しINSERTする
+DB --> Repo : 採番されたIDを返す
+Repo --> App : 登録済みの商品を返す
+deactivate Repo
+App --> 利用者 : 「追加しました: id=... 商品名」と表示する
+
+利用者 -> App : list
+App -> Repo : 全商品を取得する
+activate Repo
+Repo -> DB : SELECTする
+DB --> Repo : 商品一覧を返す
+Repo --> App : 商品一覧を返す
+deactivate Repo
+App --> 利用者 : 商品一覧を表示する
+
+利用者 -> App : find <id>
+App -> Repo : IDを指定して商品を取得する
+activate Repo
+Repo -> DB : SELECT(主キー検索)する
+DB --> Repo : 該当商品を返す
+Repo --> App : 商品を返す
+deactivate Repo
+App --> 利用者 : 商品の内容を表示する
+deactivate App
+
+@enduml

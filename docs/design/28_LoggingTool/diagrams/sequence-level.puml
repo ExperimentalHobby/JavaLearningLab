@@ -1,0 +1,27 @@
+@startuml sequence-level
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: ログレベルの実行時変更
+
+actor 利用者
+participant "ログ収集&解析ツール" as App
+participant "LogLevelController" as Controller
+participant "Logback Logger" as LogbackLogger
+
+利用者 -> App : level com.javalab.loggingtool.BatchJobRunner DEBUG
+activate App
+App -> Controller : 指定ロガーのレベル変更を依頼する
+activate Controller
+Controller -> LogbackLogger : SLF4Jの Logger を Logback の Logger にキャストする
+Controller -> LogbackLogger : レベルを設定する
+deactivate Controller
+App --> 利用者 : 「ログレベルを変更しました: ... -> DEBUG」と表示する
+deactivate App
+
+note over LogbackLogger
+  getLevel()はそのロガー自身に明示設定された
+  レベルのみを返す(親から継承した実効レベルは
+  getEffectiveLevel()が担う)。
+end note
+
+@enduml

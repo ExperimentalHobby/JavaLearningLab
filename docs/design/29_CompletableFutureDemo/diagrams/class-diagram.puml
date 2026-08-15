@@ -1,0 +1,72 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 29_CompletableFutureDemo クラス図
+
+class Main {
+  +main(args: String[]): void
+  ~run(scanner: Scanner, out: PrintStream, service: PriceComparisonService, fetchers: List<ShopPriceFetcher>): void
+}
+
+class PriceComparisonService {
+  -executor: Executor
+  -timeout: Duration
+  +PriceComparisonService(executor: Executor, timeout: Duration)
+  +compareAsync(productName: String, fetchers: List<ShopPriceFetcher>): CompletableFuture<List<PriceQuote>>
+  +cheapestOf(quotes: List<PriceQuote>): Optional<PriceQuote>
+  +findCheapestAsync(productName: String, fetchers: List<ShopPriceFetcher>): CompletableFuture<PriceQuote>
+}
+
+interface ShopPriceFetcher {
+  +shopName(): String
+  +fetchPrice(productName: String): int
+}
+
+class SimulatedShopPriceFetcher implements ShopPriceFetcher {
+  -shopName: String
+  -price: int
+  -delayMillis: long
+  -shouldFail: boolean
+  +fetchPrice(productName: String): int
+}
+
+class PriceQuote << record >> {
+  +shopName: String
+  +price: Integer
+  +status: Status
+}
+
+enum "PriceQuote.Status" as Status {
+  OK
+  FAILED
+  TIMEOUT
+}
+
+class ShopUnavailableException extends RuntimeException {
+  +ShopUnavailableException(shopName: String)
+}
+
+class NoAvailablePriceException extends RuntimeException {
+  +NoAvailablePriceException(productName: String)
+}
+
+Main "1" --> "1" PriceComparisonService : 利用する
+PriceComparisonService "1" --> "0..*" ShopPriceFetcher : 並行に問い合わせる
+PriceComparisonService ..> PriceQuote : 生成する
+PriceComparisonService ..> NoAvailablePriceException : throwする(findCheapestAsync)
+SimulatedShopPriceFetcher ..> ShopUnavailableException : throwする
+PriceQuote "1" --> "1" Status : 状態を持つ
+
+note right of PriceComparisonService
+  各店舗の問い合わせをsupplyAsyncで並行実行し、
+  orTimeoutでタイムアウト検出、exceptionallyで
+  失敗/タイムアウトをPriceQuoteのFAILED/TIMEOUT
+  状態に変換する(1店舗の失敗が全体に波及しない)。
+end note
+
+note right of SimulatedShopPriceFetcher
+  実際の店舗API呼び出しの代わりにThread.sleepで
+  遅延をシミュレートする実装。モックは使用しない。
+end note
+
+@enduml

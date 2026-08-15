@@ -1,0 +1,35 @@
+@startuml activity-diagram
+skinparam defaultFontName VL Gothic
+
+title アクティビティ図: 対話ループ全体の流れ
+
+start
+:操作方法を案内する;
+while (次の入力行があるか?) is (ある)
+  :1行分の入力を受け取る;
+  if (空行か?) then (yes)
+  elseif (終了コマンドか?) then (yes)
+    break
+  elseif (compareコマンドか?) then (yes)
+    fork
+      :ShopAへ価格を問い合わせる;
+    fork again
+      :ShopBへ価格を問い合わせる;
+    fork again
+      :ShopCへ価格を問い合わせる;
+    end fork
+    :全店舗の完了を待ち合わせる(allOf);
+    :各店舗の結果一覧を表示する;
+    if (正常取得できた見積もりが1件以上あるか?) then (yes)
+      :最安値を表示する;
+    else (no)
+      :「入手可能な価格がありませんでした」と表示する;
+    endif
+  else (no)
+    :「不明なコマンドです」と表示する;
+  endif
+endwhile (ない)
+:ExecutorServiceをシャットダウンして終了する;
+stop
+
+@enduml
