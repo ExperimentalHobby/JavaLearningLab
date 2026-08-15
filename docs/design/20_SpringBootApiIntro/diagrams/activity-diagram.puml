@@ -1,0 +1,33 @@
+@startuml activity-diagram
+skinparam defaultFontName VL Gothic
+
+title アクティビティ図: リクエスト処理全体の流れ
+
+start
+:HTTPリクエストを受け付ける;
+switch (リクエストの種類は?)
+case (GET /api/books)
+  :登録済みの書籍一覧を取得する;
+  :200で一覧を返す;
+case (GET /api/books/{id})
+  if (指定IDの書籍が存在するか?) then (yes)
+    :200で書籍を返す;
+  else (no)
+    :BookNotFoundExceptionがスローされる;
+    :Spring MVCが@ResponseStatusを読み取り\n404を返す;
+  endif
+case (POST /api/books)
+  :IDを採番し書籍を登録する;
+  :201で登録された書籍を返す;
+case (DELETE /api/books/{id})
+  if (指定IDの書籍が存在するか?) then (yes)
+    :書籍を削除する;
+    :204を返す;
+  else (no)
+    :BookNotFoundExceptionがスローされる;
+    :Spring MVCが@ResponseStatusを読み取り\n404を返す;
+  endif
+endswitch
+stop
+
+@enduml

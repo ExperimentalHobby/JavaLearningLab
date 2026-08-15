@@ -1,0 +1,61 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 08_RpsTournament クラス図
+
+class Player {
+  -name: String
+  +Player(name: String)
+  +getName(): String
+}
+
+enum Hand {
+  ROCK
+  SCISSORS
+  PAPER
+  +beats(other: Hand): boolean
+}
+
+class RockPaperScissors {
+  +{static} playMatch(playerA: Player, handA: Hand, playerB: Player, handB: Hand): Player
+}
+
+class Tournament {
+  -players: List<Player>
+  +Tournament(players: List<Player>)
+  +playRound(currentRound: List<Player>, handSupplier: Function<Player, Hand>): List<Player>
+  +runTournament(handSupplier: Function<Player, Hand>): Player
+}
+
+class TournamentException extends RuntimeException {
+  +TournamentException(message: String)
+}
+
+class Main {
+  +main(args: String[]): void
+  ~run(scanner: Scanner, out: PrintStream, handSupplier: Function<Player, Hand>): void
+  -handleCommand(players: List<Player>, line: String, out: PrintStream, handSupplier: Function<Player, Hand>): void
+}
+
+Main "1" o-- "0..*" Player : 登録する
+Main "1" --> "1" Tournament : 開始時に生成する
+Main ..> TournamentException : catchする
+Tournament "1" o-- "2..*" Player : 参加者として管理する
+Tournament ..> RockPaperScissors : 対戦を依頼する
+Tournament ..> TournamentException : throwする
+RockPaperScissors ..> Hand : 利用する
+
+note right of Tournament
+  参加人数が2以上かつ2のべき乗であることを
+  コンストラクタで検証する。
+  playRound は先頭から2人ずつペアリングし、
+  あいこの場合は決着まで再戦する。
+end note
+
+note bottom of Main
+  プレイヤーの手を Function<Player, Hand> として
+  注入可能にし、結合テストで再戦ロジックを
+  含めて決定的に検証できるようにしている。
+end note
+
+@enduml

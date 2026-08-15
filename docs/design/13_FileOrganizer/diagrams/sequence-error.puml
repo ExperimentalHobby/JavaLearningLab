@@ -1,0 +1,44 @@
+@startuml sequence-error
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: エラー処理
+
+actor 利用者
+participant "整理アプリ" as App
+participant "整理ロジック" as Organizer
+
+利用者 -> App : コマンドを入力する
+activate App
+
+alt 指定パスが存在しない場合
+  App -> Organizer : ディレクトリの整理を依頼する
+  activate Organizer
+  Organizer -> Organizer : 指定パスが存在しないことを検知する
+  Organizer --> App : パスが存在しないことを通知する
+  deactivate Organizer
+  App --> 利用者 : エラー内容を表示する
+
+else 指定パスがディレクトリでない場合
+  App -> Organizer : ディレクトリの整理を依頼する
+  activate Organizer
+  Organizer -> Organizer : 指定パスがファイルであることを検知する
+  Organizer --> App : ディレクトリでないことを通知する
+  deactivate Organizer
+  App --> 利用者 : エラー内容を表示する
+
+else ファイル操作(移動等)に失敗した場合
+  App -> Organizer : ディレクトリの整理を依頼する
+  activate Organizer
+  Organizer --> App : 入出力エラーを通知する
+  deactivate Organizer
+  App --> 利用者 : 「ファイル操作に失敗しました」と表示する
+
+else 不明なコマンドの場合
+  App -> App : いずれのコマンドにも該当しないことを検知する
+  App --> 利用者 : 「不明なコマンドです」と表示する
+end
+
+App -> App : 入力受付を継続する(アプリは終了しない)
+deactivate App
+
+@enduml

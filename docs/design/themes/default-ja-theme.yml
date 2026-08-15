@@ -1,0 +1,31 @@
+font:
+  catalog:
+    Noto Sans CJK JP:
+      normal: NotoSansCJKjp-Regular.otf
+      bold: NotoSansCJKjp-Bold.otf
+      italic: NotoSansCJKjp-Regular.otf
+      bold_italic: NotoSansCJKjp-Bold.otf
+  fallbacks:
+    - Noto Sans CJK JP
+
+base:
+  font-family: Noto Sans CJK JP
+  font-size: 11pt
+  line-height-length: 16.5pt
+
+heading:
+  font-family: Noto Sans CJK JP
+  font-size: 17.6pt
+  font-color: #262626
+  
+title:
+  font-family: Noto Sans CJK JP
+  font-size: 28pt
+
+toc:
+  font-family: Noto Sans CJK JP
+
+code:
+  font-family: Courier New
+  font-size: 10pt
+

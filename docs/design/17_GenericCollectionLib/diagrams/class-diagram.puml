@@ -1,0 +1,70 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 17_GenericCollectionLib クラス図
+
+class "GenericStack<T>" as GenericStack {
+  -top: Node<T>
+  -size: int
+  +push(value: T): void
+  +pop(): T
+  +peek(): T
+  +isEmpty(): boolean
+  +size(): int
+}
+
+class "GenericQueue<T>" as GenericQueue {
+  -head: Node<T>
+  -tail: Node<T>
+  -size: int
+  +enqueue(value: T): void
+  +dequeue(): T
+  +peek(): T
+  +isEmpty(): boolean
+  +size(): int
+}
+
+class "Node<T>" as Node {
+  ~value: T
+  ~next: Node<T>
+}
+
+class CollectionUtils {
+  -CollectionUtils()
+  +{static} "<T extends Comparable<T>> max(list: List<T>): T"
+}
+
+class EmptyCollectionException extends RuntimeException {
+  +EmptyCollectionException(message: String)
+}
+
+class Main {
+  +main(args: String[]): void
+  ~run(scanner: Scanner, out: PrintStream): void
+  -{static} handleStack(stack: GenericStack<String>, parts: String[], out: PrintStream): void
+  -{static} handleQueue(queue: GenericQueue<String>, parts: String[], out: PrintStream): void
+}
+
+GenericStack "1" *-- "0..*" Node : 単方向連結リストとして保持する
+GenericQueue "1" *-- "0..*" Node : head/tailで管理する
+GenericStack ..> EmptyCollectionException : throwする
+GenericQueue ..> EmptyCollectionException : throwする
+Main "1" --> "1" GenericStack : String用に利用する
+Main "1" --> "1" GenericQueue : String用に利用する
+Main ..> EmptyCollectionException : catchする
+
+note right of GenericStack
+  java.util.Stack をラップせず、
+  単方向連結リストで自前実装している。
+  Node<T> は private static class として
+  ネストしたジェネリッククラス。
+end note
+
+note right of CollectionUtils
+  境界型パラメータ <T extends Comparable<T>> により、
+  Integer・String など Comparable を実装する
+  任意の型に対して型安全に動作する。
+  空リストは IllegalArgumentException。
+end note
+
+@enduml

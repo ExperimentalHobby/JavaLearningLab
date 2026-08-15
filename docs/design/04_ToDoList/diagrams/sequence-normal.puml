@@ -1,0 +1,49 @@
+@startuml sequence-normal
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: タスク管理(add / done / remove / list)
+
+actor 利用者
+participant "ToDoアプリ" as App
+participant "タスクリスト" as List
+
+== タスクの追加(add) ==
+利用者 -> App : タスク追加コマンドを入力する(add <説明>)
+activate App
+App -> List : タスクを追加するよう依頼する
+activate List
+List -> List : 新しい未完了タスクを末尾に追加する
+deactivate List
+deactivate App
+
+== タスクの完了(done) ==
+利用者 -> App : タスク完了コマンドを入力する(done <番号>)
+activate App
+App -> List : 指定番号のタスクを完了にするよう依頼する
+activate List
+List -> List : 番号の妥当性を確認する
+List -> List : タスクを完了状態にする
+deactivate List
+deactivate App
+
+== タスクの削除(remove) ==
+利用者 -> App : タスク削除コマンドを入力する(remove <番号>)
+activate App
+App -> List : 指定番号のタスクを削除するよう依頼する
+activate List
+List -> List : 番号の妥当性を確認する
+List -> List : タスクを削除する
+deactivate List
+deactivate App
+
+== タスク一覧の表示(list) ==
+利用者 -> App : 一覧表示コマンドを入力する(list)
+activate App
+App -> List : タスク一覧を問い合わせる
+activate List
+List --> App : タスク一覧を返す
+deactivate List
+App --> 利用者 : 番号付きでタスク一覧を画面に表示する
+deactivate App
+
+@enduml

@@ -1,0 +1,33 @@
+@startuml activity-diagram
+skinparam defaultFontName VL Gothic
+
+title アクティビティ図: 対話ループ全体の流れ
+
+start
+:操作方法を案内する;
+while (次の入力行があるか?) is (ある)
+  :1行分の入力を受け取る;
+  if (空行か?) then (yes)
+  elseif (終了コマンドか?) then (yes)
+    break
+  else (no)
+    if (downloadコマンドか?) then (yes)
+      :URL一覧をダウンロード指示に変換する;
+      fork
+        :1件目のURLをダウンロードする;
+      fork again
+        :2件目のURLをダウンロードする;
+      fork again
+        :N件目のURLをダウンロードする;
+      end fork
+      :すべてのスレッドの完了を待つ;
+      :各URLの成功/失敗を表示する;
+    else (no)
+      :「不明なコマンドです」と表示する;
+    endif
+  endif
+endwhile (ない)
+:終了する;
+stop
+
+@enduml

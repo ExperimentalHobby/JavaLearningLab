@@ -1,0 +1,30 @@
+@startuml activity-diagram
+skinparam defaultFontName VL Gothic
+
+title アクティビティ図: 追加ボタンクリック時の処理フロー
+
+start
+:ウィンドウを表示する\n(入力フォーム/取引一覧/サマリー);
+while (アプリを終了していないか?) is (継続)
+  :利用者の操作を待つ;
+  if (追加ボタンがクリックされたか?) then (yes)
+    :種別・カテゴリ・金額を入力欄から読み取る;
+    if (金額は正しく数値として解釈できるか?) then (yes)
+      if (金額は0より大きいか?) then (yes)
+        :取引一覧に追加する;
+        :テーブル表示を再描画する;
+        :サマリー(収入/支出/残高)を更新する;
+        :カテゴリ・金額の入力欄をクリアする;
+      else (no)
+        :エラーダイアログを表示する;
+      endif
+    else (no)
+      :エラーダイアログを表示する;
+    endif
+  else (no)
+  endif
+endwhile (ウィンドウを閉じた)
+:アプリを終了する;
+stop
+
+@enduml

@@ -1,0 +1,58 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 25_JUnitPractice クラス図
+
+class Order << record >> {
+  +id: long
+  +customerEmail: String
+  +total: BigDecimal
+}
+
+interface EmailSender {
+  +send(to: String, subject: String, body: String): void
+}
+
+class ConsoleEmailSender implements EmailSender {
+  -out: PrintStream
+  +ConsoleEmailSender(out: PrintStream)
+  +send(to: String, subject: String, body: String): void
+}
+
+class OrderNotificationException extends RuntimeException {
+  +OrderNotificationException(message: String, cause: Throwable)
+}
+
+class OrderNotificationService {
+  -emailSender: EmailSender
+  +OrderNotificationService(emailSender: EmailSender)
+  +notifyOrderConfirmed(order: Order): void
+  +notifyOrders(orders: List<Order>): void
+}
+
+class Main {
+  +main(args: String[]): void
+  ~run(scanner: Scanner, out: PrintStream): void
+}
+
+Main "1" --> "1" OrderNotificationService : 利用する
+Main ..> ConsoleEmailSender : 生成し注入する
+OrderNotificationService "1" --> "1" EmailSender : コンストラクタ注入で利用する
+OrderNotificationService ..> Order : 利用する
+OrderNotificationService ..> OrderNotificationException : throwする
+
+note right of EmailSender
+  実運用ではSMTP/SES等の外部サービスを叩く実装を
+  想定するインターフェース。実際に送信すると
+  副作用が大きく実リソースでのテストに向かないため、
+  テストではMockitoでモック化する。
+end note
+
+note bottom of OrderNotificationService
+  合計金額が0円以下の注文は送信をスキップする。
+  notifyOrders は複数注文をまとめて処理する
+  (メソッド名は Object.notifyAll() との
+  衝突を避けて notifyOrders とした)。
+end note
+
+@enduml

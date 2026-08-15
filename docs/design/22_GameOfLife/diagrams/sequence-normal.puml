@@ -1,0 +1,47 @@
+@startuml sequence-normal
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: パターン編集とタイマー駆動更新
+
+actor 利用者
+participant "メインウィンドウ" as Frame
+participant "盤面" as Grid
+participant "世代更新ロジック" as GoL
+participant "タイマー" as Timer
+
+== マス目のクリックによる編集 ==
+利用者 -> Frame : グリッド上のマスをクリックする
+activate Frame
+Frame -> Frame : クリック位置を行・列に変換する
+Frame -> Grid : そのマスの生死を反転するよう依頼する
+activate Grid
+Grid -> Grid : 状態を反転する
+deactivate Grid
+Frame -> Frame : グリッドを再描画する
+deactivate Frame
+
+== 「開始」によるタイマー駆動更新 ==
+利用者 -> Frame : 「開始」ボタンをクリックする
+activate Frame
+Frame -> Timer : 一定間隔での実行を開始する
+activate Timer
+deactivate Frame
+
+loop 150ミリ秒ごとに
+  Timer -> Frame : 次の世代へ進めるよう通知する
+  activate Frame
+  Frame -> GoL : 現在の盤面から次世代の算出を依頼する
+  activate GoL
+  GoL -> Grid : 各マスの生存隣接数を問い合わせる
+  activate Grid
+  Grid --> GoL : 生存隣接数を返す
+  deactivate Grid
+  GoL -> GoL : ライフゲームのルールに従い\n次世代の各マスの生死を判定する
+  GoL --> Frame : 次世代の新しい盤面を返す
+  deactivate GoL
+  Frame -> Frame : 現在の盤面を新しい盤面に置き換え、\n世代数を表示し再描画する
+  deactivate Frame
+end
+deactivate Timer
+
+@enduml

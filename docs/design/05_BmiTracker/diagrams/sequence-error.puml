@@ -1,0 +1,32 @@
+@startuml sequence-error
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: エラー処理
+
+actor 利用者
+participant "BMIトラッカー" as App
+
+利用者 -> App : コマンドを入力する
+activate App
+
+alt 数値として解釈できない入力の場合
+  App -> App : 身長・体重の数値変換に失敗したことを検知する
+  App --> 利用者 : 「数値の形式が不正です」と表示する
+
+else 引数の個数が不正な場合
+  App -> App : addコマンドの引数が2個でないことを検知する
+  App --> 利用者 : 「入力形式が不正です」と表示する
+
+else 不明なコマンドの場合
+  App -> App : いずれのコマンドにも該当しないことを検知する
+  App --> 利用者 : 「不明なコマンドです」と表示する
+
+else ファイル操作に失敗した場合
+  App -> App : ファイルの読み書きで入出力エラーが発生する
+  App --> 利用者 : 「ファイル操作に失敗しました」と表示する
+end
+
+App -> App : 入力受付を継続する(アプリは終了しない)
+deactivate App
+
+@enduml

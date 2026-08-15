@@ -1,0 +1,33 @@
+@startuml activity-diagram
+skinparam defaultFontName VL Gothic
+
+title アクティビティ図: 対話ループ全体の流れ
+
+start
+:操作方法を案内する;
+while (次の入力行があるか?) is (ある)
+  :1行分の入力を受け取る;
+  if (空行か?) then (yes)
+  elseif (終了コマンドか?) then (yes)
+    break
+  else (no)
+    if (orderコマンドか?) then (yes)
+      :注文情報を組み立てる;
+      if (合計金額は0円より大きいか?) then (yes)
+        if (メール送信に成功したか?) then (yes)
+          :送信内容を表示する;
+        else (no)
+          :エラー内容を表示する;
+        endif
+      else (no)
+        :何もせず送信をスキップする;
+      endif
+    else (no)
+      :「不明なコマンドです」と表示する;
+    endif
+  endif
+endwhile (ない)
+:終了する;
+stop
+
+@enduml

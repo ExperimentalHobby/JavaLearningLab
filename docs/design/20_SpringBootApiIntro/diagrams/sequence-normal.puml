@@ -1,0 +1,51 @@
+@startuml sequence-normal
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: 書籍の登録・一覧取得・単一取得・削除
+
+actor 利用者
+participant "REST API\n(BookController)" as Controller
+participant "書籍管理ロジック\n(BookService)" as Service
+
+== 書籍の登録(POST /api/books) ==
+利用者 -> Controller : タイトル・著者を含むリクエストを送信する
+activate Controller
+Controller -> Service : 書籍の登録を依頼する
+activate Service
+Service -> Service : IDを採番し、インメモリの一覧に追加する
+Service --> Controller : 登録された書籍を返す
+deactivate Service
+Controller --> 利用者 : 登録された書籍を201で返す
+deactivate Controller
+
+== 一覧取得(GET /api/books) ==
+利用者 -> Controller : 書籍一覧を要求する
+activate Controller
+Controller -> Service : 書籍一覧を問い合わせる
+activate Service
+Service --> Controller : 登録済みの全書籍を返す
+deactivate Service
+Controller --> 利用者 : 書籍一覧を200で返す
+deactivate Controller
+
+== 単一取得(GET /api/books/{id}) ==
+利用者 -> Controller : 指定IDの書籍を要求する
+activate Controller
+Controller -> Service : IDに一致する書籍を問い合わせる
+activate Service
+Service --> Controller : 該当する書籍を返す
+deactivate Service
+Controller --> 利用者 : 書籍を200で返す
+deactivate Controller
+
+== 削除(DELETE /api/books/{id}) ==
+利用者 -> Controller : 指定IDの書籍削除を要求する
+activate Controller
+Controller -> Service : IDに一致する書籍の削除を依頼する
+activate Service
+Service -> Service : インメモリの一覧から取り除く
+deactivate Service
+Controller --> 利用者 : 204(本文なし)を返す
+deactivate Controller
+
+@enduml

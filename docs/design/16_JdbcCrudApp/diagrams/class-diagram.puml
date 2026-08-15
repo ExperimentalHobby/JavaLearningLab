@@ -1,0 +1,49 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 16_JdbcCrudApp クラス図
+
+class Task << record >> {
+  +id: long
+  +title: String
+  +done: boolean
+}
+
+class TaskRepository {
+  -connection: Connection
+  +TaskRepository(connection: Connection)
+  +initSchema(): void
+  +insert(title: String): long
+  +findAll(): List<Task>
+  +updateDone(id: long, done: boolean): boolean
+  +delete(id: long): boolean
+}
+
+class TaskRepositoryException extends RuntimeException {
+  +TaskRepositoryException(message: String, cause: Throwable)
+}
+
+class Main {
+  +main(args: String[]): void
+  ~run(scanner: Scanner, out: PrintStream, repository: TaskRepository): void
+  -{static} handleAdd(repository: TaskRepository, parts: String[], out: PrintStream): void
+  -{static} handleList(repository: TaskRepository, out: PrintStream): void
+  -{static} handleDone(repository: TaskRepository, parts: String[], out: PrintStream): void
+  -{static} handleDelete(repository: TaskRepository, parts: String[], out: PrintStream): void
+}
+
+Main "1" --> "1" TaskRepository : 利用する
+Main ..> TaskRepositoryException : catchする
+TaskRepository ..> Task : 生成する
+TaskRepository ..> TaskRepositoryException : throwする
+
+note right of TaskRepository
+  Connection をコンストラクタで注入する
+  DI-for-testability パターン。
+  テストは jdbc:sqlite::memory:、
+  本番は jdbc:sqlite:tasks.db を使う。
+  SQLException は TaskRepositoryException に
+  統一して呼び出し元へ伝える。
+end note
+
+@enduml

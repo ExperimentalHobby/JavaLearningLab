@@ -1,0 +1,37 @@
+@startuml sequence-error
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: エラー処理
+
+actor 利用者
+participant "図形計算アプリ" as App
+participant "図形" as Shape
+
+利用者 -> App : 図形の種類と寸法を入力する
+activate App
+
+alt 数値として解釈できない寸法の場合
+  App -> App : 寸法の数値変換に失敗したことを検知する
+  App --> 利用者 : 「数値の形式が不正です」と表示する
+
+else 寸法の個数が不正な場合
+  App -> App : コマンドに必要な引数の個数が\n一致しないことを検知する
+  App --> 利用者 : 「入力形式が不正です」と表示する
+
+else 図形として成立しない寸法の場合(負の半径・三角不等式違反など)
+  App -> Shape : 指定された寸法で図形を生成する
+  activate Shape
+  Shape -> Shape : 寸法が図形として成立しないことを検知する
+  Shape --> App : 不正な寸法であることを通知する
+  deactivate Shape
+  App --> 利用者 : エラー内容を表示する
+
+else 不明なコマンドの場合
+  App -> App : いずれのコマンドにも該当しないことを検知する
+  App --> 利用者 : 「不明なコマンドです」と表示する
+end
+
+App -> App : 入力受付を継続する(アプリは終了しない)
+deactivate App
+
+@enduml

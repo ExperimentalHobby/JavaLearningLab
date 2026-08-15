@@ -1,0 +1,44 @@
+@startuml sequence-error
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: エラー処理
+
+actor 利用者
+participant "HTTPクライアントアプリ" as App
+participant "JSON取得ロジック" as Fetcher
+participant "外部API" as Server
+
+利用者 -> App : URLを入力する
+activate App
+App -> Fetcher : JSONの取得を依頼する
+activate Fetcher
+
+alt 接続に失敗した場合(名前解決不可・タイムアウト等)
+  Fetcher -> Server : HTTP GETリクエストを送信する
+  Server --> Fetcher : 接続できず入出力エラーが発生する
+  Fetcher -> Fetcher : 通信失敗を検知する
+  Fetcher --> App : 通信失敗であることを通知する
+
+else HTTPステータスが200以外の場合
+  Fetcher -> Server : HTTP GETリクエストを送信する
+  activate Server
+  Server --> Fetcher : 異常なステータスコードを返す
+  deactivate Server
+  Fetcher -> Fetcher : ステータスコードが200でないことを検知する
+  Fetcher --> App : 異常なステータスであることを通知する
+
+else JSONの解析に失敗した場合(fetchUserのみ)
+  Fetcher -> Server : HTTP GETリクエストを送信する
+  activate Server
+  Server --> Fetcher : Userの形式に合わないJSON本文を返す
+  deactivate Server
+  Fetcher -> Fetcher : Userレコードへの変換に失敗したことを検知する
+  Fetcher --> App : JSON解析失敗であることを通知する
+end
+
+deactivate Fetcher
+App --> 利用者 : エラー内容を表示する
+App -> App : 入力受付を継続する(アプリは終了しない)
+deactivate App
+
+@enduml

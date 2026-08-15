@@ -1,0 +1,33 @@
+@startuml activity-diagram
+skinparam defaultFontName VL Gothic
+
+title アクティビティ図: 対話ループ全体の流れ
+
+start
+:操作方法を案内する;
+while (次の入力行があるか?) is (ある)
+  :1行分の入力を受け取る;
+  if (空行か?) then (yes)
+  elseif (終了コマンドか?) then (yes)
+    break
+  else (no)
+    if (organizeコマンドか?) then (yes)
+      if (指定パスは存在し、ディレクトリか?) then (yes)
+        while (直下に未処理のファイルが残っているか?) is (yes)
+          :拡張子からカテゴリを判定する;
+          :カテゴリ名のサブフォルダを作成する;
+          :ファイルをサブフォルダへ移動する;
+        endwhile (no)
+        :整理結果を表示する;
+      else (no)
+        :エラー内容を表示する;
+      endif
+    else (no)
+      :エラー内容を表示する;
+    endif
+  endif
+endwhile (ない)
+:終了する;
+stop
+
+@enduml

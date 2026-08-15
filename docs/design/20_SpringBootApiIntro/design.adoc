@@ -1,0 +1,153 @@
+= 20_SpringBootApiIntro 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-08-15
+:toc: left
+:toclevels: 2
+:sectnums:
+:pagenums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+NOTE: UML図は `diagrams/` 配下の `.puml` ファイルを https://asciidoctor.org/docs/asciidoctor-diagram/[asciidoctor-diagram] 経由でPlantUMLとして埋め込んでいる。拡張未導入の環境では、各 `.puml` を直接 https://www.plantuml.com/plantuml[PlantUMLオンラインサーバー] 等に読み込ませても図を確認できる。PDF化する場合は同フォルダの `generate-pdf.ps1` を実行する(`docs/design/fonts/`・`docs/design/themes/` の日本語フォント・テーマを用いて文字化けを回避している。詳細は `docs/design/README.md` を参照)。
+
+<<<
+
+== 概要
+
+=== 目的
+書籍管理を題材にしたインメモリのREST APIを提供する。REST API構築とDI(依存性注入)の基礎を目的とする。
+
+=== 主な機能
+* `GET /api/books` — 書籍一覧取得
+* `GET /api/books/{id}` — 単一書籍取得(存在しなければ404)
+* `POST /api/books` — 書籍登録(201、リクエストボディ `{"title": "...", "author": "..."}`)
+* `DELETE /api/books/{id}` — 書籍削除(204、存在しなければ404)
+
+=== 開発環境
+[cols="1,3", options="header"]
+|===
+| 項目 | 内容
+
+| 言語
+| Java 25
+
+| フレームワーク
+| Spring Boot 3.5.3(`spring-boot-starter-parent` をこのフォルダ単体の親POMとして採用)
+
+| ビルドツール
+| Maven(このフォルダのみSpring Boot親POMを使用、リポジトリ全体の共通親は持たない)
+
+| テスト
+| JUnit 5 + `@SpringBootTest(webEnvironment = RANDOM_PORT)` + `TestRestTemplate`(実際に埋め込みTomcatへHTTPリクエストを送る結合テスト)
+
+| データ管理
+| インメモリ(`ConcurrentHashMap`)
+|===
+
+=== 実行方法
+[source,powershell]
+----
+cd 20_SpringBootApiIntro
+.\mvnw.cmd compile
+.\mvnw.cmd test
+.\mvnw.cmd spring-boot:run
+----
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/20[Issue #20] / https://github.com/ExperimentalHobby/JavaLearningLab/pull/50[PR #50]
+
+<<<
+
+== ユースケース
+
+[cols="1,3,4", options="header"]
+|===
+| ID | ユースケース | 概要
+
+| UC-1
+| 書籍一覧を取得する
+| `GET /api/books` を呼び出し、登録済み書籍の一覧を取得する
+
+| UC-2
+| 単一書籍を取得する
+| `GET /api/books/{id}` を呼び出し、指定IDの書籍を取得する
+
+| UC-3
+| 書籍を登録する
+| `POST /api/books` にタイトル・著者を送信し、新規書籍を登録する
+
+| UC-4
+| 書籍を削除する
+| `DELETE /api/books/{id}` を呼び出し、指定IDの書籍を削除する
+
+| UC-5
+| 存在しないIDへのアクセスで404を受け取る
+| 存在しないIDで単一取得/削除を要求した場合、404レスポンスを受け取る
+|===
+
+<<<
+
+== シーケンス図
+
+=== 書籍の登録・一覧取得・単一取得・削除
+[plantuml, sequence-normal, svg]
+----
+include::diagrams/sequence-normal.puml[]
+----
+
+=== 存在しないIDへのアクセス(404)
+[plantuml, sequence-error, svg]
+----
+include::diagrams/sequence-error.puml[]
+----
+
+<<<
+
+== クラス図
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+`BookController`(`@RestController`)は `BookService`(`@Service`)をコンストラクタインジェクションで受け取る。`BookService` は書籍をインメモリで管理し、該当書籍がない場合は `BookNotFoundException` をスローする。この例外は `@ResponseStatus(HttpStatus.NOT_FOUND)` によりSpring MVCが自動的にHTTP 404へマッピングする。
+
+<<<
+
+== アクティビティ図
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+<<<
+
+== 補足事項
+
+=== フォルダ単体でのSpring Boot親POM採用
+このリポジトリで初めてSpring Bootを使う課題である。`spring-boot-starter-parent:3.5.3` をこのフォルダ単体の親POMとして採用した(リポジトリ全体で共通親を持たない方針とは矛盾しない、あくまでこのフォルダのみの親)。
+
+=== Java 25とSpring Boot 3.5.3の組み合わせ
+Java 25 + Spring Boot 3.5.3の組み合わせでビルド・テストとも問題なく動作することを確認済み(リリース時点でJava 25は正式サポート対象外の可能性を懸念していたが、実際には `<java.version>25</java.version>` の指定で警告なくコンパイル・実行できた)。
+
+=== フレームワークから独立したロジック層
+`BookService` はSpringのDIコンテナ(`@Service`)に登録しつつも、テストでは `new BookService()` でSpringコンテナなしにプレーンなJUnitテストとして直接検証できる設計にしている(01〜19で培った「ロジックをフレームワークから独立させる」パターンをSpring Boot上でも踏襲)。
+
+=== 実リソースでのHTTPレベル結合テスト
+`BookController` は `@SpringBootTest(webEnvironment = RANDOM_PORT)` + `TestRestTemplate` で実際に埋め込みTomcatへHTTPリクエストを送る結合テストとした。`MockMvc` のような擬似的な検証ではなく、既存Issueと同じ「実リソースでのテスト」方針をHTTPレベルでも徹底している。
+
+=== @ResponseStatusによる404の自動マッピング
+存在しないIDへのアクセスによる404は、コントローラー側で個別に例外処理をせず、`BookNotFoundException` に `@ResponseStatus(HttpStatus.NOT_FOUND)` を付与することでSpring MVCに自動マッピングさせている。
+
+=== TDDでの偽陽性への気づき
+`GET /api/books/{id}` の404テストを実装する際、最初に書いたテスト(存在しないIDへのアクセスが404であること)は、そもそも `/{id}` のマッピング自体が存在しない状態でもSpring Bootのデフォルト404応答により偽陽性でGreenになってしまう問題に気づいた。存在するIDで200が返ることを検証するテストを追加してから初めてRedを確認でき、エンドポイント実装後にGreenへ移行させた(TDDでテストの実効性を見誤らないための教訓として記録)。
+
+=== テスト方針(TDD)
+Red → Green → Refactor サイクルで実装した。
+
+* *単体テスト*(`BookServiceTest`): Springコンテナなしで登録・一覧取得・単一取得・削除・該当なしの例外を検証
+* *結合テスト*(`BookControllerTest`): `@SpringBootTest` + `TestRestTemplate` で実際のHTTPリクエストとして各エンドポイントの正常系・404を検証

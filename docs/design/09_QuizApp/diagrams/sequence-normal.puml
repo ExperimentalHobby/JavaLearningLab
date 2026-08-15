@@ -1,0 +1,36 @@
+@startuml sequence-normal
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: クイズの実施(正常系)
+
+actor 利用者
+participant "クイズアプリ" as App
+participant "問題読み込み" as Loader
+participant "スコア集計" as Score
+
+App -> Loader : 問題データの読み込みを依頼する
+activate Loader
+Loader -> Loader : プロパティファイルを解析し\n問題一覧を生成する
+Loader --> App : 問題一覧を返す
+deactivate Loader
+
+loop 問題一覧の各問について
+  App --> 利用者 : 問題文を表示する
+  利用者 -> App : 回答を入力する
+  activate App
+  App -> App : 回答が正解と一致するか判定する\n(前後の空白・大文字小文字は無視)
+  App -> Score : 正誤結果の記録を依頼する
+  activate Score
+  Score -> Score : 出題数と正解数を更新する
+  deactivate Score
+  App --> 利用者 : 正誤フィードバックを表示する
+  deactivate App
+end
+
+App -> Score : 最終結果を問い合わせる
+activate Score
+Score --> App : 正解数・出題数・正答率を返す
+deactivate Score
+App --> 利用者 : 結果を画面に表示する
+
+@enduml

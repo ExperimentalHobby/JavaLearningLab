@@ -1,0 +1,37 @@
+@startuml sequence-normal
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: ログファイルの読み込みと解析(正常系)
+
+actor 利用者
+participant "解析アプリ" as App
+participant "ログ解析ロジック" as Parser
+participant "ファイルシステム" as FS
+
+利用者 -> App : 読み込むファイルパスを入力する(load <パス>)
+activate App
+App -> FS : ファイルを1行ずつ読み込む
+activate FS
+FS --> App : 全行のテキストを返す
+deactivate FS
+App -> Parser : 全行の解析を依頼する
+activate Parser
+loop 各行について
+  Parser -> Parser : 正規表現でタイムスタンプ・\nレベル・メッセージを抽出しようと試みる
+  alt 形式に合致する場合
+    Parser -> Parser : 解析結果を一覧に追加する
+  else 形式に合致しない場合(スタックトレースの継続行等)
+    Parser -> Parser : その行をスキップする(全体は止めない)
+  end
+end
+Parser --> App : 解析に成功したログ一覧を返す
+deactivate Parser
+App -> Parser : レベルごとの件数集計を依頼する
+activate Parser
+Parser -> Parser : レベルでグルーピングし件数を数える
+Parser --> App : レベルごとの件数を返す
+deactivate Parser
+App --> 利用者 : 解析成功件数・スキップ件数・\nレベル別集計を画面に表示する
+deactivate App
+
+@enduml

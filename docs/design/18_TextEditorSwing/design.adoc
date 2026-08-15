@@ -1,0 +1,150 @@
+= 18_TextEditorSwing 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-08-15
+:toc: left
+:toclevels: 2
+:sectnums:
+:pagenums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+NOTE: UML図は `diagrams/` 配下の `.puml` ファイルを https://asciidoctor.org/docs/asciidoctor-diagram/[asciidoctor-diagram] 経由でPlantUMLとして埋め込んでいる。拡張未導入の環境では、各 `.puml` を直接 https://www.plantuml.com/plantuml[PlantUMLオンラインサーバー] 等に読み込ませても図を確認できる。PDF化する場合は同フォルダの `generate-pdf.ps1` を実行する(`docs/design/fonts/`・`docs/design/themes/` の日本語フォント・テーマを用いて文字化けを回避している。詳細は `docs/design/README.md` を参照)。
+
+<<<
+
+== 概要
+
+=== 目的
+`JTextArea` でテキストを編集し、メニューバーからファイルの「開く」「保存」「名前を付けて保存」「終了」を行える簡易テキストエディタを提供する。`JTextArea`・ファイル入出力・メニューバーの実践を目的とする。
+
+=== 主な機能
+* 「開く」でファイルを選択し内容をテキストエリアに読み込む
+* 「保存」で現在開いているファイルへ上書き保存する(未指定時は「名前を付けて保存」と同じ動作)
+* 「名前を付けて保存」で保存先を選択して保存する
+* 「終了」でウィンドウを閉じる
+
+=== 開発環境
+[cols="1,3", options="header"]
+|===
+| 項目 | 内容
+
+| 言語
+| Java 25
+
+| ビルドツール
+| Maven(フォルダ単位で独立した `pom.xml`)
+
+| テスト
+| JUnit 5(`junit-jupiter`。GUI描画・イベント配線は自動テスト対象外)
+
+| GUIフレームワーク
+| Swing(`JFrame`/`JTextArea`/`JMenuBar`/`JFileChooser`)
+
+| ファイルI/O
+| `java.nio.file.Files`(`readString`/`writeString`、UTF-8)
+|===
+
+=== 実行方法
+[source,powershell]
+----
+cd 18_TextEditorSwing
+.\mvnw.cmd compile
+.\mvnw.cmd test
+.\mvnw.cmd exec:java "-Dexec.mainClass=com.javalab.texteditor.Main"
+----
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/18[Issue #18] / https://github.com/ExperimentalHobby/JavaLearningLab/pull/48[PR #48]
+
+<<<
+
+== ユースケース
+
+[cols="1,3,4", options="header"]
+|===
+| ID | ユースケース | 概要
+
+| UC-1
+| ファイルを開く
+| 「開く」メニューでファイルを選択し、内容をテキストエリアに読み込む
+
+| UC-2
+| ファイルを保存する
+| 「保存」メニューで現在開いているファイルへ上書き保存する
+
+| UC-3
+| 名前を付けて保存する
+| 「名前を付けて保存」メニューで保存先を選択して保存する
+
+| UC-4
+| ファイル操作エラー時にエラーを表示する
+| 読み込み・保存に失敗した場合、エラーダイアログを表示する
+
+| UC-5
+| アプリを終了する
+| 「終了」メニューでウィンドウを閉じる
+|===
+
+<<<
+
+== シーケンス図
+
+=== ファイルを開く・保存する(正常系)
+[plantuml, sequence-normal, svg]
+----
+include::diagrams/sequence-normal.puml[]
+----
+
+=== ファイル操作エラー時のダイアログ表示
+[plantuml, sequence-error, svg]
+----
+include::diagrams/sequence-error.puml[]
+----
+
+<<<
+
+== クラス図
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+`TextEditorFrame`(`JFrame` を継承したメインウィンドウ)は `TextFileService`(GUIに依存しないファイルI/Oロジック)を利用する。読み込み・書き込みの失敗は `TextFileException` に統一され、`TextEditorFrame` がキャッチして `JOptionPane` でエラーダイアログを表示する。
+
+<<<
+
+== アクティビティ図
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+<<<
+
+== 補足事項
+
+=== テスト方針の分離
+Issue #11(家計簿アプリ)と同じ方針で、テスト方針を明確に分離した。ファイルI/Oロジック(`TextFileService`)はTDDで自動テストし、`TextEditorFrame`(実際のウィンドウ・メニューバー・イベントリスナー配線)は実装後に実機で起動して手動確認した。
+
+=== GUIに依存しないファイルI/O
+`TextFileService` は `Files.readString`/`Files.writeString`(UTF-8)を使い、GUIに依存しない純粋なロジックとして `@TempDir` の実ファイルでテストした。読み込み/書き込みの失敗(存在しないファイル・存在しないディレクトリなど)は `TextFileException` に統一している。
+
+=== メニューバーとイベント配線
+`TextEditorFrame` は `JMenuBar` の「ファイル」メニューに開く/保存/名前を付けて保存/終了の `JMenuItem` をラムダの `ActionListener` で配線した。「開く」「名前を付けて保存」は `JFileChooser` でパス選択し、選択したファイル名をウィンドウタイトルに反映する。失敗時は `JOptionPane` でエラーダイアログを表示する。
+
+=== 手動確認での検証内容
+手動確認では、実際にWindows上でアプリを起動し、テキスト入力→「名前を付けて保存」でのファイル書き込み→タイトルバー更新→「開く」での再読み込みの一連の流れをスクリーンショットで検証した。ファイルシステム上でも保存内容が期待通りであることを確認済み。
+
+=== テスト方針(TDD)
+Red → Green → Refactor サイクルで実装した。
+
+* *単体テスト*(`TextFileServiceTest`): `@TempDir` を用いた読み込み・書き込みのラウンドトリップ、存在しないファイル/ディレクトリでの失敗を検証
+* *手動確認*: `TextEditorFrame` のウィンドウ表示・開く/保存/名前を付けて保存・エラーダイアログ表示を実機で確認
+
+=== 設計上の工夫
+* `Main` はSwingのイベントディスパッチスレッド(EDT)上でウィンドウ生成・表示を行うため、`SwingUtilities.invokeLater` を使用している。

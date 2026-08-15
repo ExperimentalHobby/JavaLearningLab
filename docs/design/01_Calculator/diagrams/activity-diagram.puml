@@ -1,0 +1,33 @@
+@startuml activity-diagram
+skinparam defaultFontName VL Gothic
+
+title アクティビティ図: 対話ループ全体の流れ
+
+start
+:操作方法を案内する;
+while (次の入力行があるか?) is (ある)
+  :1行分の入力を受け取る;
+  if (空行か?) then (yes)
+  elseif (終了コマンドか?) then (yes)
+    break
+  else (no)
+    if (メモリ操作コマンドか?\n(M+ / M- / MR / MC)) then (yes)
+      :メモリ操作を実行し、\nメモリ値を表示する;
+    else (no)
+      if (入力を数値2つと演算子に\n正しく分解・変換できるか?) then (yes)
+        :四則演算を実行する;
+        if (演算は成功したか?\n(ゼロ除算ではないか)) then (yes)
+          :計算結果を表示し、\n次回のメモリ操作用に保持する;
+        else (no)
+          :エラー内容を表示する;
+        endif
+      else (no)
+        :エラー内容を表示する;
+      endif
+    endif
+  endif
+endwhile (ない)
+:終了する;
+stop
+
+@enduml

@@ -1,0 +1,161 @@
+= 01_Calculator 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-08-15
+:toc: left
+:toclevels: 2
+:sectnums:
+:pagenums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+NOTE: UML図は `diagrams/` 配下の `.puml` ファイルを https://asciidoctor.org/docs/asciidoctor-diagram/[asciidoctor-diagram] 経由でPlantUMLとして埋め込んでいる。拡張未導入の環境では、各 `.puml` を直接 https://www.plantuml.com/plantuml[PlantUMLオンラインサーバー] 等に読み込ませても図を確認できる。PDF化する場合は同フォルダの `generate-pdf.ps1` を実行する(`docs/design/fonts/`・`docs/design/themes/` の日本語フォント・テーマを用いて文字化けを回避している。詳細は `docs/design/README.md` を参照)。
+
+<<<
+
+== 概要
+
+=== 目的
+四則演算(`+`, `-`, `*`, `/`)とメモリ機能(M+, M-, MR, MC)を持つ、標準入出力ベースの対話式CLI電卓を提供する。
+`0.6 - 0.2` のような小数演算で丸め誤差が出ないよう、内部の数値表現には `double` ではなく `BigDecimal` を用いる。
+
+=== 主な機能
+* 四則演算(`"数値 演算子 数値"` 形式の1行入力を解析して計算)
+* メモリ機能(M+: メモリ加算 / M-: メモリ減算 / MR: メモリ呼び出し / MC: メモリクリア)
+* 不正な入力(数値変換失敗・不正な演算子・ゼロ除算)をエラー表示し、アプリを継続する
+* `exit` によるアプリ終了
+
+=== 開発環境
+[cols="1,3", options="header"]
+|===
+| 項目 | 内容
+
+| 言語
+| Java 25
+
+| ビルドツール
+| Maven(フォルダ単位で独立した `pom.xml`)
+
+| テスト
+| JUnit 5(`junit-jupiter` 5.11.3)
+
+| 数値表現
+| `java.math.BigDecimal`(`double` の丸め誤差を回避するため採用)
+|===
+
+=== 実行方法
+[source,powershell]
+----
+cd 01_Calculator
+.\mvnw.cmd compile
+.\mvnw.cmd test
+.\mvnw.cmd exec:java "-Dexec.mainClass=com.javalab.calculator.Main"
+----
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/1[Issue #1] / https://github.com/ExperimentalHobby/JavaLearningLab/pull/31[PR #31]
+
+<<<
+
+== ユースケース
+
+[cols="1,3,4", options="header"]
+|===
+| ID | ユースケース | 概要
+
+| UC-1
+| 四則演算を行う
+| `"数値 演算子 数値"` 形式で式を入力し、計算結果を受け取る
+
+| UC-2
+| ゼロ除算時にエラーを表示する
+| 除数が0の除算を入力した場合、エラーメッセージを表示しアプリを継続する
+
+| UC-3
+| 不正な入力時にエラーを表示する
+| 数値として解釈できない値や、四則演算以外の演算子を入力した場合、エラーメッセージを表示しアプリを継続する
+
+| UC-4
+| メモリに加算する(M+)
+| `M+` を入力し、直前の計算結果をメモリに加算する
+
+| UC-5
+| メモリから減算する(M-)
+| `M-` を入力し、直前の計算結果をメモリから減算する
+
+| UC-6
+| メモリ値を呼び出す(MR)
+| `MR` を入力し、現在のメモリ値を表示・以降の計算に使用する
+
+| UC-7
+| メモリをクリアする(MC)
+| `MC` を入力し、メモリ値を0にリセットする
+
+| UC-8
+| アプリを終了する
+| `exit` を入力し、対話ループを終了する
+|===
+
+<<<
+
+== シーケンス図
+
+=== 四則演算(正常系)
+[plantuml, sequence-normal, svg]
+----
+include::diagrams/sequence-normal.puml[]
+----
+
+=== メモリ操作(M+ / M- / MR / MC)
+[plantuml, sequence-memory, svg]
+----
+include::diagrams/sequence-memory.puml[]
+----
+
+=== エラー処理
+[plantuml, sequence-error, svg]
+----
+include::diagrams/sequence-error.puml[]
+----
+
+<<<
+
+== クラス図
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+`Main` はエントリーポイントであり、`Calculator` に演算・メモリ操作を委譲する。`Calculator` は演算メソッド自体は副作用を持たせず、`memory` フィールドのみを内部状態として保持する。不正な演算子は `Calculator` が `CalculatorException` をスローし、`Main` がキャッチしてエラーメッセージを表示する。
+
+<<<
+
+== アクティビティ図
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+<<<
+
+== 補足事項
+
+=== BigDecimal採用理由
+`double` で `0.6 - 0.2` を計算すると `0.39999999999999997` のような誤差が発生する。本アプリは学習用電卓として厳密な小数計算を扱うため、`BigDecimal` を採用した。
+
+=== 除算の丸め処理
+`1 / 3` のような無限小数は、そのままでは `ArithmeticException` になる。本アプリではスケール10・`RoundingMode.HALF_UP` で丸めることで例外を回避しつつ、実用上十分な精度を確保している。表示時は `stripTrailingZeros()` で末尾の余分な0を除去する(例: `0.4000000000` → `0.4`)。
+
+=== テスト方針(TDD)
+Red → Green → Refactor サイクルで実装した。
+
+* *単体テスト*(`CalculatorTest` / `CalculatorMemoryTest`): 四則演算の正常系・ゼロ除算・不正な演算子、メモリ操作(M+/M-/MR/MC)の初期値・加算・減算・クリアを検証
+* *結合テスト*(`MainTest`): `Scanner`/`PrintStream` を注入した対話ループに対して、不正な数値入力時にクラッシュせず継続すること、複数コマンドの一連の入力(例: `"2 + 3"` → `"M+"` → `"10 - 4"` → `"M+"` → `"MR"`)でメモリ値が正しく積算されることを検証
+
+=== 設計上の工夫
+* `Main.run()` を `Scanner`/`PrintStream` を引数に取る静的メソッドとして分離し、`StringReader`/`ByteArrayOutputStream` を用いた結合テストを可能にしている。
+* `Calculator` の演算メソッド(`add`/`subtract`/`multiply`/`divide`)は副作用を持たない純粋な計算とし、状態を持つメモリ操作(`memoryAdd` 等)と役割を分離している。

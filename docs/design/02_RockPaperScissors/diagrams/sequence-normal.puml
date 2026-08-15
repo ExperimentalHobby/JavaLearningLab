@@ -1,0 +1,24 @@
+@startuml sequence-normal
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: じゃんけん対戦(正常系)
+
+actor 利用者
+participant "じゃんけんアプリ" as App
+participant "じゃんけんロジック" as Logic
+
+利用者 -> App : 手を入力する(グー/チョキ/パー)
+activate App
+App -> App : 入力を手に変換する
+App -> Logic : コンピュータの手をランダムに決定するよう依頼する
+activate Logic
+Logic --> App : コンピュータの手を返す
+deactivate Logic
+App -> Logic : 2つの手から勝敗を判定するよう依頼する
+activate Logic
+Logic --> App : 勝敗結果を返す
+deactivate Logic
+App --> 利用者 : 両者の手と勝敗結果を画面に表示する
+deactivate App
+
+@enduml

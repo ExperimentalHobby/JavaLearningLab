@@ -1,0 +1,46 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 01_Calculator クラス図
+
+class Main {
+  +main(args: String[]): void
+  ~run(scanner: Scanner, out: PrintStream): void
+  -evaluateExpression(calculator: Calculator, line: String, out: PrintStream): BigDecimal
+  -format(value: BigDecimal): String
+}
+
+class Calculator {
+  -memory: BigDecimal
+  +add(a: BigDecimal, b: BigDecimal): BigDecimal
+  +subtract(a: BigDecimal, b: BigDecimal): BigDecimal
+  +multiply(a: BigDecimal, b: BigDecimal): BigDecimal
+  +divide(a: BigDecimal, b: BigDecimal): BigDecimal
+  +calculate(a: BigDecimal, operator: String, b: BigDecimal): BigDecimal
+  +memoryAdd(value: BigDecimal): void
+  +memorySubtract(value: BigDecimal): void
+  +memoryRecall(): BigDecimal
+  +memoryClear(): void
+}
+
+class CalculatorException extends RuntimeException {
+  +CalculatorException(message: String)
+}
+
+Main "1" --> "1" Calculator : 利用する
+Main ..> CalculatorException : catchする
+Calculator ..> CalculatorException : throwする
+
+note right of Calculator
+  演算メソッド(add/subtract/multiply/divide)は副作用を持たない。
+  memory フィールドのみが内部状態として
+  M+/M-/MR/MC の対象となる。
+end note
+
+note bottom of Main
+  Scanner/PrintStream を引数に取る run() を
+  main() から分離し、結合テストで
+  標準入出力を差し替えられるようにしている。
+end note
+
+@enduml

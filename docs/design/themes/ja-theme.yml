@@ -1,0 +1,176 @@
+# Japanese Theme for AsciiDoc PDF Output
+# Based on asciidoctor-pdf default theme with CJK font support
+
+page:
+  background-color: FFFFFF
+  layout: portrait
+  margin: [0.75in, 0.75in, 0.75in, 0.75in]
+  margin-inner: 0.75in
+  margin-outer: 0.75in
+
+base:
+  text_align: left
+  background_color: FFFFFF
+  border_color: EEEEEE
+  border_radius: 4
+  border_width: 0.5
+  font_color: 333333
+  font_family: VL Gothic
+  font_size: 11pt
+  font_style: normal
+  line_height_length: 17.325
+  line_height: 1.15
+  orphans: 3
+  text_decoration: none
+  widows: 3
+
+heading:
+  text_align: left
+  font_color: C0392B
+  font_family: VL Gothic
+  font_style: bold
+  h1_font_size: 20pt
+  h2_font_size: 16pt
+  h3_font_size: 14pt
+  h4_font_size: 12pt
+  h5_font_size: 11pt
+  h6_font_size: 11pt
+  line_height: 1.15
+  margin_bottom: 12pt
+  margin_top: 12pt
+  min_height_after: 16pt
+  orphans: 3
+  widows: 3
+
+title-page:
+  align: center
+  background-color: FFFFFF
+  font-color: 000000
+  font-family: VL Gothic
+  font-size: 24pt
+  font-weight: bold
+  line-height: 1.15
+  padding: [50pt, 0, 0, 0]
+
+title:
+  align: center
+  bottom: 0
+  font-color: 000000
+  font-family: VL Gothic
+  font-size: 24pt
+  font-weight: bold
+  line-height: 1.15
+  margin: [0, 0, 12pt, 0]
+
+subtitle:
+  font-color: 666666
+  font-family: VL Gothic
+  font-size: 14pt
+  font-style: normal
+  font-weight: normal
+  line-height: 1.15
+  margin: [8pt, 0, 16pt, 0]
+
+toc:
+  background-color: F9F9F9
+  border-color: E0E0E0
+  border-style: solid
+  border-width: 1
+  font-family: VL Gothic
+  font-size: 10pt
+  font-weight: normal
+  line-height: 1.15
+  margin-bottom: 12pt
+  padding: [12pt, 12pt, 12pt, 12pt]
+
+toc-title:
+  font-color: 000000
+  font-family: VL Gothic
+  font-size: 12pt
+  font-weight: bold
+  line-height: 1.15
+  margin-bottom: 8pt
+
+paragraph:
+  font-family: VL Gothic
+  font-size: 11pt
+  line-height: 1.15
+  margin-bottom: 0
+  margin-top: 0
+  orphans: 3
+  text-align: left
+  widows: 3
+
+paragraph-orphaned:
+  margin-top: 12pt
+
+link:
+  font-color: 0066CC
+
+list:
+  font-family: VL Gothic
+  font-size: 11pt
+  line-height: 1.15
+  margin-top: 0
+  margin-bottom: 12pt
+
+list item:
+  margin-bottom: 6pt
+
+table:
+  background_color: FFFFFF
+  border_color: CCCCCC
+  border_width: 0.5
+  grid_width: 0.5
+  cell_padding: 5
+  head:
+    font_style: bold
+    background_color: F0F0F0
+    border_bottom_color: 000000
+    border_bottom_width: 1
+  body:
+    stripe_background_color: F9F9F9
+  foot:
+    background_color: F0F0F0
+
+codespan:
+  font_color: 0066CC
+  font_family: VL Gothic
+  font_style: normal
+
+code:
+  font_color: 333333
+  font_family: VL Gothic
+  font_size: 10pt
+  padding: 5pt
+  line_height: 1.25
+  background_color: F5F5F5
+  border_color: E0E0E0
+  border_radius: 3
+  border_width: 0.75
+
+footer:
+  border_color: DDDDDD
+  border_width: 0.25
+  font_color: 666666
+  font_family: VL Gothic
+  font_size: 9pt
+  height: 24pt
+  line_height: 1
+  padding: [6pt, 1, 0, 1]
+  vertical_align: middle
+  recto:
+    center:
+      content: '{page-number} / {page-count}'
+  verso:
+    center:
+      content: '{page-number} / {page-count}'
+
+font:
+  catalog:
+    VL Gothic:
+      normal: VL-Gothic-Regular.ttf
+      bold: VL-Gothic-Regular.ttf
+      italic: VL-Gothic-Regular.ttf
+      bold_italic: VL-Gothic-Regular.ttf
+  fallbacks: [VL Gothic]

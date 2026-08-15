@@ -1,0 +1,152 @@
+= 06_RpnCalculator 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-08-15
+:toc: left
+:toclevels: 2
+:sectnums:
+:pagenums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+NOTE: UML図は `diagrams/` 配下の `.puml` ファイルを https://asciidoctor.org/docs/asciidoctor-diagram/[asciidoctor-diagram] 経由でPlantUMLとして埋め込んでいる。拡張未導入の環境では、各 `.puml` を直接 https://www.plantuml.com/plantuml[PlantUMLオンラインサーバー] 等に読み込ませても図を確認できる。PDF化する場合は同フォルダの `generate-pdf.ps1` を実行する(`docs/design/fonts/`・`docs/design/themes/` の日本語フォント・テーマを用いて文字化けを回避している。詳細は `docs/design/README.md` を参照)。
+
+<<<
+
+== 概要
+
+=== 目的
+逆ポーランド記法(RPN)の数式(例: `3 4 +`)を評価する対話式CLI電卓を提供する。数値は `BigDecimal` で厳密に計算する。
+
+=== 主な機能
+* RPN形式の数式を1行入力し、`java.util.Stack` を用いて評価する
+* 不正なトークン・オペランド不足・不正な式・ゼロ除算をエラー表示し、アプリを継続する
+* `exit` によるアプリ終了
+
+=== 開発環境
+[cols="1,3", options="header"]
+|===
+| 項目 | 内容
+
+| 言語
+| Java 25
+
+| ビルドツール
+| Maven(フォルダ単位で独立した `pom.xml`)
+
+| テスト
+| JUnit 5(`junit-jupiter`)
+
+| 数値表現
+| `java.math.BigDecimal`(除算はスケール10・`HALF_UP`で丸め)
+
+| 評価アルゴリズム
+| `java.util.Stack`
+|===
+
+=== 実行方法
+[source,powershell]
+----
+cd 06_RpnCalculator
+.\mvnw.cmd compile
+.\mvnw.cmd test
+.\mvnw.cmd exec:java "-Dexec.mainClass=com.javalab.rpn.Main"
+----
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/6[Issue #6] / https://github.com/ExperimentalHobby/JavaLearningLab/pull/36[PR #36]
+
+<<<
+
+== ユースケース
+
+[cols="1,3,4", options="header"]
+|===
+| ID | ユースケース | 概要
+
+| UC-1
+| RPN式を評価する
+| 逆ポーランド記法の式(例: `3 4 +`)を入力し、評価結果を受け取る
+
+| UC-2
+| 不正なトークン時にエラーを表示する
+| 数値としても演算子としても解釈できないトークンがある場合、エラーメッセージを表示しアプリを継続する
+
+| UC-3
+| オペランド不足時にエラーを表示する
+| 演算子適用時に値が不足している場合、エラーメッセージを表示しアプリを継続する
+
+| UC-4
+| 不正な式でエラーを表示する
+| 評価終了時にスタックへ複数または0個の値が残る場合、エラーメッセージを表示しアプリを継続する
+
+| UC-5
+| ゼロ除算時にエラーを表示する
+| 除数が0の除算を含む式の場合、エラーメッセージを表示しアプリを継続する
+
+| UC-6
+| アプリを終了する
+| `exit` を入力し、対話ループを終了する
+|===
+
+<<<
+
+== シーケンス図
+
+=== RPN式の評価(正常系)
+[plantuml, sequence-normal, svg]
+----
+include::diagrams/sequence-normal.puml[]
+----
+
+=== エラー処理
+[plantuml, sequence-error, svg]
+----
+include::diagrams/sequence-error.puml[]
+----
+
+<<<
+
+== クラス図
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+`RpnCalculator` はすべてのメソッドが static であり、インスタンス状態を持たないステートレスなロジッククラスである。`Main` はこれを直接利用し、不正な式やゼロ除算時にスローされる `RpnCalculatorException`(および `ArithmeticException`)をキャッチしてエラーメッセージを表示する。
+
+<<<
+
+== アクティビティ図
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+NOTE: ×印は「この式1件の評価だけが打ち切られる」ことを表すフロー終端(flow final)であり、対話ループ全体を終了する●印(アクティビティ終端)とは意味が異なる。エラー発生後もアプリ自体は次の入力行の受付を継続する。
+
+<<<
+
+== 補足事項
+
+=== Stackによる評価アルゴリズム
+`java.util.Stack<BigDecimal>` にトークンを順次push/popすることでRPNを評価する。演算子が来たら直近2つの値をpopして計算し、結果を再度pushする(例: `"3 4 +"` → 3をpush → 4をpush → `"+"` で2つpopして7をpush)。
+
+=== 3種類の妥当性検証
+パーサーとしての妥当性検証は3種類ある: ①数値でも演算子でもないトークン、②演算子適用時のオペランド不足、③評価終了時にスタックへ複数(または0個)の値が残る不正な式。いずれも `RpnCalculatorException` にまとめ、`Main` 側で一律にエラー表示・継続できるようにしている。
+
+=== BigDecimalによる厳密な計算
+01_Calculatorと同様、`0.1+0.2` のような誤差を避けるため `double` ではなく `BigDecimal` を使用する。除算はスケール10・`RoundingMode.HALF_UP` で丸める。
+
+=== テスト方針(TDD)
+Red → Green → Refactor サイクルで実装した。
+
+* *単体テスト*: 四則演算の評価、不正なトークン、オペランド不足、不正な式、ゼロ除算を検証
+* *結合テスト*(`MainTest`): `Scanner`/`PrintStream` を注入した対話ループに対して、不正な式でクラッシュせず継続することを検証
+
+=== 設計上の工夫
+* `Main` は01〜05と同じ設計パターンで、`Scanner`/`PrintStream` を引数に取る `run` 静的メソッドに分離している。

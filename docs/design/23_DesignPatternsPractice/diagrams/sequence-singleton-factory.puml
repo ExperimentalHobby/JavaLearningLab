@@ -1,0 +1,37 @@
+@startuml sequence-singleton-factory
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: Singleton(log)とFactory(shape)
+
+actor 利用者
+participant "デモアプリ" as App
+participant "ログ(Singleton)" as Logger
+participant "図形ファクトリ" as Factory
+
+== Singleton: ログの記録(log) ==
+利用者 -> App : メッセージを入力する(log <メッセージ>)
+activate App
+App -> Logger : 唯一のインスタンスを取得する
+activate Logger
+Logger --> App : 常に同一のインスタンスを返す
+deactivate Logger
+App -> Logger : メッセージの記録を依頼する
+activate Logger
+Logger -> Logger : 内部のログ一覧に追加する
+deactivate Logger
+App --> 利用者 : 記録したことを表示する
+deactivate App
+
+== Factory: 図形の生成(shape) ==
+利用者 -> App : 図形の種類とパラメータを入力する(shape <種類> <値...>)
+activate App
+App -> Factory : 指定された種類の図形生成を依頼する
+activate Factory
+Factory -> Factory : 種類文字列に応じて\n具象図形クラスを選択し生成する
+Factory --> App : 生成された図形を返す
+deactivate Factory
+App -> App : 図形の面積を計算する
+App --> 利用者 : 生成結果と面積を表示する
+deactivate App
+
+@enduml

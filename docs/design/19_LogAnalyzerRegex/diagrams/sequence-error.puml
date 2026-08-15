@@ -1,0 +1,28 @@
+@startuml sequence-error
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: エラー処理
+
+actor 利用者
+participant "解析アプリ" as App
+participant "ファイルシステム" as FS
+
+利用者 -> App : コマンドを入力する
+activate App
+
+alt 指定ファイルの読み込みに失敗した場合(存在しない等)
+  App -> FS : ファイルを読み込む
+  activate FS
+  FS --> App : 入出力エラーを返す
+  deactivate FS
+  App --> 利用者 : 「ファイルの読み込みに失敗しました」と表示する
+
+else 不明なコマンドの場合
+  App -> App : loadでもexitでもないことを検知する
+  App --> 利用者 : 「不明なコマンドです」と表示する
+end
+
+App -> App : 入力受付を継続する(アプリは終了しない)
+deactivate App
+
+@enduml

@@ -1,0 +1,153 @@
+= 24_SocketChatApp 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-08-15
+:toc: left
+:toclevels: 2
+:sectnums:
+:pagenums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+NOTE: UML図は `diagrams/` 配下の `.puml` ファイルを https://asciidoctor.org/docs/asciidoctor-diagram/[asciidoctor-diagram] 経由でPlantUMLとして埋め込んでいる。拡張未導入の環境では、各 `.puml` を直接 https://www.plantuml.com/plantuml[PlantUMLオンラインサーバー] 等に読み込ませても図を確認できる。PDF化する場合は同フォルダの `generate-pdf.ps1` を実行する(`docs/design/fonts/`・`docs/design/themes/` の日本語フォント・テーマを用いて文字化けを回避している。詳細は `docs/design/README.md` を参照)。
+
+<<<
+
+== 概要
+
+=== 目的
+生の `ServerSocket`/`Socket`(TCP)で動作するマルチクライアント対応チャットサーバーを提供する。`ServerSocket`/`Socket` と並行接続処理の実践を目的とする。
+
+=== 主な機能
+* サーバーは複数クライアントの同時接続を受け付ける
+* 接続直後にクライアントが送るユーザー名以降、送信した各行を接続中の他クライアント全員へ `<ユーザー名>: <メッセージ>` の形式でブロードキャストする
+* クライアント切断時は他クライアントへ退出通知を配信する
+
+=== 開発環境
+[cols="1,3", options="header"]
+|===
+| 項目 | 内容
+
+| 言語
+| Java 25
+
+| ビルドツール
+| Maven(フォルダ単位で独立した `pom.xml`)
+
+| テスト
+| JUnit 5(`junit-jupiter`。実際の `ServerSocket`(ephemeralポート)+`Socket` による結合テスト)
+
+| 通信
+| `java.net.ServerSocket`/`Socket`(TCP)
+
+| 並行処理
+| 1接続1スレッドモデル(`ExecutorService.newCachedThreadPool`)、`CopyOnWriteArrayList`
+|===
+
+=== 実行方法
+[source,powershell]
+----
+cd 24_SocketChatApp
+.\mvnw.cmd compile
+.\mvnw.cmd test
+
+# サーバー起動(既定ポート5000、引数で変更可)
+.\mvnw.cmd exec:java "-Dexec.mainClass=com.javalab.socketchat.Main"
+
+# クライアント起動(複数プロセスで同時接続可能)
+.\mvnw.cmd exec:java "-Dexec.mainClass=com.javalab.socketchat.ChatClientMain"
+----
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/24[Issue #24] / https://github.com/ExperimentalHobby/JavaLearningLab/pull/54[PR #54]
+
+<<<
+
+== ユースケース
+
+[cols="1,3,4", options="header"]
+|===
+| ID | ユースケース | 概要
+
+| UC-1
+| サーバーに接続しユーザー名を登録する
+| クライアントがTCP接続し、最初の行でユーザー名を送信すると「ようこそ」メッセージを受け取る
+
+| UC-2
+| メッセージを送信する
+| 送信した行が「ユーザー名: メッセージ」の形式で他の全クライアントへブロードキャストされる(送信者自身には届かない)
+
+| UC-3
+| 切断時に退出通知が配信される
+| クライアントが切断すると、他クライアントへ「<ユーザー名>が退出しました」が配信される
+
+| UC-4
+| サーバーを停止する
+| サーバープロセス終了時、全クライアント接続をクローズしスレッドプールを終了する
+|===
+
+<<<
+
+== シーケンス図
+
+=== 接続・メッセージ送信・ブロードキャスト
+[plantuml, sequence-normal, svg]
+----
+include::diagrams/sequence-normal.puml[]
+----
+
+=== 切断と退出通知
+[plantuml, sequence-error, svg]
+----
+include::diagrams/sequence-error.puml[]
+----
+
+<<<
+
+== クラス図
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+`ChatServer` は接続ごとに `ClientHandler`(`Runnable`)を生成し、スレッドプールで並行実行する。`ClientHandler` は自身の担当接続からの入力を読み取り、`ChatServer.broadcast` を呼び戻して他クライアントへ配信する。
+
+<<<
+
+== アクティビティ図
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+<<<
+
+== 補足事項
+
+=== 1接続1スレッドモデル
+`ChatServer` は `ServerSocket.accept()` ループを専用スレッドで回し、接続ごとに `ClientHandler`(`Runnable`)を `ExecutorService`(`newCachedThreadPool`)へ投入する1接続1スレッドモデルを採用した。並行接続処理の基本形として学習ポイントに直接対応する。
+
+=== CopyOnWriteArrayListの採用理由
+接続中クライアントは `CopyOnWriteArrayList` で管理した。ブロードキャスト(読み取り・反復)の頻度が接続/切断(書き込み)より圧倒的に多い用途に適しており、`synchronized` なリストより単純にスレッドセーフな反復ができる。
+
+=== 実ソケットでの結合テスト
+テストはモックを使わず、`ChatServer` を実際にephemeralポート(`port=0`)で起動し、実際の `java.net.Socket` でクライアント接続する結合テストとした(既存Issue #13/#14と同じ「実リソースでのテスト」方針)。
+
+=== ブロードキャスト除外の検証方法
+「送信者自身にはブロードキャストされない」ことを検証するテストでは、接続クライアントを1つだけにしたうえで自分自身の発言後に短いタイムアウト(`SoTimeout`)付きで `readLine()` し、`SocketTimeoutException` が飛ぶこと(＝何も返ってこないこと)を確認する設計にした。2クライアントで「相手には届くが自分には届かない」ことを個別に確認するよりも、この方法の方がブロードキャスト除外ロジックの欠落を確実に検出できる。
+
+=== レースコンディション回避のためのハンドシェイク
+ユーザー名ハンドシェイク直後にサーバーから当該クライアント本人へ「ようこそ」メッセージを直接送るプロトコルにした。テストではこのメッセージを読むことでサーバー側の登録完了を待ち合わせ、複数クライアントの接続順とブロードキャストタイミングの競合(レースコンディション)を避けている。
+
+=== 手動確認での検証内容
+手動確認として、実際に `Main`(サーバー)と `ChatClientMain`(クライアント)を別プロセスで起動し、2クライアント間でのメッセージ相互送信・片方切断時の退出通知配信までコマンドラインから直接確認した。
+
+=== テスト方針(TDD)
+Red → Green → Refactor サイクルで実装した。
+
+* *結合テスト*(`ChatServerTest`): 実ソケットでの複数クライアント接続、ブロードキャスト、送信者除外、退出通知を検証
+* *手動確認*: `Main`/`ChatClientMain` を別プロセスで起動し、実際のメッセージ送受信・切断時の退出通知を確認

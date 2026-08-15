@@ -1,0 +1,79 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 23_DesignPatternsPractice クラス図
+
+package singleton {
+  class AppLogger {
+    -{static} INSTANCE: AppLogger
+    -logs: List<String>
+    -AppLogger()
+    +{static} getInstance(): AppLogger
+    +log(message: String): void
+    +logs(): List<String>
+  }
+}
+
+package factory {
+  interface Shape {
+    +area(): double
+  }
+  class Circle << record >> implements Shape {
+    +radius: double
+  }
+  class Rectangle << record >> implements Shape {
+    +width: double
+    +height: double
+  }
+  class ShapeFactory {
+    +create(type: String, params: double...): Shape
+  }
+  ShapeFactory ..> Shape : 生成する
+}
+
+package observer {
+  interface WeatherObserver {
+    +onTemperatureChanged(temperature: double): void
+  }
+  class WeatherStation {
+    -observers: List<WeatherObserver>
+    +subscribe(observer: WeatherObserver): void
+    +unsubscribe(observer: WeatherObserver): void
+    +setTemperature(temperature: double): void
+  }
+  WeatherStation "1" o-- "0..*" WeatherObserver : 通知先として管理する
+}
+
+package strategy {
+  interface PaymentStrategy {
+    +pay(amount: int): String
+  }
+  class CreditCardPayment implements PaymentStrategy
+  class PayPalPayment implements PaymentStrategy
+  class Checkout {
+    -strategy: PaymentStrategy
+    +Checkout(strategy: PaymentStrategy)
+    +setStrategy(strategy: PaymentStrategy): void
+    +checkout(amount: int): String
+  }
+  Checkout "1" --> "1" PaymentStrategy : 実行時に切り替える
+}
+
+class Main {
+  +main(args: String[]): void
+  ~run(scanner: Scanner, out: PrintStream): void
+}
+
+Main ..> AppLogger : Singletonとして利用する
+Main ..> ShapeFactory : Factoryとして利用する
+Main ..> WeatherStation : Subjectとして利用する
+Main ..> Checkout : Contextとして利用する
+
+note bottom of AppLogger
+  static final フィールドによる
+  eager initialization。JVMのクラス初期化は
+  スレッドセーフに1度だけ行われるため、
+  synchronizedなしで安全なSingletonを実現する。
+end note
+
+@enduml

@@ -1,0 +1,51 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 02_RockPaperScissors クラス図
+
+enum Hand {
+  ROCK
+  SCISSORS
+  PAPER
+  +beats(other: Hand): boolean
+}
+
+enum Result {
+  PLAYER_WIN
+  COMPUTER_WIN
+  DRAW
+}
+
+class RockPaperScissorsGame {
+  +{static} randomHand(random: Random): Hand
+  +{static} judge(player: Hand, computer: Hand): Result
+}
+
+class Main {
+  +main(args: String[]): void
+  ~run(scanner: Scanner, out: PrintStream, computerHandSupplier: Supplier<Hand>): void
+  -parseHand(input: String): Hand
+  -toDisplayName(hand: Hand): String
+  -toMessage(result: Result): String
+}
+
+Main ..> RockPaperScissorsGame : 利用する
+Main ..> Hand : 利用する
+Main ..> Result : 利用する
+RockPaperScissorsGame ..> Hand : 決定・判定する
+RockPaperScissorsGame ..> Result : 返す
+Hand ..> Hand : 比較する(beats)
+
+note right of RockPaperScissorsGame
+  すべてのメソッドがstaticであり、
+  インスタンス状態を持たないステートレスな
+  ロジッククラス。
+end note
+
+note bottom of Main
+  コンピュータの手を Supplier<Hand> として
+  注入可能にし、結合テストで乱数に依存せず
+  決定的に検証できるようにしている。
+end note
+
+@enduml

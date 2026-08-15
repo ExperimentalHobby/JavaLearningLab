@@ -1,0 +1,159 @@
+= 22_GameOfLife 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-08-15
+:toc: left
+:toclevels: 2
+:sectnums:
+:pagenums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+NOTE: UML図は `diagrams/` 配下の `.puml` ファイルを https://asciidoctor.org/docs/asciidoctor-diagram/[asciidoctor-diagram] 経由でPlantUMLとして埋め込んでいる。拡張未導入の環境では、各 `.puml` を直接 https://www.plantuml.com/plantuml[PlantUMLオンラインサーバー] 等に読み込ませても図を確認できる。PDF化する場合は同フォルダの `generate-pdf.ps1` を実行する(`docs/design/fonts/`・`docs/design/themes/` の日本語フォント・テーマを用いて文字化けを回避している。詳細は `docs/design/README.md` を参照)。
+
+<<<
+
+== 概要
+
+=== 目的
+Conwayのライフゲームを、`javax.swing.Timer` で世代更新しながらグリッドを描画するSwing GUIアプリを提供する。2D配列操作・GUI描画・タイマー駆動更新の実践を目的とする。
+
+=== 主な機能
+* マス目をクリックして初期パターンを編集する
+* 「開始」でタイマーによる自動世代更新を開始する
+* 「停止」で自動更新を止める
+* 「1世代進める」で手動で1世代だけ進める
+* 「クリア」で盤面を全消去する
+* 「ランダム生成」でランダムな初期パターンを生成する
+
+=== 開発環境
+[cols="1,3", options="header"]
+|===
+| 項目 | 内容
+
+| 言語
+| Java 25
+
+| ビルドツール
+| Maven(フォルダ単位で独立した `pom.xml`)
+
+| テスト
+| JUnit 5(`junit-jupiter`。GUI描画・イベント配線は自動テスト対象外)
+
+| GUIフレームワーク
+| Swing(`JFrame`/`JPanel`/`javax.swing.Timer`)
+
+| 盤面表現
+| `boolean[][]`(2次元配列)
+|===
+
+=== 実行方法
+[source,powershell]
+----
+cd 22_GameOfLife
+.\mvnw.cmd compile
+.\mvnw.cmd test
+.\mvnw.cmd exec:java "-Dexec.mainClass=com.javalab.gameoflife.Main"
+----
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/22[Issue #22] / https://github.com/ExperimentalHobby/JavaLearningLab/pull/52[PR #52]
+
+<<<
+
+== ユースケース
+
+[cols="1,3,4", options="header"]
+|===
+| ID | ユースケース | 概要
+
+| UC-1
+| 初期パターンを編集する
+| グリッド上のマスをクリックし、生死を反転させる
+
+| UC-2
+| 自動更新を開始する
+| 「開始」ボタンをクリックし、タイマーで一定間隔ごとに世代を進める
+
+| UC-3
+| 自動更新を停止する
+| 「停止」ボタンをクリックし、タイマーを止める
+
+| UC-4
+| 1世代だけ進める
+| 「1世代進める」ボタンをクリックし、手動で1世代だけ進める
+
+| UC-5
+| 盤面をクリアする
+| 「クリア」ボタンをクリックし、全マスを死にする
+
+| UC-6
+| ランダムな初期パターンを生成する
+| 「ランダム生成」ボタンをクリックし、各マスをランダムに生死判定する
+|===
+
+<<<
+
+== シーケンス図
+
+=== パターン編集とタイマー駆動更新
+[plantuml, sequence-normal, svg]
+----
+include::diagrams/sequence-normal.puml[]
+----
+
+=== 停止・1世代進める・クリア・ランダム生成
+[plantuml, sequence-error, svg]
+----
+include::diagrams/sequence-error.puml[]
+----
+
+<<<
+
+== クラス図
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+`LifeFrame`(`JFrame` を継承したメインウィンドウ)は `Grid`(盤面)と `GameOfLife`(世代更新ロジック)を保持する。`GameOfLife.nextGeneration` は現在の `Grid` を書き換えず新しい `Grid` を返す純粋関数である。
+
+<<<
+
+== アクティビティ図
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+<<<
+
+== 補足事項
+
+=== テスト方針の分離
+Issue #11/#18/#21と同じ方針で、`Grid`/`GameOfLife` はGUIに依存しない純粋なロジックとしてTDDし、`LifeFrame` は実装後に実機起動・スクリーンショットで手動確認した。
+
+=== 境界の扱い
+`Grid` は `boolean[][]` の2次元配列で盤面を表現し、`countLiveNeighbors` は境界外を非生存として扱う(トーラス状のラップアラウンドはしない、盤面の端では隣接マスが少なくカウントされる仕様)。
+
+=== 純粋関数としての世代更新
+`GameOfLife.nextGeneration` は現在の `Grid` を書き換えず新しい `Grid` を返す純粋関数とした。世代更新中に元の盤面を参照しながら判定する必要があるため、インプレース更新だと参照している最中に値が変わってしまう不整合を避けられる。
+
+=== 既知の周期パターンによる検証
+ソルバーのテストでは、既知の周期パターン「ブリンカー」(3マスの直線が1世代ごとに90度回転する)を使い、隣接セル数だけでなく実際のパターン変化まで含めて `nextGeneration` の正しさを検証した。
+
+=== タイマー駆動更新の実装
+`LifeFrame` は `javax.swing.Timer` で一定間隔(150ms)ごとに世代を進める「タイマー駆動更新」を実装した。フレームワーク指定のない学習ポイントだったため、既存exercise(#11/#18)と同じSwingを採用し、新規依存関係を増やさずに済ませた。
+
+=== 手動確認での検証内容
+手動確認では、実際にWindows上でアプリを起動し、「ランダム生成」で初期パターンを作成→「開始」でタイマーが自動的に世代を進める(2秒間で13世代)ことをスクリーンショットで確認した。
+
+=== テスト方針(TDD)
+Red → Green → Refactor サイクルで実装した。
+
+* *単体テスト*(`GridTest`/`GameOfLifeTest`): 生存隣接数のカウント、境界外の非生存扱い、ブリンカーパターンでの世代遷移を検証
+* *手動確認*: `LifeFrame` のウィンドウ表示・マスクリック編集・開始/停止/1世代進める/クリア/ランダム生成を実機で確認

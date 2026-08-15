@@ -1,0 +1,58 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 20_SpringBootApiIntro クラス図
+
+class Book << record >> {
+  +id: long
+  +title: String
+  +author: String
+}
+
+class BookRequest << record >> {
+  +title: String
+  +author: String
+}
+
+class BookService << Service >> {
+  -books: Map<Long, Book>
+  -nextId: AtomicLong
+  +create(title: String, author: String): Book
+  +findAll(): List<Book>
+  +findById(id: long): Book
+  +delete(id: long): void
+}
+
+class BookNotFoundException << ResponseStatus404 >> extends RuntimeException {
+  +BookNotFoundException(id: long)
+}
+
+class BookController << RestController >> {
+  -bookService: BookService
+  +BookController(bookService: BookService)
+  +findAll(): List<Book>
+  +create(request: BookRequest): Book
+  +findById(id: long): Book
+  +delete(id: long): void
+}
+
+BookController "1" --> "1" BookService : コンストラクタ\nインジェクション(DI)
+BookController ..> BookRequest : リクエストボディとして受け取る
+BookController ..> Book : レスポンスとして返す
+BookService "1" o-- "0..*" Book : インメモリで管理する
+BookService ..> BookNotFoundException : throwする
+
+note right of BookService
+  @Service によりSpringのDIコンテナへ登録される。
+  テストでは new BookService() で
+  Springコンテナなしにプレーンな
+  JUnitテストとして直接検証できる。
+end note
+
+note right of BookNotFoundException
+  @ResponseStatus(HttpStatus.NOT_FOUND) により、
+  コントローラー側で個別に例外処理せずとも
+  Spring MVCが自動的にHTTP 404へマッピングする。
+end note
+
+@enduml

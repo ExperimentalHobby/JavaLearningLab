@@ -1,0 +1,34 @@
+@startuml activity-diagram
+skinparam defaultFontName VL Gothic
+
+title アクティビティ図: 対話ループ全体の流れ
+
+start
+:操作方法を案内する;
+while (次の入力行があるか?) is (ある)
+  :1行分の入力を受け取る;
+  if (空行か?) then (yes)
+  elseif (終了コマンドか?) then (yes)
+    break
+  else (no)
+    switch (コマンドの種類は?)
+    case (list)
+      :記録一覧を表示する;
+    case (save/load)
+      :ファイルへの保存/読込を実行する;
+    case (add)
+      if (身長・体重が正しく\n数値として解釈できるか?) then (yes)
+        :BMIを算出し体格区分を判定する;
+        :記録として追加する;
+      else (no)
+        :エラー内容を表示する;
+      endif
+    case (不明なコマンド)
+      :エラー内容を表示する;
+    endswitch
+  endif
+endwhile (ない)
+:終了する;
+stop
+
+@enduml

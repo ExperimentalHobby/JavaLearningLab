@@ -1,0 +1,83 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 07_ShapePolymorphism クラス図
+
+interface Measurable {
+  +area(): double
+  +perimeter(): double
+}
+
+abstract class Shape {
+  +{abstract} getName(): String
+  +describe(): String
+}
+
+class Circle {
+  -radius: double
+  +Circle(radius: double)
+  +area(): double
+  +perimeter(): double
+  +getName(): String
+}
+
+class Rectangle {
+  -width: double
+  -height: double
+  +Rectangle(width: double, height: double)
+  +area(): double
+  +perimeter(): double
+  +getName(): String
+}
+
+class Triangle {
+  -sideA: double
+  -sideB: double
+  -sideC: double
+  +Triangle(sideA: double, sideB: double, sideC: double)
+  +area(): double
+  +perimeter(): double
+  +getName(): String
+}
+
+class ShapeException extends RuntimeException {
+  +ShapeException(message: String)
+}
+
+class Main {
+  +main(args: String[]): void
+  ~run(scanner: Scanner, out: PrintStream): void
+  -handleCommand(shapes: List<Shape>, line: String, out: PrintStream): void
+  -printShapes(shapes: List<Shape>, out: PrintStream): void
+}
+
+Shape ..|> Measurable
+Circle --|> Shape
+Rectangle --|> Shape
+Triangle --|> Shape
+Main "1" o-- "0..*" Shape : 管理する
+Main ..> ShapeException : catchする
+Circle ..> ShapeException : throwする
+Triangle ..> ShapeException : throwする
+
+note right of Measurable
+  「面積・周囲長を計算できる」という契約。
+  図形以外の概念にも適用できるよう
+  Shape(抽象クラス)とは分離している。
+end note
+
+note right of Shape
+  area()/perimeter() は図形ごとに
+  計算方法が異なるためサブクラスに委ね、
+  それらを組み合わせる describe() のみ
+  共通実装として持つ。
+end note
+
+note bottom of Main
+  shapes は List<Shape> として一律に扱う。
+  shape.area() の呼び出しは実行時の実際の型
+  (Circle/Rectangle/Triangle)に応じて解決される
+  (ポリモーフィズム)。
+end note
+
+@enduml

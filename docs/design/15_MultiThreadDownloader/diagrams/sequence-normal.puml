@@ -1,0 +1,35 @@
+@startuml sequence-normal
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: 複数URLの並行ダウンロード(正常系)
+
+actor 利用者
+participant "ダウンローダーアプリ" as App
+participant "並行ダウンロード\n管理ロジック" as Downloader
+participant "スレッドプール" as Pool
+participant "外部サーバー群" as Server
+
+利用者 -> App : URL一覧と保存先ディレクトリを入力する\n(download <URL1,URL2,...> <保存先>)
+activate App
+App -> App : カンマ区切りのURLをダウンロード指示の一覧に変換する
+App -> Downloader : 全件の並行ダウンロードを依頼する
+activate Downloader
+Downloader -> Pool : リクエスト件数分のスレッドを用意する
+activate Pool
+
+par 各ダウンロード指示について並行に実行
+  Pool -> Server : HTTP GETリクエストを送信する
+  activate Server
+  Server --> Pool : レスポンス(ステータスコード・本文)を返す
+  deactivate Server
+  Pool -> Pool : ファイルへ書き込み、結果を記録する
+end
+
+Pool --> Downloader : 全スレッドの完了を待ち、\nリクエストと同じ順序で結果を回収する
+deactivate Pool
+Downloader --> App : ダウンロード結果一覧を返す
+deactivate Downloader
+App --> 利用者 : 各URLの成功/失敗を1件ずつ表示する
+deactivate App
+
+@enduml

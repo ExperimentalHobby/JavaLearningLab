@@ -1,0 +1,48 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 15_MultiThreadDownloader クラス図
+
+class DownloadRequest << record >> {
+  +url: URI
+  +destination: Path
+}
+
+class DownloadResult << record >> {
+  +request: DownloadRequest
+  +success: boolean
+  +bytesWritten: long
+  +errorMessage: String
+}
+
+class MultiThreadDownloader {
+  -client: HttpClient
+  +downloadAll(requests: List<DownloadRequest>, threadCount: int): List<DownloadResult>
+  -joinResult(future: Future<DownloadResult>): DownloadResult
+  -downloadOne(request: DownloadRequest): DownloadResult
+}
+
+class Main {
+  +main(args: String[]): void
+  ~run(scanner: Scanner, out: PrintStream): void
+  -{static} handleDownload(downloader: MultiThreadDownloader, urlsCsv: String, destDir: String, out: PrintStream): void
+  -{static} fileNameOf(uri: URI, index: int): String
+}
+
+Main "1" --> "1" MultiThreadDownloader : 利用する
+Main ..> DownloadRequest : 生成する
+Main ..> DownloadResult : 表示に利用する
+MultiThreadDownloader ..> DownloadRequest : 受け取る
+MultiThreadDownloader ..> DownloadResult : 生成する
+DownloadResult --> DownloadRequest
+
+note right of MultiThreadDownloader
+  Executors.newFixedThreadPool(threadCount) で
+  ダウンロードを並行実行し、Future経由で
+  リクエストと同じ順序の結果を回収する。
+  1件の失敗は例外を投げず success=false の
+  DownloadResult として記録し、他のダウンロードを
+  止めない設計にしている。
+end note
+
+@enduml

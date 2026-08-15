@@ -1,0 +1,46 @@
+@startuml sequence-normal
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: プレイヤー登録とトーナメント実施
+
+actor 利用者
+participant "大会アプリ" as App
+participant "トーナメント" as Tournament
+participant "対戦ロジック" as Match
+
+== プレイヤーの登録(register) ==
+利用者 -> App : 参加者名を入力する(register <名前...>)
+activate App
+App -> App : 入力された名前ごとにプレイヤーを生成し登録する
+deactivate App
+
+== トーナメントの開始(start) ==
+利用者 -> App : 開始コマンドを入力する(start)
+activate App
+App -> Tournament : 登録済みプレイヤーでトーナメントを生成するよう依頼する
+activate Tournament
+Tournament -> Tournament : 参加人数が2以上かつ2のべき乗であることを検証する
+deactivate Tournament
+App -> Tournament : トーナメントの実施を依頼する
+activate Tournament
+loop 参加者が1人になるまで
+  loop 現在のラウンドの各対戦カードについて
+    Tournament -> Match : 2人の手から勝者を判定するよう依頼する
+    activate Match
+    Match --> Tournament : 勝者を返す(あいこの場合はなし)
+    deactivate Match
+    opt あいこの場合
+      Tournament -> Match : 決着がつくまで再戦を依頼する
+      activate Match
+      Match --> Tournament : 勝者を返す
+      deactivate Match
+    end
+  end
+  Tournament -> Tournament : 各対戦の勝者を次ラウンドの参加者とする
+end
+Tournament --> App : 優勝者を返す
+deactivate Tournament
+App --> 利用者 : 優勝者を画面に表示する
+deactivate App
+
+@enduml

@@ -1,0 +1,48 @@
+@startuml sequence-error
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: 停止・1世代進める・クリア・ランダム生成
+
+actor 利用者
+participant "メインウィンドウ" as Frame
+participant "盤面" as Grid
+participant "世代更新ロジック" as GoL
+participant "タイマー" as Timer
+
+== 停止 ==
+利用者 -> Frame : 「停止」ボタンをクリックする
+activate Frame
+Frame -> Timer : 実行中の更新を停止する
+activate Timer
+deactivate Timer
+deactivate Frame
+
+== 1世代進める(手動) ==
+利用者 -> Frame : 「1世代進める」ボタンをクリックする
+activate Frame
+Frame -> GoL : 現在の盤面から次世代の算出を依頼する
+activate GoL
+GoL --> Frame : 次世代の新しい盤面を返す
+deactivate GoL
+Frame -> Frame : 現在の盤面を置き換え再描画する
+deactivate Frame
+
+== クリア ==
+利用者 -> Frame : 「クリア」ボタンをクリックする
+activate Frame
+Frame -> Grid : 全マスを死とするよう依頼する
+activate Grid
+deactivate Grid
+Frame -> Frame : 世代数を0に戻し再描画する
+deactivate Frame
+
+== ランダム生成 ==
+利用者 -> Frame : 「ランダム生成」ボタンをクリックする
+activate Frame
+Frame -> Grid : 各マスをランダムに生死判定するよう依頼する
+activate Grid
+deactivate Grid
+Frame -> Frame : 世代数を0に戻し再描画する
+deactivate Frame
+
+@enduml

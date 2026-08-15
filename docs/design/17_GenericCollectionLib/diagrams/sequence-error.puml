@@ -1,0 +1,33 @@
+@startuml sequence-error
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: エラー処理
+
+actor 利用者
+participant "デモアプリ" as App
+participant "汎用スタック/キュー" as Coll
+
+利用者 -> App : 操作コマンドを入力する
+activate App
+
+alt 空のコレクションに対しpop/peek/dequeueを行う場合
+  App -> Coll : 先頭要素の取り出し/参照を依頼する
+  activate Coll
+  Coll -> Coll : 要素が1つもないことを検知する
+  Coll --> App : 空であることを通知する
+  deactivate Coll
+  App --> 利用者 : エラー内容を表示する
+
+else 不明なstack/queue操作の場合
+  App -> App : いずれの操作にも該当しないことを検知する
+  App --> 利用者 : 「不明な操作です」と表示する
+
+else 不明なコマンドの場合
+  App -> App : stack/queue/exitのいずれにも該当しないことを検知する
+  App --> 利用者 : 「不明なコマンドです」と表示する
+end
+
+App -> App : 入力受付を継続する(アプリは終了しない)
+deactivate App
+
+@enduml

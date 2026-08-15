@@ -1,0 +1,37 @@
+@startuml sequence-error
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: エラー処理
+
+actor 利用者
+participant "RPN電卓アプリ" as App
+participant "RPN評価ロジック" as Logic
+
+利用者 -> App : 式を入力する
+activate App
+App -> Logic : 式の評価を依頼する
+activate Logic
+
+alt 数値でも演算子でもないトークンの場合
+  Logic -> Logic : トークンが数値として解釈できないことを検知する
+  Logic --> App : 不正なトークンであることを通知する
+
+else 演算子適用時にオペランドが不足する場合
+  Logic -> Logic : 演算子適用時に積み上げた値が足りないことを検知する
+  Logic --> App : オペランド不足であることを通知する
+
+else 評価終了時に値が1つに定まらない場合
+  Logic -> Logic : 評価終了時に積み上げた値が0個または2個以上であることを検知する
+  Logic --> App : 不正な式であることを通知する
+
+else 除数が0の場合
+  Logic -> Logic : 除算を試みるが除数が0であることを検知する
+  Logic --> App : ゼロ除算であることを通知する
+end
+
+deactivate Logic
+App --> 利用者 : エラー内容を表示する
+App -> App : 入力受付を継続する(アプリは終了しない)
+deactivate App
+
+@enduml

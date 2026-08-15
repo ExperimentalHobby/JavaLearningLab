@@ -1,0 +1,22 @@
+@startuml sequence-normal
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: 四則演算(正常系)
+
+actor 利用者
+participant "電卓アプリ" as App
+participant "演算ロジック" as Logic
+
+利用者 -> App : "数値 演算子 数値" の形式で式を入力する\n(例: "3 + 5")
+activate App
+App -> App : 入力を数値2つと演算子に分解する
+App -> Logic : 演算子に応じた四則演算の実行を依頼する
+activate Logic
+Logic -> Logic : 指定された演算子で計算する
+Logic --> App : 計算結果を返す
+deactivate Logic
+App -> App : 計算結果を次回のメモリ操作のために保持する
+App --> 利用者 : 計算結果を画面に表示する
+deactivate App
+
+@enduml

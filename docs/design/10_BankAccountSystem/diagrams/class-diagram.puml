@@ -1,0 +1,74 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 10_BankAccountSystem クラス図
+
+class Account {
+  -ownerName: String
+  -balance: BigDecimal
+  -history: List<Transaction>
+  +Account(ownerName: String)
+  +getOwnerName(): String
+  +getBalance(): BigDecimal
+  +getHistory(): List<Transaction>
+  +deposit(amount: BigDecimal): void
+  +withdraw(amount: BigDecimal): void
+  -{static} validatePositiveAmount(amount: BigDecimal, label: String): void
+}
+
+class Transaction << record >> {
+  +type: Type
+  +amount: BigDecimal
+  +balanceAfter: BigDecimal
+}
+
+enum "Transaction.Type" as TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+}
+
+abstract class BankAccountException extends RuntimeException {
+}
+
+class InvalidAmountException extends BankAccountException {
+  +InvalidAmountException(message: String)
+}
+
+class InsufficientBalanceException extends BankAccountException {
+  +InsufficientBalanceException(message: String)
+}
+
+class Main {
+  +main(args: String[]): void
+  ~run(scanner: Scanner, out: PrintStream): void
+  -handleCommand(account: Account, line: String, out: PrintStream): void
+  -printHistory(account: Account, out: PrintStream): void
+}
+
+Main "1" --> "1" Account : 利用する
+Main ..> BankAccountException : 基底クラスで一括catchする
+Account "1" *-- "0..*" Transaction : 記録する
+Transaction --> TransactionType
+Account ..> InvalidAmountException : throwする
+Account ..> InsufficientBalanceException : throwする
+
+note right of Account
+  balance/history はいずれも private で保護し、
+  deposit/withdraw を通じてのみ変更できる。
+  getHistory() は List.copyOf で
+  変更不可なビューを返す(カプセル化)。
+end note
+
+note right of BankAccountException
+  InvalidAmountException(不正な金額)と
+  InsufficientBalanceException(残高不足)の
+  共通基底。Main側は基底クラスで一括catchでき、
+  原因ごとのcatch節を増やさずに済む。
+end note
+
+note bottom of Transaction
+  Java の record として実装した
+  イミュータブルな値オブジェクト。
+end note
+
+@enduml

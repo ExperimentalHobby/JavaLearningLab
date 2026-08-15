@@ -1,0 +1,41 @@
+@startuml sequence-normal
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: JSON取得(fetch / fetchUser)
+
+actor 利用者
+participant "HTTPクライアントアプリ" as App
+participant "JSON取得ロジック" as Fetcher
+participant "外部API" as Server
+
+== 生JSONの取得(fetch) ==
+利用者 -> App : 取得先URLを入力する(fetch <URL>)
+activate App
+App -> Fetcher : JSONの取得を依頼する
+activate Fetcher
+Fetcher -> Server : HTTP GETリクエストを送信する
+activate Server
+Server --> Fetcher : レスポンス(ステータスコード・JSON本文)を返す
+deactivate Server
+Fetcher -> Fetcher : ステータスコードが200であることを確認する
+Fetcher --> App : レスポンス本文(JSON文字列)を返す
+deactivate Fetcher
+App --> 利用者 : 取得したJSONをそのまま画面に表示する
+deactivate App
+
+== Userとして解析・表示(fetchUser) ==
+利用者 -> App : 取得先URLを入力する(fetchUser <URL>)
+activate App
+App -> Fetcher : Userとしての取得を依頼する
+activate Fetcher
+Fetcher -> Server : HTTP GETリクエストを送信する
+activate Server
+Server --> Fetcher : レスポンス(ステータスコード・JSON本文)を返す
+deactivate Server
+Fetcher -> Fetcher : JSON本文をUserレコードへ変換する
+Fetcher --> App : 解析済みのUserを返す
+deactivate Fetcher
+App --> 利用者 : id・name・emailを画面に表示する
+deactivate App
+
+@enduml

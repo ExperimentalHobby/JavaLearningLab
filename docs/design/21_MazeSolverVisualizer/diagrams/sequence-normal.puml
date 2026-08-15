@@ -1,0 +1,42 @@
+@startuml sequence-normal
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: 迷路生成と探索アニメーション
+
+actor 利用者
+participant "メインウィンドウ" as App
+participant "迷路生成ロジック" as Generator
+participant "探索ロジック\n(選択中のアルゴリズム)" as Solver
+participant "描画キャンバス" as Canvas
+
+== 迷路の生成 ==
+利用者 -> App : 「迷路生成」ボタンをクリックする
+activate App
+App -> Generator : 新しい迷路の生成を依頼する
+activate Generator
+Generator -> Generator : 再帰的バックトラック法で\nスタートからゴールまでの\n全域木を組み立てる
+Generator --> App : 生成した迷路を返す
+deactivate Generator
+App -> Canvas : 迷路の壁・スタート・ゴールを描画する
+activate Canvas
+Canvas --> App : 描画完了を返す
+deactivate Canvas
+deactivate App
+
+== 探索アニメーションの開始 ==
+利用者 -> App : アルゴリズムを選択し、\n「探索アニメーション開始」ボタンをクリックする
+activate App
+App -> Solver : 現在の迷路で経路探索を依頼する
+activate Solver
+Solver -> Solver : 選択されたアルゴリズムで\nスタートからゴールまでの経路を求める
+Solver --> App : スタートからゴールまでの経路を返す
+deactivate Solver
+loop 経路上の各マスについて、一定間隔で
+  App -> Canvas : そのマスを塗りつぶす
+  activate Canvas
+  Canvas --> App : 描画完了を返す
+  deactivate Canvas
+end
+deactivate App
+
+@enduml

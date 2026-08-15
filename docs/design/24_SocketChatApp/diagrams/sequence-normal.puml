@@ -1,0 +1,42 @@
+@startuml sequence-normal
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: 接続・メッセージ送信・ブロードキャスト
+
+actor "クライアントA" as ClientA
+actor "クライアントB" as ClientB
+participant "チャットサーバー" as Server
+participant "Aの接続担当\n(ClientHandler)" as HandlerA
+participant "Bの接続担当\n(ClientHandler)" as HandlerB
+
+== 接続とユーザー名登録 ==
+ClientA -> Server : TCP接続し、最初の行でユーザー名を送信する
+activate Server
+Server -> HandlerA : 接続担当を生成し、\nスレッドプールで実行を開始する
+activate HandlerA
+HandlerA -> HandlerA : 最初の行をユーザー名として記憶する
+HandlerA --> ClientA : 「ようこそ、<ユーザー名>さん」を送信する
+deactivate HandlerA
+deactivate Server
+
+ClientB -> Server : 同様に接続しユーザー名を送信する
+activate Server
+Server -> HandlerB : 接続担当を生成し、\nスレッドプールで実行を開始する
+activate HandlerB
+HandlerB --> ClientB : 「ようこそ、<ユーザー名>さん」を送信する
+deactivate HandlerB
+deactivate Server
+
+== メッセージ送信とブロードキャスト ==
+ClientA -> HandlerA : メッセージを1行送信する
+activate HandlerA
+HandlerA -> Server : 「<ユーザー名>: メッセージ」の\nブロードキャストを依頼する(送信者自身は除外)
+activate Server
+Server -> HandlerB : メッセージの配信を依頼する
+activate HandlerB
+HandlerB --> ClientB : メッセージを受信する
+deactivate HandlerB
+deactivate Server
+deactivate HandlerA
+
+@enduml

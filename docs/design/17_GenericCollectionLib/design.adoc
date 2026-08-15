@@ -1,0 +1,143 @@
+= 17_GenericCollectionLib 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-08-15
+:toc: left
+:toclevels: 2
+:sectnums:
+:pagenums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+NOTE: UML図は `diagrams/` 配下の `.puml` ファイルを https://asciidoctor.org/docs/asciidoctor-diagram/[asciidoctor-diagram] 経由でPlantUMLとして埋め込んでいる。拡張未導入の環境では、各 `.puml` を直接 https://www.plantuml.com/plantuml[PlantUMLオンラインサーバー] 等に読み込ませても図を確認できる。PDF化する場合は同フォルダの `generate-pdf.ps1` を実行する(`docs/design/fonts/`・`docs/design/themes/` の日本語フォント・テーマを用いて文字化けを回避している。詳細は `docs/design/README.md` を参照)。
+
+<<<
+
+== 概要
+
+=== 目的
+任意の型を格納できる汎用スタック(`GenericStack<T>`)・キュー(`GenericQueue<T>`)と、境界型パラメータを使った汎用ユーティリティ(`CollectionUtils.max`)を提供するライブラリを、対話式CLI(`Main`)でデモする。Generic型と型安全なコレクション設計の実践を目的とする。
+
+=== 主な機能
+* `stack push/pop/peek/size <値>` でスタックを操作する
+* `queue enqueue/dequeue/peek/size <値>` でキューを操作する
+* `exit` によるアプリ終了
+
+=== 開発環境
+[cols="1,3", options="header"]
+|===
+| 項目 | 内容
+
+| 言語
+| Java 25
+
+| ビルドツール
+| Maven(フォルダ単位で独立した `pom.xml`)
+
+| テスト
+| JUnit 5(`junit-jupiter`。外部リソースに依存しない純粋な単体テスト)
+
+| データ構造
+| 単方向連結リストによる自前実装(`java.util.Stack`/`Queue`はラップしない)
+|===
+
+=== 実行方法
+[source,powershell]
+----
+cd 17_GenericCollectionLib
+.\mvnw.cmd compile
+.\mvnw.cmd test
+.\mvnw.cmd exec:java "-Dexec.mainClass=com.javalab.genericcollection.Main"
+----
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/17[Issue #17] / https://github.com/ExperimentalHobby/JavaLearningLab/pull/47[PR #47]
+
+<<<
+
+== ユースケース
+
+[cols="1,3,4", options="header"]
+|===
+| ID | ユースケース | 概要
+
+| UC-1
+| スタックを操作する
+| `stack push/pop/peek/size <値>` を入力し、汎用スタックを操作する
+
+| UC-2
+| キューを操作する
+| `queue enqueue/dequeue/peek/size <値>` を入力し、汎用キューを操作する
+
+| UC-3
+| 空コレクション操作時にエラーを表示する
+| 空のスタック/キューへの `pop`/`peek`/`dequeue` 操作時、エラーメッセージを表示しアプリを継続する
+
+| UC-4
+| 不明な操作・コマンド時にエラーを表示する
+| 未定義の操作やコマンドを入力した場合、エラーメッセージを表示しアプリを継続する
+
+| UC-5
+| アプリを終了する
+| `exit` を入力し、対話ループを終了する
+|===
+
+<<<
+
+== シーケンス図
+
+=== スタック・キューの操作
+[plantuml, sequence-normal, svg]
+----
+include::diagrams/sequence-normal.puml[]
+----
+
+=== エラー処理
+[plantuml, sequence-error, svg]
+----
+include::diagrams/sequence-error.puml[]
+----
+
+<<<
+
+== クラス図
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+`GenericStack<T>`/`GenericQueue<T>` はいずれも `Node<T>`(ネストしたジェネリッククラス)による単方向連結リストで自前実装されている。空コレクションへの操作は `EmptyCollectionException` をスローする。`CollectionUtils.max` は境界型パラメータ `<T extends Comparable<T>>` により、比較可能な任意の型に型安全に対応する。
+
+<<<
+
+== アクティビティ図
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+<<<
+
+== 補足事項
+
+=== 連結リストによる自前実装
+`java.util.Stack`/`Queue` をラップせず、単方向連結リストで自前実装している。`GenericStack` は `top` のみを持つ単純な連結リスト、`GenericQueue` は `head`/`tail` の両端を管理する連結リストとして設計し、どちらも `private static class Node<T>` をネストしたジェネリッククラスとして定義している。
+
+=== 空コレクションのエラー統一
+空のスタック/キューへの `pop`/`peek`/`dequeue` は、既存exerciseの「カスタム例外で統一する」方針に沿って `EmptyCollectionException`(非チェック例外)に統一している。
+
+=== 境界型パラメータの活用
+`CollectionUtils.max` は境界型パラメータ `<T extends Comparable<T>>` を使い、`Integer`・`String` など `Comparable` を実装する任意の型に対して型安全に動作することをテストで確認している。空リストは `IllegalArgumentException` とした。
+
+=== テスト方針(TDD)
+Red → Green → Refactor サイクルで実装した。外部リソース(ネットワーク・ファイル・DB)に依存しない純粋なユニットテストのみで構成している(既存Issue #1〜#12と同様の方針)。
+
+* *単体テスト*(`GenericStackTest`/`GenericQueueTest`/`CollectionUtilsTest`): push/pop/peek/size、enqueue/dequeue/peek/size、空コレクション時の例外、`max` の型安全な動作を検証
+* *結合テスト*(`MainTest`): `stack`/`queue`コマンドの結果表示、および空コレクションへの操作・不正なコマンド入力時にエラー表示してループを継続する動作を検証
+
+=== 設計上の工夫
+* `Main` は01〜16と同じ設計パターンで、`Scanner`/`PrintStream` を引数に取る `run` 静的メソッドに分離している。

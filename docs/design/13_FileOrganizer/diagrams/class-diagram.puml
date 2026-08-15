@@ -1,0 +1,45 @@
+@startuml class-diagram
+skinparam defaultFontName VL Gothic
+
+title 13_FileOrganizer クラス図
+
+class FileCategorizer {
+  -{static} CATEGORY_EXTENSIONS: Map<String, Set<String>>
+  -{static} DEFAULT_CATEGORY: String
+  +{static} categoryOf(file: Path): String
+  -{static} extensionOf(file: Path): String
+}
+
+class FileOrganizer {
+  +{static} organize(sourceDir: Path): List<Path>
+}
+
+class FileOrganizerException extends RuntimeException {
+  +FileOrganizerException(message: String)
+}
+
+class Main {
+  +main(args: String[]): void
+  ~run(scanner: Scanner, out: PrintStream): void
+  -handleCommand(line: String, out: PrintStream): void
+}
+
+Main ..> FileOrganizer : 整理を依頼する
+Main ..> FileOrganizerException : catchする
+FileOrganizer ..> FileCategorizer : 分類を依頼する
+FileOrganizer ..> FileOrganizerException : throwする
+
+note right of FileOrganizer
+  すべて java.nio.file.Path/Files で実装し、
+  レガシーな java.io.File は使用しない。
+  Files.list は直下のエントリのみを返すため、
+  サブディレクトリの中身までは再帰しない。
+end note
+
+note right of FileCategorizer
+  拡張子 → カテゴリの Map<String, Set<String>> を
+  持つステートレスなロジッククラス。
+  未知の拡張子・拡張子なしは "others" に分類する。
+end note
+
+@enduml

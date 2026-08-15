@@ -1,0 +1,43 @@
+@startuml sequence-normal
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: ファイルの整理(正常系)
+
+actor 利用者
+participant "整理アプリ" as App
+participant "整理ロジック" as Organizer
+participant "分類ロジック" as Categorizer
+participant "ファイルシステム" as FS
+
+利用者 -> App : 整理対象のディレクトリを指定する(organize <パス>)
+activate App
+App -> Organizer : ディレクトリの整理を依頼する
+activate Organizer
+Organizer -> FS : 指定パスが存在しディレクトリであることを確認する
+activate FS
+FS --> Organizer : 確認結果を返す
+deactivate FS
+Organizer -> FS : ディレクトリ直下のエントリ一覧を取得する
+activate FS
+FS --> Organizer : エントリ一覧を返す
+deactivate FS
+loop 直下の各ファイルについて(サブディレクトリは対象外)
+  Organizer -> Categorizer : 拡張子からカテゴリを判定するよう依頼する
+  activate Categorizer
+  Categorizer --> Organizer : カテゴリ名を返す
+  deactivate Categorizer
+  Organizer -> FS : カテゴリ名のサブフォルダを作成する
+  activate FS
+  FS --> Organizer : 作成完了を通知する
+  deactivate FS
+  Organizer -> FS : ファイルをサブフォルダへ移動する
+  activate FS
+  FS --> Organizer : 移動完了を通知する
+  deactivate FS
+end
+Organizer --> App : 移動後のファイルパス一覧を返す
+deactivate Organizer
+App --> 利用者 : 整理結果(移動したファイルと件数)を画面に表示する
+deactivate App
+
+@enduml

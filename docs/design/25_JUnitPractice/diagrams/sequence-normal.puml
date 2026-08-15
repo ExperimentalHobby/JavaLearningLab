@@ -1,0 +1,25 @@
+@startuml sequence-normal
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: 注文確認メールの送信(正常系)
+
+actor 利用者
+participant "注文通知デモアプリ" as App
+participant "注文通知サービス" as Service
+participant "メール送信\n(ConsoleEmailSender)" as Sender
+
+利用者 -> App : メールアドレスと金額を入力する(order <メール> <金額>)
+activate App
+App -> App : 注文IDを採番し、注文情報を組み立てる
+App -> Service : 注文確認メールの送信を依頼する
+activate Service
+Service -> Service : 合計金額が0円より大きいことを確認する
+Service -> Service : 件名・本文を組み立てる
+Service -> Sender : メール送信を依頼する
+activate Sender
+Sender -> Sender : 宛先・件名・本文を標準出力に表示する
+deactivate Sender
+deactivate Service
+deactivate App
+
+@enduml

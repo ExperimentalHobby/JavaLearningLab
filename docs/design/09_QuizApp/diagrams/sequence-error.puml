@@ -1,0 +1,32 @@
+@startuml sequence-error
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: 問題データ読み込みエラー(起動時)
+
+participant "クイズアプリ" as App
+participant "問題読み込み" as Loader
+
+App -> Loader : 問題データの読み込みを依頼する
+activate Loader
+
+alt 出題数キーが見つからない場合
+  Loader -> Loader : question.count キーの欠落を検知する
+  Loader --> App : 不正な問題データであることを通知する
+
+else 個別の問題文・正解キーが見つからない場合
+  Loader -> Loader : q<N>.question / q<N>.answer キーの欠落を検知する
+  Loader --> App : 不正な問題データであることを通知する
+
+else クラスパス上にファイルが見つからない場合
+  Loader -> Loader : リソースが存在しないことを検知する
+  Loader --> App : ファイルが見つからないことを通知する
+end
+
+deactivate Loader
+note over App
+  他のアプリと異なり、読み込みエラーは
+  起動時に発生するため対話ループでは継続できない。
+  アプリの起動自体が失敗として終了する。
+end note
+
+@enduml

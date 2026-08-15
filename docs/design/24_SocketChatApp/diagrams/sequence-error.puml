@@ -1,0 +1,34 @@
+@startuml sequence-error
+skinparam defaultFontName VL Gothic
+
+title シーケンス図: 切断と退出通知
+
+actor "クライアントA" as ClientA
+actor "クライアントB" as ClientB
+participant "チャットサーバー" as Server
+participant "Aの接続担当\n(ClientHandler)" as HandlerA
+participant "Bの接続担当\n(ClientHandler)" as HandlerB
+
+ClientA -> HandlerA : 接続を切断する
+activate HandlerA
+HandlerA -> HandlerA : 入力ストリームの終端(または\n入出力エラー)を検知する
+HandlerA -> Server : 接続中クライアント一覧から\n自分自身を除去するよう依頼する
+activate Server
+deactivate Server
+HandlerA -> Server : 「<ユーザー名>が退出しました」の\nブロードキャストを依頼する
+activate Server
+Server -> HandlerB : 退出通知の配信を依頼する
+activate HandlerB
+HandlerB --> ClientB : 退出通知を受信する
+deactivate HandlerB
+deactivate Server
+HandlerA -> HandlerA : ソケットをクローズする
+deactivate HandlerA
+
+note over HandlerA, Server
+  接続断による IOException は異常ではなく
+  正常な終了経路として扱い、
+  後始末(除去・退出通知・クローズ)は finally で行う。
+end note
+
+@enduml
