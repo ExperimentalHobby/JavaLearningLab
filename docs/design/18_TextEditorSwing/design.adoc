@@ -114,7 +114,7 @@ include::diagrams/sequence-error.puml[]
 include::diagrams/class-diagram.puml[]
 ----
 
-`TextEditorFrame`(`JFrame` を継承したメインウィンドウ)は `TextFileService`(GUIに依存しないファイルI/Oロジック)を利用する。読み込み・書き込みの失敗は `TextFileException` に統一され、`TextEditorFrame` がキャッチして `JOptionPane` でエラーダイアログを表示する。
+`TextEditorFrame`(`JFrame` を継承したメインウィンドウ)は現在のファイルパスの保持・切り替えという状態遷移を `EditorDocument` に委譲し、自身はダイアログ操作とエラー表示のみを担当する。`EditorDocument` は `TextFileService`(GUIに依存しないファイルI/Oロジック)を利用する。読み込み・書き込みの失敗は `TextFileException` に統一され、`TextEditorFrame` がキャッチして `JOptionPane` でエラーダイアログを表示する。
 
 <<<
 
@@ -129,10 +129,12 @@ include::diagrams/activity-diagram.puml[]
 == 補足事項
 
 === テスト方針の分離
-Issue #11(家計簿アプリ)と同じ方針で、テスト方針を明確に分離した。ファイルI/Oロジック(`TextFileService`)はTDDで自動テストし、`TextEditorFrame`(実際のウィンドウ・メニューバー・イベントリスナー配線)は実装後に実機で起動して手動確認した。
+Issue #11(家計簿アプリ)と同じ方針で、テスト方針を明確に分離した。ファイルI/Oロジック(`TextFileService`)と状態遷移ロジック(`EditorDocument`)はTDDで自動テストし、`TextEditorFrame`(実際のウィンドウ・メニューバー・イベントリスナー配線・`JFileChooser`/`JOptionPane`のダイアログ操作)は実装後に実機で起動して手動確認した。
 
-=== GUIに依存しないファイルI/O
+=== GUIに依存しないファイルI/Oと状態遷移
 `TextFileService` は `Files.readString`/`Files.writeString`(UTF-8)を使い、GUIに依存しない純粋なロジックとして `@TempDir` の実ファイルでテストした。読み込み/書き込みの失敗(存在しないファイル・存在しないディレクトリなど)は `TextFileException` に統一している。
+
+当初「保存」(UC-2)と「名前を付けて保存」(UC-3)の挙動差(現在のファイルへ上書きするか、保存先を選び直して切り替えるか)が `TextEditorFrame` に直接実装されており、テストで検証できていなかった。この状態遷移(現在のファイルパスの保持・切り替え)を `EditorDocument` として切り出すことで、`JFileChooser` に依存せずUC-1〜3をTDDで検証できるようにした。11_HouseholdBudgetGuiの `BudgetTableModel` 分離と同じ考え方を踏襲している。
 
 === メニューバーとイベント配線
 `TextEditorFrame` は `JMenuBar` の「ファイル」メニューに開く/保存/名前を付けて保存/終了の `JMenuItem` をラムダの `ActionListener` で配線した。「開く」「名前を付けて保存」は `JFileChooser` でパス選択し、選択したファイル名をウィンドウタイトルに反映する。失敗時は `JOptionPane` でエラーダイアログを表示する。
@@ -144,7 +146,8 @@ Issue #11(家計簿アプリ)と同じ方針で、テスト方針を明確に分
 Red → Green → Refactor サイクルで実装した。
 
 * *単体テスト*(`TextFileServiceTest`): `@TempDir` を用いた読み込み・書き込みのラウンドトリップ、存在しないファイル/ディレクトリでの失敗を検証
-* *手動確認*: `TextEditorFrame` のウィンドウ表示・開く/保存/名前を付けて保存・エラーダイアログ表示を実機で確認
+* *単体テスト*(`EditorDocumentTest`): `open`後の`hasCurrentFile()`、`save`が現在のファイルへ書き込むこと、`saveAs`が現在のファイルを新パスへ切り替えること(UC-2とUC-3の挙動差)、`windowTitle()`が未保存/保存後で切り替わることを検証
+* *手動確認*: `TextEditorFrame` のウィンドウ表示・`JFileChooser`によるファイル選択・エラーダイアログ表示を実機で確認
 
 === 設計上の工夫
 * `Main` はSwingのイベントディスパッチスレッド(EDT)上でウィンドウ生成・表示を行うため、`SwingUtilities.invokeLater` を使用している。

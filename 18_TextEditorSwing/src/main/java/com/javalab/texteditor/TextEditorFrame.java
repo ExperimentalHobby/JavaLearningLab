@@ -14,14 +14,14 @@ import java.nio.file.Path;
 /**
  * 簡易テキストエディタのメインウィンドウ。
  * 中央に{@link JTextArea}、上部にファイル操作用の{@link JMenuBar}を配置する。
+ * ファイルの状態遷移(現在のファイルパスの保持・更新)は{@link EditorDocument}に委譲し、
+ * このクラスはダイアログ操作とエラー表示のみを担当する。
  * GUIの描画・イベント配線自体は自動テスト対象外のため、実際にアプリを起動して手動確認している。
  */
 public class TextEditorFrame extends JFrame {
 
-    private final TextFileService fileService = new TextFileService();
+    private final EditorDocument document = new EditorDocument(new TextFileService());
     private final JTextArea textArea = new JTextArea();
-
-    private Path currentFile;
 
     public TextEditorFrame() {
         super("簡易テキストエディタ - 無題");
@@ -71,20 +71,24 @@ public class TextEditorFrame extends JFrame {
         }
         Path path = chooser.getSelectedFile().toPath();
         try {
-            textArea.setText(fileService.load(path));
-            currentFile = path;
-            updateTitle();
+            textArea.setText(document.open(path));
+            setTitle(document.windowTitle());
         } catch (TextFileException ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "読み込みエラー", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void onSave() {
-        if (currentFile == null) {
+        if (!document.hasCurrentFile()) {
             onSaveAs();
             return;
         }
-        saveTo(currentFile);
+        try {
+            document.save(textArea.getText());
+            setTitle(document.windowTitle());
+        } catch (TextFileException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "保存エラー", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void onSaveAs() {
@@ -92,20 +96,11 @@ public class TextEditorFrame extends JFrame {
         if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) {
             return;
         }
-        saveTo(chooser.getSelectedFile().toPath());
-    }
-
-    private void saveTo(Path path) {
         try {
-            fileService.save(path, textArea.getText());
-            currentFile = path;
-            updateTitle();
+            document.saveAs(chooser.getSelectedFile().toPath(), textArea.getText());
+            setTitle(document.windowTitle());
         } catch (TextFileException ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "保存エラー", JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    private void updateTitle() {
-        setTitle("簡易テキストエディタ - " + currentFile.getFileName());
     }
 }
