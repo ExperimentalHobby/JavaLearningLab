@@ -12,6 +12,7 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -74,5 +75,58 @@ class MainTest {
         String result = buffer.toString(StandardCharsets.UTF_8);
         assertTrue(result.contains("削除しました"));
         assertTrue(result.contains("商品はありません"));
+    }
+
+    @Test
+    void runShowsErrorAndContinuesForUnknownCommand() {
+        Scanner scanner = new Scanner("unknown foo\nadd ノート 150 100\nexit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out, repository);
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains("不明なコマンドです"));
+        // 不明なコマンドでループを抜けず、後続のコマンドが処理されることまで確認する
+        assertTrue(result.contains("追加しました"));
+    }
+
+    @Test
+    void runShowsNotFoundMessageForFindWithNonExistentId() {
+        Scanner scanner = new Scanner("find 999\nexit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out, repository);
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains("該当する商品が見つかりません: id=999"));
+    }
+
+    @Test
+    void runShowsNotFoundMessageForUpdateWithNonExistentId() {
+        Scanner scanner = new Scanner("update 999 200 80\nexit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out, repository);
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains("該当する商品が見つかりません: id=999"));
+        // 更新処理そのものが実行されていないことを確認する
+        assertFalse(result.contains("更新しました"));
+    }
+
+    @Test
+    void runShowsNotFoundMessageForDeleteWithNonExistentId() {
+        Scanner scanner = new Scanner("delete 999\nexit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out, repository);
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains("該当する商品が見つかりません: id=999"));
+        assertFalse(result.contains("削除しました"));
     }
 }
