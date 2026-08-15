@@ -13,6 +13,12 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * {@link TextStatsCommand} のpicocliコマンド実装(ファイル統計表示・出力形式切替・
+ * バージョン表示・異常終了コード)を検証するテスト。
+ * 出力はpicocliの{@link CommandLine#setOut}で差し替えたPrintWriterを介して検証しており、
+ * 標準出力への直接書き込みではなくpicocliの出力ストリーム経由で行うことでテスト容易性を高めている。
+ */
 class TextStatsCommandTest {
 
     @TempDir
