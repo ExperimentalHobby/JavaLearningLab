@@ -4,6 +4,9 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * {@link TextStatisticsCalculator#calculate(String)} の行数・単語数・文字数計算を検証するテスト。
+ */
 class TextStatisticsCalculatorTest {
 
     private final TextStatisticsCalculator calculator = new TextStatisticsCalculator();

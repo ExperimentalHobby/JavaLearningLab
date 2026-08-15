@@ -10,12 +10,18 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * {@link MazeGenerator} の再帰的バックトラック法による迷路生成を検証するテスト。
+ * 同一シードでの再現性と、生成された迷路が必ずスタート→ゴールへ到達可能であることを確認する。
+ */
 class MazeGeneratorTest {
 
     private final MazeGenerator generator = new MazeGenerator();
 
     @Test
     void generateProducesIdenticalMazeForSameSeed() {
+        // 同じシードを渡せば乱数の消費順序が同一になり、全く同じ迷路構造が再現されることを確認する
+        // (デバッグ・テストの再現性のために乱数シードを外部から注入可能にした設計の検証)。
         Maze first = generator.generate(5, 5, 42L);
         Maze second = generator.generate(5, 5, 42L);
 

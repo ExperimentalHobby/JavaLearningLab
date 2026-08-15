@@ -17,6 +17,11 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * {@link PriceComparisonService} のCompletableFuture非同期チェーン(supplyAsync/orTimeout/
+ * exceptionally/allOf/thenApply)を検証するテスト。並行実行の効果は実測時間で検証し、
+ * モックやタイマー操作は使用していない(実際に複数スレッドで待機させている)。
+ */
 class PriceComparisonServiceTest {
 
     private ExecutorService executor;

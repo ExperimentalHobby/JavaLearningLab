@@ -6,6 +6,12 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * {@link DfsMazeSolver} の経路探索を検証するテスト。
+ * {@link BfsMazeSolverTest}と同一構造の迷路(一直線のa-b-c)を用いており、
+ * このように単純な経路ではDFSもBFSと同じ最短経路を返すことを確認できる
+ * (経路が複数存在する複雑な迷路ではDFSは最短性を保証しない点に注意)。
+ */
 class DfsMazeSolverTest {
 
     private final DfsMazeSolver solver = new DfsMazeSolver();

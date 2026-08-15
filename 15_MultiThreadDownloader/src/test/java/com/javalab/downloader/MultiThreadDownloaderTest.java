@@ -20,6 +20,11 @@ import java.util.concurrent.Executors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * {@link MultiThreadDownloader#downloadAll} の並行ダウンロードロジックを検証するテスト。
+ * 単一URL・複数URL成功・一部失敗・実際の並行実行(所要時間による検証)を確認する。
+ * モックは使わず、実際に起動したHTTPサーバーへ本物のHTTPリクエストを送っている。
+ */
 class MultiThreadDownloaderTest {
 
     private HttpServer server;

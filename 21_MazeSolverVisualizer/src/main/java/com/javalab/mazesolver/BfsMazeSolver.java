@@ -14,6 +14,8 @@ public class BfsMazeSolver implements MazeSolver {
 
     @Override
     public List<Cell> solve(Maze maze) {
+        // BFSはFIFOキューを使い、スタートから近い順(最短距離順)にマスを訪問する。
+        // 各マスへ初めて到達した経路が必ず最短経路になるため、最短経路の保証が必要な場面に向く。
         Map<Cell, Cell> cameFrom = new HashMap<>();
         Deque<Cell> queue = new ArrayDeque<>();
         queue.add(maze.start());

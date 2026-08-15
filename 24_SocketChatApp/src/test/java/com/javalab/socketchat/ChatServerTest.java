@@ -18,6 +18,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+/**
+ * {@link ChatServer} のマルチクライアント間ブロードキャストを検証するテスト。
+ * モックは使わず、実際に{@link Socket}で複数のTCP接続を張って本物の通信を行う。
+ * ポート0で起動して空きポートをOSに自動割当させ、テスト同士のポート競合を避けている。
+ */
 class ChatServerTest {
 
     private final ChatServer server = new ChatServer(0);
@@ -30,6 +35,8 @@ class ChatServerTest {
     @Test
     @Timeout(value = 10, unit = TimeUnit.SECONDS)
     void messageFromOneClientIsBroadcastToAnother() throws IOException {
+        // AliceがBobと同じサーバーに接続した状態でメッセージを送ると、Bob側で
+        // "Alice: <メッセージ>" 形式で受信できることを確認する(最も基本的なブロードキャスト)。
         server.start();
 
         try (Socket clientA = new Socket("localhost", server.port());
@@ -75,6 +82,8 @@ class ChatServerTest {
     @Test
     @Timeout(value = 10, unit = TimeUnit.SECONDS)
     void broadcastReachesAllClientsExceptSenderWithThreeClients() throws IOException {
+        // 3人接続時、Aliceが送ったメッセージがBob・Carol両方に届くことを確認する
+        // (2人限定ではなく任意人数へブロードキャストできることの検証)。
         server.start();
 
         try (Socket clientA = new Socket("localhost", server.port());
@@ -104,6 +113,8 @@ class ChatServerTest {
     @Test
     @Timeout(value = 10, unit = TimeUnit.SECONDS)
     void communicationContinuesAfterOneClientDisconnects() throws IOException {
+        // Carolが退出した後も、Alice・Bob間の通信が引き続き正常に行えることを確認する
+        // (1クライアントの切断がサーバー全体や他クライアントの接続に影響しないことの検証)。
         server.start();
 
         try (Socket clientA = new Socket("localhost", server.port());
@@ -136,6 +147,8 @@ class ChatServerTest {
     @Test
     @Timeout(value = 10, unit = TimeUnit.SECONDS)
     void stopClosesAllClientConnections() throws IOException {
+        // server.stop()を呼ぶと接続中のソケットも強制的にクローズされ、クライアント側の
+        // readLine()がストリーム終端(null)を返すことを確認する。
         server.start();
 
         try (Socket clientA = new Socket("localhost", server.port())) {

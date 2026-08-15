@@ -15,6 +15,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * {@link BookController} のREST APIをHTTP経由で結合テストするクラス。
+ * {@code webEnvironment = RANDOM_PORT}により実際に組み込みTomcatを起動し、
+ * {@link TestRestTemplate}で本物のHTTPリクエストを送ることで、
+ * {@code MockMvc}のようなモックを使わず結合的に検証している。
+ */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class BookControllerTest {
 

@@ -13,6 +13,9 @@ import java.util.Scanner;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * {@link Main#run(Scanner, PrintStream)} のREPLループを結合テストするクラス。
+ */
 class MainTest {
 
     @TempDir
@@ -20,6 +23,8 @@ class MainTest {
 
     @Test
     void invalidPathShowsErrorAndContinuesWithoutCrashing() throws Exception {
+        // 存在しないディレクトリを指定するとFileOrganizerExceptionになりエラー表示されるが、
+        // REPLは継続し、直後の正常な組織化コマンドが処理されることを確認する。
         Path missing = tempDir.resolve("does-not-exist");
         Files.createFile(tempDir.resolve("photo.jpg"));
         Scanner scanner = new Scanner(new StringReader(

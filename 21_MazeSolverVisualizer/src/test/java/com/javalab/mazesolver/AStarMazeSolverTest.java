@@ -6,6 +6,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * {@link AStarMazeSolver} の経路探索を検証するテスト。
+ * {@link BfsMazeSolverTest}と同一構造の迷路を用いており、単純な迷路ではA*もBFSと
+ * 同じ最短経路を返すことを確認できる(ヒューリスティックの効果は分岐が多い迷路で顕著になる)。
+ */
 class AStarMazeSolverTest {
 
     private final AStarMazeSolver solver = new AStarMazeSolver();

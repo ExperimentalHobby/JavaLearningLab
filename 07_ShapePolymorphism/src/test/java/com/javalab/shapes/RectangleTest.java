@@ -4,6 +4,9 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * {@link Rectangle} の面積・周囲長計算を検証するテスト。
+ */
 class RectangleTest {
 
     @Test

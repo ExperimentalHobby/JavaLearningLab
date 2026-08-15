@@ -7,6 +7,12 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+/**
+ * {@link BookService} のインメモリCRUDロジックを検証するテスト。
+ * SpringのDIコンテナを起動せず{@code new BookService()}で直接インスタンス化しており、
+ * HTTP層を経由しないビジネスロジック単体の高速なテストになっている
+ * (HTTP層の検証は{@link BookControllerTest}が担当)。
+ */
 class BookServiceTest {
 
     private final BookService service = new BookService();

@@ -10,10 +10,16 @@ import java.util.Scanner;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * {@link Main#run(Scanner, PrintStream)} のREPLループを結合テストするクラス。
+ * 入力の1行目は口座名義人名として扱われる仕様のため、各シナリオの先頭に"Alice"を含めている。
+ */
 class MainTest {
 
     @Test
     void invalidAmountShowsErrorAndContinuesWithoutCrashing() {
+        // "-100"は0以下のためInvalidAmountExceptionになる不正な入金額。
+        // エラー表示のみで継続し、直後の正常な "deposit 1000" が処理されることを確認する。
         Scanner scanner = new Scanner(new StringReader("Alice\ndeposit -100\ndeposit 1000\nexit\n"));
         ByteArrayOutputStream outContent = new ByteArrayOutputStream();
         PrintStream out = new PrintStream(outContent, true, StandardCharsets.UTF_8);
@@ -26,6 +32,7 @@ class MainTest {
 
     @Test
     void depositWithdrawBalanceSequenceShowsCorrectBalance() {
+        // 1000入金→300出金という一連の操作後、balanceコマンドで残高700が表示されることを確認する。
         Scanner scanner = new Scanner(new StringReader("Alice\ndeposit 1000\nwithdraw 300\nbalance\nexit\n"));
         ByteArrayOutputStream outContent = new ByteArrayOutputStream();
         PrintStream out = new PrintStream(outContent, true, StandardCharsets.UTF_8);

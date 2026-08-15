@@ -13,6 +13,9 @@ import java.util.Scanner;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * {@link Main#run(Scanner, PrintStream)} のREPLループを結合テストするクラス。
+ */
 class MainTest {
 
     @TempDir
@@ -20,6 +23,8 @@ class MainTest {
 
     @Test
     void runShowsParseResultForLoadCommand() throws IOException {
+        // 3行(うち1行は不正な形式)のログファイルをloadし、解析成功2件・スキップ1件・
+        // レベル別集計(ERROR/INFOそれぞれ1件)が正しく表示されることを確認する。
         Path logFile = tempDir.resolve("app.log");
         Files.writeString(logFile, String.join("\n",
                 "2026-08-13 10:15:30 [ERROR] データベース接続に失敗しました",

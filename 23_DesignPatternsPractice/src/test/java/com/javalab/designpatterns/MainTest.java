@@ -9,6 +9,11 @@ import java.util.Scanner;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * {@link Main#run(Scanner, PrintStream)} のREPLループを結合テストするクラス。
+ * Singleton/Factory/Observer/Strategyの4パターンそれぞれに対応するコマンドを一通り実行し、
+ * REPL経由でも各パターンの実装が正しく動作することを確認する。
+ */
 class MainTest {
 
     @Test

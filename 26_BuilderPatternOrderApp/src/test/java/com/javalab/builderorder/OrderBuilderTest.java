@@ -5,6 +5,10 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+/**
+ * {@link Order.Builder} によるBuilderパターンの実装(必須項目の検証・オプション項目の既定値・
+ * フルーエントAPI)を検証するテスト。
+ */
 class OrderBuilderTest {
 
     @Test

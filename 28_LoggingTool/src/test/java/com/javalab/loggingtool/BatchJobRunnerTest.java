@@ -13,6 +13,12 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * {@link BatchJobRunner} のログレベル使い分け(開始/完了=INFO、詳細=DEBUG、
+ * スキップ=WARN、失敗=ERROR)を検証するテスト。
+ * モックを使わず、Logback標準の{@link ListAppender}を実際のLoggerに取り付けて
+ * 実ログイベントの内容(レベル・メッセージ・例外情報)を直接検証する。
+ */
 class BatchJobRunnerTest {
 
     private Logger logger;

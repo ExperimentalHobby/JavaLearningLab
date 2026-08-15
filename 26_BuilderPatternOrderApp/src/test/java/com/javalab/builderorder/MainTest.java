@@ -9,6 +9,10 @@ import java.util.Scanner;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * {@link Main#run(Scanner, PrintStream)} のREPLループを結合テストするクラス。
+ * start→item→buildという段階的な注文構築の流れと、途中でのエラー処理を確認する。
+ */
 class MainTest {
 
     @Test

@@ -1,5 +1,8 @@
 package com.javalab.designpatterns.strategy;
 
+/**
+ * クレジットカード決済(Strategyパターンにおける具象戦略の1つ)。
+ */
 public class CreditCardPayment implements PaymentStrategy {
 
     @Override
