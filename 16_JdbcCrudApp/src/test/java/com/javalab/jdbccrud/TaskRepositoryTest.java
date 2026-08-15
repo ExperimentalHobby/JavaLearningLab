@@ -13,6 +13,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * {@link TaskRepository} のCRUD操作を検証するテスト。
+ * モックを使わず、SQLiteのインメモリDB({@code jdbc:sqlite::memory:})に対して
+ * 実際にSQLを発行することで、生成したSQLが正しく動作することまで確認する。
+ */
 class TaskRepositoryTest {
 
     private Connection connection;
@@ -45,6 +50,8 @@ class TaskRepositoryTest {
 
     @Test
     void insertReturnsGeneratedId() {
+        // AUTOINCREMENTのIDが挿入順に1ずつ増えることを確認する
+        // (SQLiteの採番仕様に依存したテストであることに注意)。
         long firstId = repository.insert("牛乳を買う");
         long secondId = repository.insert("卵を買う");
 
