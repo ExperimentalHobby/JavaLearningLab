@@ -11,6 +11,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+/**
+ * {@link LogLevelController} によるLogback固有のログレベル動的変更を検証するテスト。
+ * SLF4Jの薄いAPIだけでは実現できない「実行時のログレベル変更」ができていることを、
+ * 実際にログを出力させて抑制されるかどうかまで確認する。
+ */
 class LogLevelControllerTest {
 
     private final LogLevelController controller = new LogLevelController();

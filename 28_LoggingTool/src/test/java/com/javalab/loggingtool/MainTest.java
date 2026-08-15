@@ -11,6 +11,10 @@ import java.util.Scanner;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * {@link Main#run(Scanner, PrintStream, BatchJobRunner, LogLevelController)} の
+ * REPLループを結合テストするクラス。
+ */
 class MainTest {
 
     @Test
