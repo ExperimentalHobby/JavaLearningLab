@@ -6,24 +6,31 @@ title シーケンス図: 複数店舗への並行価格問い合わせ(正常�
 actor 利用者
 participant "並行処理デモREPL" as App
 participant "PriceComparisonService" as Service
-participant "ShopA" as ShopA
-participant "ShopB" as ShopB
+participant "店舗1" as Shop1
+participant "店舗2" as Shop2
+
+note over Shop1, Shop2
+  正常応答する店舗2つを一般化して描いている。
+  Mainの固定店舗構成(ShopA/ShopB/ShopC)では
+  正常応答するのはShopAのみで、ShopBはタイムアウト・
+  ShopCは失敗する(sequence-errorを参照)。
+end note
 
 利用者 -> App : compare <商品名>
 activate App
 App -> Service : 全店舗へ並行して価格を問い合わせる
 activate Service
 
-par ShopAへの問い合わせ
-  Service -> ShopA : supplyAsyncで価格取得を依頼する
-  activate ShopA
-  ShopA --> Service : 価格を返す(OK)
-  deactivate ShopA
-else ShopBへの問い合わせ
-  Service -> ShopB : supplyAsyncで価格取得を依頼する
-  activate ShopB
-  ShopB --> Service : 価格を返す(OK)
-  deactivate ShopB
+par 店舗1への問い合わせ
+  Service -> Shop1 : supplyAsyncで価格取得を依頼する
+  activate Shop1
+  Shop1 --> Service : 価格を返す(OK)
+  deactivate Shop1
+else 店舗2への問い合わせ
+  Service -> Shop2 : supplyAsyncで価格取得を依頼する
+  activate Shop2
+  Shop2 --> Service : 価格を返す(OK)
+  deactivate Shop2
 end
 
 Service -> Service : allOfで全店舗の完了を待ち合わせる
