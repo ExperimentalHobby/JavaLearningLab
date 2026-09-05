@@ -40,5 +40,8 @@ Java学習用のアプリ・技術トピックを30個作成するプロジェ�
 - [x] [29_CompletableFutureDemo](29_CompletableFutureDemo/README.md) - 並行処理デモ(CompletableFuture)
 - [x] [30_MavenCliPackaging](30_MavenCliPackaging/README.md) - CLIパッケージ化&配布(Mavenプロジェクト)
 
+### フェーズ4: 発展編(抜け漏れ補完テーマ)
+- [x] [33_SpringSecurityAuth](33_SpringSecurityAuth/README.md) - 認証・認可付きAPI(Spring Security + JWT)
+
 ## フォルダ構成
 各フォルダは独立したMaven/Gradleプロジェクトとして管理します(必要に応じてpom.xml/build.gradleを配置)。
