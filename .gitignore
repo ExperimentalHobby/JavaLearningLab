@@ -70,6 +70,6 @@ docs/*
 
 # design配下の生成物(.puml/.adocから再生成可能なため対象外)
 docs/design/*/diagrams/*.svg
-docs/design/*/design.pdf
-docs/design/*/design.html
+docs/design/**/design.pdf
+docs/design/**/design.html
 docs/design/*/.asciidoctor/

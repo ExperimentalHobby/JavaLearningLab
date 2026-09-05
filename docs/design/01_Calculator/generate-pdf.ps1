@@ -1,6 +1,6 @@
-# 01_Calculator デザイン書PDF生成スクリプト
+﻿# 01_Calculator デザイン書PDF生成スクリプト
 # 
-# 用法: ./generate-pdf.ps1
+# 用法: ./generate-pdf.ps1（Windows PowerShell 5.1対応）
 #
 # 必要な環境:
 #   - Ruby + asciidoctor-pdf
@@ -34,3 +34,4 @@ if (Test-Path design.pdf) {
     Write-Host "✗ PDF 生成失敗！" -ForegroundColor Red
     exit 1
 }
+
