@@ -46,6 +46,7 @@ Java学習用のアプリ・技術トピックを30個作成するプロジェ�
 - [x] [32_BeanValidationApi](32_BeanValidationApi/README.md) - 入力検証&エラーハンドリング強化(Bean Validation)
 - [x] [33_SpringSecurityAuth](33_SpringSecurityAuth/README.md) - 認証・認可付きAPI(Spring Security + JWT)
 - [x] [36_JacksonJsonMapping](36_JacksonJsonMapping/README.md) - JSON/XMLシリアライズ実践(Jackson)
+- [x] [37_OptionalNullSafety](37_OptionalNullSafety/README.md) - Optional設計とnull安全
 
 ## フォルダ構成
 各フォルダは独立したMaven/Gradleプロジェクトとして管理します(必要に応じてpom.xml/build.gradleを配置)。
