@@ -29,6 +29,7 @@ Java学習用のアプリ・技術トピックを30個作成するプロジェ�
 - [x] [18_TextEditorSwing](18_TextEditorSwing/README.md) - 簡易テキストエディタ(Swing)
 - [x] [19_LogAnalyzerRegex](19_LogAnalyzerRegex/README.md) - 正規表現ログ解析ツール
 - [x] [20_SpringBootApiIntro](20_SpringBootApiIntro/README.md) - 簡易Webサーバー/API(Spring Boot入門)
+    - [x] Dockerコンテナ化 — [20_SpringBootApiIntro](20_SpringBootApiIntro/README.md)にDockerfileを追加(マルチステージビルド)
 - [x] [21_MazeSolverVisualizer](21_MazeSolverVisualizer/README.md) - 迷路生成&探索ビジュアライザ(JavaFX)
 - [x] [22_GameOfLife](22_GameOfLife/README.md) - ライフゲーム(Conway's Game of Life)
 - [x] [23_DesignPatternsPractice](23_DesignPatternsPractice/README.md) - デザインパターン実践集
