@@ -48,6 +48,7 @@ Java学習用のアプリ・技術トピックを30個作成するプロジェ�
 - [x] [36_JacksonJsonMapping](36_JacksonJsonMapping/README.md) - JSON/XMLシリアライズ実践(Jackson)
 - [x] [37_OptionalNullSafety](37_OptionalNullSafety/README.md) - Optional設計とnull安全
 - [x] [38_VirtualThreadsDemo](38_VirtualThreadsDemo/README.md) - 並行処理デモ(Virtual Threads)
+- [x] [39_AlgorithmsDataStructures](39_AlgorithmsDataStructures/README.md) - アルゴリズム/データ構造実践
 
 ## フォルダ構成
 各フォルダは独立したMaven/Gradleプロジェクトとして管理します(必要に応じてpom.xml/build.gradleを配置)。
