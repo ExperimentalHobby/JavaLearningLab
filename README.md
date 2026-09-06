@@ -29,6 +29,7 @@ Java学習用のアプリ・技術トピックを30個作成するプロジェ�
 - [x] [18_TextEditorSwing](18_TextEditorSwing/README.md) - 簡易テキストエディタ(Swing)
 - [x] [19_LogAnalyzerRegex](19_LogAnalyzerRegex/README.md) - 正規表現ログ解析ツール
 - [x] [20_SpringBootApiIntro](20_SpringBootApiIntro/README.md) - 簡易Webサーバー/API(Spring Boot入門)
+    - [x] Dockerコンテナ化 — [20_SpringBootApiIntro](20_SpringBootApiIntro/README.md)にDockerfileを追加(マルチステージビルド)
 - [x] [21_MazeSolverVisualizer](21_MazeSolverVisualizer/README.md) - 迷路生成&探索ビジュアライザ(JavaFX)
 - [x] [22_GameOfLife](22_GameOfLife/README.md) - ライフゲーム(Conway's Game of Life)
 - [x] [23_DesignPatternsPractice](23_DesignPatternsPractice/README.md) - デザインパターン実践集
@@ -41,6 +42,9 @@ Java学習用のアプリ・技術トピックを30個作成するプロジェ�
 - [x] [30_MavenCliPackaging](30_MavenCliPackaging/README.md) - CLIパッケージ化&配布(Mavenプロジェクト)
 
 ### フェーズ4: 発展編(抜け漏れ補完テーマ)
+- [x] [31_ModernJavaSyntax](31_ModernJavaSyntax/README.md) - Java 25モダン構文実践(record/sealed/パターンマッチング)
+- [x] [32_BeanValidationApi](32_BeanValidationApi/README.md) - 入力検証&エラーハンドリング強化(Bean Validation)
+- [x] [33_SpringSecurityAuth](33_SpringSecurityAuth/README.md) - 認証・認可付きAPI(Spring Security + JWT)
 - [x] [36_JacksonJsonMapping](36_JacksonJsonMapping/README.md) - JSON/XMLシリアライズ実践(Jackson)
 
 ## フォルダ構成
