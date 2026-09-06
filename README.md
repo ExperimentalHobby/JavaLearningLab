@@ -43,6 +43,7 @@ Java学習用のアプリ・技術トピックを30個作成するプロジェ�
 ### フェーズ4: 発展編(抜け漏れ補完テーマ)
 - [x] [31_ModernJavaSyntax](31_ModernJavaSyntax/README.md) - Java 25モダン構文実践(record/sealed/パターンマッチング)
 - [x] [32_BeanValidationApi](32_BeanValidationApi/README.md) - 入力検証&エラーハンドリング強化(Bean Validation)
+- [x] [33_SpringSecurityAuth](33_SpringSecurityAuth/README.md) - 認証・認可付きAPI(Spring Security + JWT)
 
 ## フォルダ構成
 各フォルダは独立したMaven/Gradleプロジェクトとして管理します(必要に応じてpom.xml/build.gradleを配置)。
