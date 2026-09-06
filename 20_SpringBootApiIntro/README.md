@@ -20,6 +20,27 @@ REST API構築、DI(依存性注入)の基礎
 - 存在しないIDへのアクセスによる404は、コントローラー側で個別に例外処理をせず、`BookNotFoundException`に`@ResponseStatus(HttpStatus.NOT_FOUND)`を付与することでSpring MVCに自動マッピングさせている。
 - `GET /api/books/{id}`の404テストを実装する際、最初に書いたテスト(存在しないIDへのアクセスが404であること)は、そもそも`/{id}`のマッピング自体が存在しない状態でもSpring Bootのデフォルト404応答により偽陽性でGreenになってしまう問題に気づいた。存在するIDで200が返ることを検証するテストを追加してから初めてRedを確認でき、エンドポイント実装後にGreenへ移行させた(TDDでテストの実効性を見誤らないための教訓として記録)。
 
+## Docker
+マルチステージビルドのDockerfileを追加した(ビルドステージ`eclipse-temurin:25-jdk` → 実行ステージ
+`eclipse-temurin:25-jre`、非rootユーザーで実行)。
+
+```bash
+cd 20_SpringBootApiIntro
+docker build -t springbootapiintro .
+docker run --rm -p 8080:8080 springbootapiintro
+curl http://localhost:8080/api/books
+```
+
+- `mvnw`(Maven Wrapper)を使ってビルドステージ内で依存解決・パッケージングを行うため、
+  ホスト側にMavenのインストールは不要
+- `pom.xml`だけを先にコピーして`dependency:go-offline`することで依存解決レイヤーをキャッシュし、
+  `src`だけを変更した再ビルドを高速化している
+- イメージビルドではテストを実行しない(`-DskipTests`)。テストの担保は`mvn test`/CIの役割とし、
+  Dockerビルドはパッケージングに専念させる設計にした
+
+**注記**: 作業環境にDocker Desktopが導入されていないため、`docker build`/`docker run`による実機検証は
+未実施(構文レビューのみ)。実行確認は各自の環境で行うこと。
+
 ## ステータス
 - [ ] 未着手
 - [ ] 実装中
