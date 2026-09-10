@@ -22,6 +22,15 @@ Spring Data JPA、レイヤードアーキテクチャ(Controller→Service→Re
 - DBは開発時: H2ファイルDB(`./data/`、`.gitignore`対象)、テスト時: H2インメモリDB(`create-drop`)を使い分けている。実DBMS(PostgreSQL)によるテストはTestcontainers採用回(#109)で別途扱う。
 - `ProductController`/`OrderController`のテストは`@SpringBootTest(webEnvironment = RANDOM_PORT)` + `TestRestTemplate`で実際に埋め込みTomcat+実H2へアクセスする結合テストとした(`MockMvc`は使わない、既存Issueと同じ「実リソースでのテスト」方針)。
 
+## API仕様書自動生成(#111)
+`springdoc-openapi-starter-webmvc-ui`を導入し、`/v3/api-docs`(OpenAPI仕様のJSON)と
+`/swagger-ui/index.html`(Swagger UI)を自動生成している。
+
+- 依存関係を追加するだけで、既存の`@RestController`のアノテーションからゼロコードで仕様書が生成されることを`OpenApiDocsTest`(導入前は404、導入後は200になることを確認)で実証した
+- `OpenApiConfig`(`OpenAPI` Bean)でAPI全体のタイトル・説明・バージョンをカスタマイズ
+- `@Operation`(各エンドポイント)・`@Schema`(DTOの各フィールド)を付与し、生成される仕様書の可読性を高めた
+- これまでREADMEに手書きしていたエンドポイント仕様(本READMEの「概要」セクションの箇条書き)を、コードから自動生成できることを実践した
+
 ## テスト
 ```bash
 cd 44_JpaRestApi

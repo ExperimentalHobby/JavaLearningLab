@@ -1,5 +1,6 @@
 package com.javalab.jparestapi;
 
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,6 +19,7 @@ public class OrderController {
         this.productService = productService;
     }
 
+    @Operation(summary = "複数商品の在庫を一括で引き当てる", description = "在庫不足の商品があれば409を返し、全ての引き当てがロールバックされる")
     @PostMapping
     public void fulfill(@RequestBody List<OrderLine> lines) {
         productService.fulfillOrder(lines);
