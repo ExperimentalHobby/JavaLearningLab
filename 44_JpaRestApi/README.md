@@ -7,7 +7,7 @@ Spring Data JPA、レイヤードアーキテクチャ(Controller→Service→Re
 商品在庫管理を題材に、Spring Data JPAで実際にDB(H2)へ永続化するCRUD REST API。
 
 - `POST /api/products` — 商品登録(201)
-- `GET /api/products` — 商品一覧取得
+- `GET /api/products?name=...&page=0&size=10&sort=price,desc` — 商品一覧取得(ページネーション・ソート・名前の部分一致検索対応)
 - `GET /api/products/{id}` — 単一商品取得(存在しなければ404)
 - `PUT /api/products/{id}` — 商品の名前・価格・在庫を更新
 - `DELETE /api/products/{id}` — 商品削除(204、存在しなければ404)
@@ -21,6 +21,15 @@ Spring Data JPA、レイヤードアーキテクチャ(Controller→Service→Re
 - Spring Boot 3系はデフォルトで`spring.jpa.open-in-view=true`だが、REST APIにはビュー描画がなく遅延ロードの温床になるだけなので、明示的に`false`に設定して起動時の警告を解消した。
 - DBは開発時: H2ファイルDB(`./data/`、`.gitignore`対象)、テスト時: H2インメモリDB(`create-drop`)を使い分けている。実DBMS(PostgreSQL)によるテストはTestcontainers採用回(#109)で別途扱う。
 - `ProductController`/`OrderController`のテストは`@SpringBootTest(webEnvironment = RANDOM_PORT)` + `TestRestTemplate`で実際に埋め込みTomcat+実H2へアクセスする結合テストとした(`MockMvc`は使わない、既存Issueと同じ「実リソースでのテスト」方針)。
+
+## ページネーション/検索・ソート(#110)
+一覧取得API(`GET /api/products`)にページング・ソート・名前の部分一致検索を追加した。
+
+- `PageResponse<T>`(record)でSpring Data JPAの`Page<T>`を独自DTOに変換してから返す(実装詳細を晒さない)
+- `ProductRepository.findByNameContainingIgnoreCase(String, Pageable)`はメソッド名からのクエリ自動生成(Spring Data JPAのクエリメソッド命名規則)
+- `ProductController`は`@PageableDefault(size = 10, sort = "id")`でデフォルト値を設定
+- **テスト分離の注意点**: `OrderFulfillmentTest`/`ProductControllerTest`/`OrderControllerTest`は`@Transactional`を使わず実コミットするため、同じ共有H2インスタンス上にそれらが作成したデータが残る。`findAll`の総件数を検証するページングのテストは、この残留データの影響を受けて当初「期待5件・実際12件」のように失敗した。そこで各テストで一意なマーカー文字列(例: `PAGINGTEST3`)を商品名に含め、検索条件としてマーカーを指定することで「自分が作成したデータだけ」を対象に集計・検証するよう設計した。
+- **URLエンコードの注意点**: 結合テストで日本語(「ノート」等)をクエリパラメータに含める際、`UriComponentsBuilder`で事前にURLエンコードした文字列を`TestRestTemplate.exchange(String url, ...)`にそのまま渡すと、内部でさらに符号化され二重符号化になりサーバー側で意図した文字列に復元できなかった(0件ヒットになる不具合として顕在化)。URIテンプレート(`"...?name={name}"`)+ 生の値を`uriVariables`として渡す方式に変更し、符号化をRestTemplateに一任することで解決した。
 
 ## テスト
 ```bash

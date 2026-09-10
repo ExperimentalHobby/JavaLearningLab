@@ -1,5 +1,7 @@
 package com.javalab.jparestapi;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,8 +26,12 @@ public class ProductService {
         return ProductResponse.from(saved);
     }
 
-    public List<ProductResponse> findAll() {
-        return repository.findAll().stream().map(ProductResponse::from).toList();
+    /** {@code name}が指定されていれば部分一致検索、なければ全件を対象にページング・ソートを適用する。 */
+    public PageResponse<ProductResponse> findAll(String name, Pageable pageable) {
+        Page<Product> page = (name == null || name.isBlank())
+                ? repository.findAll(pageable)
+                : repository.findByNameContainingIgnoreCase(name, pageable);
+        return PageResponse.from(page.map(ProductResponse::from));
     }
 
     public ProductResponse findById(Long id) {
