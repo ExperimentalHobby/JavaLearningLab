@@ -1,0 +1,2 @@
+# 実行時に生成されるH2ファイルDB(spring.datasource.urlのjdbc:h2:file:./data/...)
+data/
