@@ -40,7 +40,8 @@ Dockerコンテナで実際のPostgreSQLを起動し、`ProductService`が本物
 
 **注記**: 作業環境にDocker Desktopが導入されていないため、ローカルでの`mvn test`実行はできない
 (`IllegalStateException: Could not find a valid Docker environment`)。GitHub ActionsのCI環境
-(ubuntu-latest)にはDockerが標準搭載されているため、実装後はCI上で実行・検証した。
+(ubuntu-latest)にはDockerが標準搭載されているため、実装後はCI上で実行し、実際のPostgreSQLコンテナに
+対してテストが成功することを確認済み。
 
 ## ステータス
 - [ ] 未着手
