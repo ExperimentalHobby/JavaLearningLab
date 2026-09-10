@@ -22,6 +22,23 @@ Spring Data JPA、レイヤードアーキテクチャ(Controller→Service→Re
 - DBは開発時: H2ファイルDB(`./data/`、`.gitignore`対象)、テスト時: H2インメモリDB(`create-drop`)を使い分けている。実DBMS(PostgreSQL)によるテストはTestcontainers採用回(#109)で別途扱う。
 - `ProductController`/`OrderController`のテストは`@SpringBootTest(webEnvironment = RANDOM_PORT)` + `TestRestTemplate`で実際に埋め込みTomcat+実H2へアクセスする結合テストとした(`MockMvc`は使わない、既存Issueと同じ「実リソースでのテスト」方針)。
 
+## Spring Boot Actuator(#112)
+`spring-boot-starter-actuator`を導入し、`/actuator/health`(ヘルスチェック)・`/actuator/metrics`
+(メトリクス公開)を有効化した。
+
+- DB接続そのものはSpring Boot標準の`db`ヘルスインジケータで既にカバーされるため、本課題では
+  ビジネスロジックに基づくカスタム`HealthIndicator`(`LowStockHealthIndicator`)を実装した。
+  在庫が閾値(`app.low-stock-threshold`、デフォルト5)未満の商品数を`lowStockCount`として
+  `/actuator/health`のレスポンスに公開する
+- 在庫不足はアプリケーションの死活とは別軸の情報のため、あえて常にUPとし、ステータスをDOWNには
+  していない(参考情報として公開する設計)
+- クラス名`LowStockHealthIndicator`の「HealthIndicator」を除いた「lowStock」が、レスポンスJSON上の
+  コンポーネント名になる(Spring Bootの命名規則)
+- `management.endpoints.web.exposure.include`はデフォルトで`health`のみが公開対象のため、
+  `metrics`・`info`も含めて明示的に設定した
+- テストでは他クラスが共有DBに残すデータの影響を避けるため、`lowStockCount`を絶対値ではなく
+  「作成前後の差分」で検証している(46番のページングテストと同じ方針)
+
 ## テスト
 ```bash
 cd 44_JpaRestApi
