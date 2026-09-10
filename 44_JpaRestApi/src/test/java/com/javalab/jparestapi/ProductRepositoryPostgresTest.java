@@ -29,6 +29,10 @@ class ProductRepositoryPostgresTest {
 
     @DynamicPropertySource
     static void configureDataSource(DynamicPropertyRegistry registry) {
+        // src/test/resources/application.propertiesがH2用のdriver-class-nameを固定指定しているため、
+        // ここで上書きしないとPostgreSQLのURLに対してH2ドライバが使われようとして
+        // 「Driver org.h2.Driver claims to not accept jdbcUrl」で失敗する。
+        registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
