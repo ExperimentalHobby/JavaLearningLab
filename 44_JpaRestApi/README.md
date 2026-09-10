@@ -28,6 +28,20 @@ cd 44_JpaRestApi
 mvn test
 ```
 
+## Testcontainers(実PostgreSQLでの結合テスト)
+これまでのDB系テストはSQLite/H2インメモリで済ませていたが、`ProductRepositoryPostgresTest`は
+Dockerコンテナで実際のPostgreSQLを起動し、`ProductService`が本物のDBMSに対しても正しく
+動作することを検証する。`@DynamicPropertySource`でコンテナの接続情報にデータソースを差し替え、
+44番のH2版と同じ「在庫不足時のロールバック」検証をPostgreSQLに対しても行っている。
+
+- 既存のH2ベースのテストは維持し、開発時の手軽さ(H2)と本番相当DBでの検証(Testcontainers+PostgreSQL)を使い分ける設計にした
+- Testcontainersのバージョンは`spring-boot-starter-parent`の依存関係管理に委ねている(Spring Boot 3.5系がバージョンを管理)
+
+**注記**: 作業環境にDocker Desktopが導入されていないため、ローカルでの`mvn test`実行時に
+Testcontainersがコンテナ起動時にDockerデーモンへの接続を試み、`IllegalStateException: Could not
+find a valid Docker environment`で失敗することを確認済み(コード自体のバグではないことを確認済み)。
+GitHub ActionsのCI環境(ubuntu-latest)にはDockerが標準搭載されているため、CI上では実行される。
+
 ## ステータス
 - [ ] 未着手
 - [ ] 実装中
