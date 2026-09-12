@@ -28,6 +28,21 @@ cd 44_JpaRestApi
 mvn test
 ```
 
+## Testcontainers(実PostgreSQLでの結合テスト)
+これまでのDB系テストはSQLite/H2インメモリで済ませていたが、`ProductRepositoryPostgresTest`は
+Dockerコンテナで実際のPostgreSQLを起動し、`ProductService`が本物のDBMSに対しても正しく
+動作することを検証する。`@DynamicPropertySource`でコンテナの接続情報にデータソースを差し替え、
+44番のH2版と同じ「在庫不足時のロールバック」検証をPostgreSQLに対しても行っている。
+
+- 既存のH2ベースのテストは維持し、開発時の手軽さ(H2)と本番相当DBでの検証(Testcontainers+PostgreSQL)を使い分ける設計にした
+- Testcontainersのバージョンは`spring-boot-starter-parent`の依存関係管理に委ねている(Spring Boot 3.5系がバージョンを管理)
+- `@DynamicPropertySource`で`spring.datasource.url`をPostgreSQLコンテナの接続情報に差し替えても、`src/test/resources/application.properties`がH2用の`spring.datasource.driver-class-name=org.h2.Driver`を固定指定しているため、URLだけ差し替えるとドライバがミスマッチし`Driver org.h2.Driver claims to not accept jdbcUrl`で失敗する。`driver-class-name`も`@DynamicPropertySource`側で`org.postgresql.Driver`に明示的に上書きすることで解決した(この不一致はCI上で実際に発生・修正した実例)。
+
+**注記**: 作業環境にDocker Desktopが導入されていないため、ローカルでの`mvn test`実行はできない
+(`IllegalStateException: Could not find a valid Docker environment`)。GitHub ActionsのCI環境
+(ubuntu-latest)にはDockerが標準搭載されているため、実装後はCI上で実行し、実際のPostgreSQLコンテナに
+対してテストが成功することを確認済み。
+
 ## ステータス
 - [ ] 未着手
 - [ ] 実装中
