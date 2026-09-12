@@ -6,6 +6,7 @@ Java学習用のアプリ・技術トピックを30個作成するプロジェ�
 1. 01〜10: 基本文法とOOPの基礎(継承・カプセル化・例外処理)
 2. 11〜20: コレクション・ストリームAPI・ファイルI/O・簡単なGUI/Web連携
 3. 21〜30: 並行処理・デザインパターン・アーキテクチャ設計
+4. 31〜: フェーズ4(発展編・抜け漏れ補完テーマ)
 
 ## アプリ一覧・進捗チェックリスト
 
@@ -50,6 +51,10 @@ Java学習用のアプリ・技術トピックを30個作成するプロジェ�
 - [x] [38_VirtualThreadsDemo](38_VirtualThreadsDemo/README.md) - 並行処理デモ(Virtual Threads)
 - [x] [39_AlgorithmsDataStructures](39_AlgorithmsDataStructures/README.md) - アルゴリズム/データ構造実践
 - [x] [40_ReflectionAnnotation](40_ReflectionAnnotation/README.md) - リフレクション&カスタムアノテーション
+- [x] [41_JpmsModuleDemo](41_JpmsModuleDemo/README.md) - モジュールシステム入門(JPMS)
+- [x] [42_WebSocketChat](42_WebSocketChat/README.md) - WebSocketチャットアプリ
+- [x] [43_JmhBenchmark](43_JmhBenchmark/README.md) - JMHパフォーマンス計測
+- [x] [44_JpaRestApi](44_JpaRestApi/README.md) - DB連携REST API(Spring Boot + Spring Data JPA)
 
 ## フォルダ構成
 各フォルダは独立したMaven/Gradleプロジェクトとして管理します(必要に応じてpom.xml/build.gradleを配置)。

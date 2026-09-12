@@ -1,7 +1,8 @@
 # Java 25モダン構文実践(record/sealed/パターンマッチング)
 
 ## 学習ポイント
-record、sealed interface、switchのパターンマッチング(recordパターンによる分解)、text block
+record、sealed interface、switchのパターンマッチング(recordパターンによる分解)、text block、
+unnamed pattern variable(`_`)
 
 ## 概要
 注文の配送状況を管理する対話式CLIツール。
@@ -15,6 +16,7 @@ record、sealed interface、switchのパターンマッチング(recordパター
 - `Shipped`の伝票番号・`Cancelled`の理由はrecordのコンパクトコンストラクタで空文字チェックを行い、不正な状態オブジェクトがそもそも生成できないようにした。
 - `Main`は01〜30と同じ設計パターン(`Scanner`/`PrintStream`を引数に取る`run`静的メソッド)を踏襲しつつ、日付を`Supplier<LocalDate>`として注入可能にし、テストから日付を固定できるようにした。
 - 外部リソース(ネットワーク・ファイル・DB)に依存しない純粋なユニットテストのみで構成した。
+- `OrderStateTransition`のswitch式では、遷移不可な分岐(例外を投げるだけの分岐)や分解結果のうち使わない要素をunnamed pattern variable(`_`、Java 22で正式導入)にし、「意図的に未使用」であることを明示してIDEの未使用変数警告を解消した。
 
 ## テスト
 ```bash
