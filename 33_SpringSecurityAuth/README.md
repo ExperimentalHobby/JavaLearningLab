@@ -17,6 +17,8 @@ Spring Security基礎、認証・認可、JWT
 - デフォルトのSpring Securityはフォームログイン用のリダイレクトを行うため、`exceptionHandling().authenticationEntryPoint(...)`でリダイレクトせず401を返すよう明示的に上書きした。これを忘れるとAPIなのに302が返ってしまう。
 - `AuthController`は`AuthenticationManager.authenticate(...)`が`BadCredentialsException`をスローすることを利用し、`@ExceptionHandler(BadCredentialsException.class)`で401にマッピングしている。
 - `AuthController`/`SecureController`のテストは`@SpringBootTest(webEnvironment = RANDOM_PORT)` + `TestRestTemplate`で実際に埋め込みTomcatへHTTPリクエストを送る結合テストとした(モック・`MockMvc`は使わない、既存Issueと同じ「実リソースでのテスト」方針)。
+- JJWT(`io.jsonwebtoken`)は0.12系で`Keys.secretKeyFor(SignatureAlgorithm)`が非推奨になっており、公式移行先の`Jwts.SIG.HS256.key().build()`に置き換えた。
+- Spring本体の多くのパッケージ(`org.springframework.web.filter`や`org.springframework.data.repository`等)はパッケージ単位で`@NonNullApi`が宣言されている。これらの型を継承・実装する際、自分のコード側に`@NonNull`を明示しないとVSCode(Eclipse JDT)のnull解析で「継承元は@NonNullを要求しているのに明示されていない」という警告になる。`JwtAuthenticationFilter#doFilterInternal`は`OncePerRequestFilter`のオーバーライドなので各パラメータに`@NonNull`を付与し、`SecurityConfig`の`AbstractHttpConfigurer::disable`のようにSpring側の型で自分から注釈を追加できない箇所は`@SuppressWarnings("null")`で対応した。
 
 ## テスト
 ```bash
