@@ -27,6 +27,9 @@ public class ProductService {
     }
 
     /** {@code name}が指定されていれば部分一致検索、なければ全件を対象にページング・ソートを適用する。 */
+    // Spring Data(org.springframework.data.repositoryパッケージ)は@NonNullApiだが、
+    // 呼び出し元のpageableにはnull許容性の注釈が無いため、誤検知される警告を抑制する。
+    @SuppressWarnings("null")
     public PageResponse<ProductResponse> findAll(String name, Pageable pageable) {
         Page<Product> page = (name == null || name.isBlank())
                 ? repository.findAll(pageable)
@@ -46,6 +49,9 @@ public class ProductService {
         return ProductResponse.from(product);
     }
 
+    // findProductOrThrowの戻り値には注釈が無いため、Spring Dataの@NonNullApiとの不一致で
+    // 誤検知される警告を抑制する。
+    @SuppressWarnings("null")
     public void delete(Long id) {
         Product product = findProductOrThrow(id);
         repository.delete(product);
@@ -66,6 +72,8 @@ public class ProductService {
         }
     }
 
+    // idにnull許容性の注釈が無いため、Spring Dataの@NonNullApiとの不一致で誤検知される警告を抑制する。
+    @SuppressWarnings("null")
     private Product findProductOrThrow(Long id) {
         return repository.findById(id).orElseThrow(() -> new ProductNotFoundException(id));
     }
