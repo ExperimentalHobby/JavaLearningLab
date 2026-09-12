@@ -44,6 +44,10 @@ public class SecurityConfig {
         return new org.springframework.security.authentication.ProviderManager(provider);
     }
 
+    // AbstractHttpConfigurer::disableはCustomizer<CsrfConfigurer<HttpSecurity>>の引数を
+    // disable()の暗黙のレシーバとして使うが、Customizer側の引数にはnull許容性の注釈が無く、
+    // @NonNullApiのAbstractHttpConfigurerとの不一致で誤検知される警告を抑制する。
+    @SuppressWarnings("null")
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtService jwtService) throws Exception {
         http
@@ -53,7 +57,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(
-                        (request, response, authException) -> response.sendError(401)))
+                        (request, response, _) -> response.sendError(401)))
                 .addFilterBefore(new JwtAuthenticationFilter(jwtService), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
