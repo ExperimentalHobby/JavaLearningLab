@@ -9,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 
 import java.util.Objects;
 
@@ -23,6 +24,10 @@ class SecureControllerTest {
     @Autowired
     private TestRestTemplate restTemplate;
 
+    // Objects.requireNonNullはnull注釈が無いため、戻り値が@NonNullだと静的解析では
+    // 確認できず誤検知される警告を抑制する(実行時にはnullなら例外で失敗する)。
+    @SuppressWarnings("null")
+    @NonNull
     private String issueToken() {
         AuthResponse response = restTemplate.postForObject(
                 "/api/auth/login", new AuthRequest("alice", "password"), AuthResponse.class);
