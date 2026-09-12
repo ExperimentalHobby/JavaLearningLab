@@ -22,22 +22,7 @@ Spring Data JPA、レイヤードアーキテクチャ(Controller→Service→Re
 - DBは開発時: H2ファイルDB(`./data/`、`.gitignore`対象)、テスト時: H2インメモリDB(`create-drop`)を使い分けている。実DBMS(PostgreSQL)によるテストはTestcontainers採用回(#109)で別途扱う。
 - `ProductController`/`OrderController`のテストは`@SpringBootTest(webEnvironment = RANDOM_PORT)` + `TestRestTemplate`で実際に埋め込みTomcat+実H2へアクセスする結合テストとした(`MockMvc`は使わない、既存Issueと同じ「実リソースでのテスト」方針)。
 
-## ページネーション/検索・ソート(#110)
-一覧取得API(`GET /api/products`)にページング・ソート・名前の部分一致検索を追加した。
-
-- `PageResponse<T>`(record)でSpring Data JPAの`Page<T>`を独自DTOに変換してから返す(実装詳細を晒さない)
-- `ProductRepository.findByNameContainingIgnoreCase(String, Pageable)`はメソッド名からのクエリ自動生成(Spring Data JPAのクエリメソッド命名規則)
-- `ProductController`は`@PageableDefault(size = 10, sort = "id")`でデフォルト値を設定
-- **テスト分離の注意点**: `OrderFulfillmentTest`/`ProductControllerTest`/`OrderControllerTest`は`@Transactional`を使わず実コミットするため、同じ共有H2インスタンス上にそれらが作成したデータが残る。`findAll`の総件数を検証するページングのテストは、この残留データの影響を受けて当初「期待5件・実際12件」のように失敗した。そこで各テストで一意なマーカー文字列(例: `PAGINGTEST3`)を商品名に含め、検索条件としてマーカーを指定することで「自分が作成したデータだけ」を対象に集計・検証するよう設計した。
-- **URLエンコードの注意点**: 結合テストで日本語(「ノート」等)をクエリパラメータに含める際、`UriComponentsBuilder`で事前にURLエンコードした文字列を`TestRestTemplate.exchange(String url, ...)`にそのまま渡すと、内部でさらに符号化され二重符号化になりサーバー側で意図した文字列に復元できなかった(0件ヒットになる不具合として顕在化)。URIテンプレート(`"...?name={name}"`)+ 生の値を`uriVariables`として渡す方式に変更し、符号化をRestTemplateに一任することで解決した。
-
-## テスト
-```bash
-cd 44_JpaRestApi
-mvn test
-```
-
-## Testcontainers(実PostgreSQLでの結合テスト)
+## Testcontainers(実PostgreSQLでの結合テスト、#109)
 これまでのDB系テストはSQLite/H2インメモリで済ませていたが、`ProductRepositoryPostgresTest`は
 Dockerコンテナで実際のPostgreSQLを起動し、`ProductService`が本物のDBMSに対しても正しく
 動作することを検証する。`@DynamicPropertySource`でコンテナの接続情報にデータソースを差し替え、
@@ -51,6 +36,30 @@ Dockerコンテナで実際のPostgreSQLを起動し、`ProductService`が本物
 (`IllegalStateException: Could not find a valid Docker environment`)。GitHub ActionsのCI環境
 (ubuntu-latest)にはDockerが標準搭載されているため、実装後はCI上で実行し、実際のPostgreSQLコンテナに
 対してテストが成功することを確認済み。
+
+## ページネーション/検索・ソート(#110)
+一覧取得API(`GET /api/products`)にページング・ソート・名前の部分一致検索を追加した。
+
+- `PageResponse<T>`(record)でSpring Data JPAの`Page<T>`を独自DTOに変換してから返す(実装詳細を晒さない)
+- `ProductRepository.findByNameContainingIgnoreCase(String, Pageable)`はメソッド名からのクエリ自動生成(Spring Data JPAのクエリメソッド命名規則)
+- `ProductController`は`@PageableDefault(size = 10, sort = "id")`でデフォルト値を設定
+- **テスト分離の注意点**: `OrderFulfillmentTest`/`ProductControllerTest`/`OrderControllerTest`は`@Transactional`を使わず実コミットするため、同じ共有H2インスタンス上にそれらが作成したデータが残る。`findAll`の総件数を検証するページングのテストは、この残留データの影響を受けて当初「期待5件・実際12件」のように失敗した。そこで各テストで一意なマーカー文字列(例: `PAGINGTEST3`)を商品名に含め、検索条件としてマーカーを指定することで「自分が作成したデータだけ」を対象に集計・検証するよう設計した。
+- **URLエンコードの注意点**: 結合テストで日本語(「ノート」等)をクエリパラメータに含める際、`UriComponentsBuilder`で事前にURLエンコードした文字列を`TestRestTemplate.exchange(String url, ...)`にそのまま渡すと、内部でさらに符号化され二重符号化になりサーバー側で意図した文字列に復元できなかった(0件ヒットになる不具合として顕在化)。URIテンプレート(`"...?name={name}"`)+ 生の値を`uriVariables`として渡す方式に変更し、符号化をRestTemplateに一任することで解決した。
+
+## API仕様書自動生成(#111)
+`springdoc-openapi-starter-webmvc-ui`を導入し、`/v3/api-docs`(OpenAPI仕様のJSON)と
+`/swagger-ui/index.html`(Swagger UI)を自動生成している。
+
+- 依存関係を追加するだけで、既存の`@RestController`のアノテーションからゼロコードで仕様書が生成されることを`OpenApiDocsTest`(導入前は404、導入後は200になることを確認)で実証した
+- `OpenApiConfig`(`OpenAPI` Bean)でAPI全体のタイトル・説明・バージョンをカスタマイズ
+- `@Operation`(各エンドポイント)・`@Schema`(DTOの各フィールド)を付与し、生成される仕様書の可読性を高めた
+- これまでREADMEに手書きしていたエンドポイント仕様(本READMEの「概要」セクションの箇条書き)を、コードから自動生成できることを実践した
+
+## テスト
+```bash
+cd 44_JpaRestApi
+mvn test
+```
 
 ## ステータス
 - [ ] 未着手
