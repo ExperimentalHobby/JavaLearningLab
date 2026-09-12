@@ -55,6 +55,23 @@ Dockerコンテナで実際のPostgreSQLを起動し、`ProductService`が本物
 - `@Operation`(各エンドポイント)・`@Schema`(DTOの各フィールド)を付与し、生成される仕様書の可読性を高めた
 - これまでREADMEに手書きしていたエンドポイント仕様(本READMEの「概要」セクションの箇条書き)を、コードから自動生成できることを実践した
 
+## Spring Boot Actuator(#112)
+`spring-boot-starter-actuator`を導入し、`/actuator/health`(ヘルスチェック)・`/actuator/metrics`
+(メトリクス公開)を有効化した。
+
+- DB接続そのものはSpring Boot標準の`db`ヘルスインジケータで既にカバーされるため、本課題では
+  ビジネスロジックに基づくカスタム`HealthIndicator`(`LowStockHealthIndicator`)を実装した。
+  在庫が閾値(`app.low-stock-threshold`、デフォルト5)未満の商品数を`lowStockCount`として
+  `/actuator/health`のレスポンスに公開する
+- 在庫不足はアプリケーションの死活とは別軸の情報のため、あえて常にUPとし、ステータスをDOWNには
+  していない(参考情報として公開する設計)
+- クラス名`LowStockHealthIndicator`の「HealthIndicator」を除いた「lowStock」が、レスポンスJSON上の
+  コンポーネント名になる(Spring Bootの命名規則)
+- `management.endpoints.web.exposure.include`はデフォルトで`health`のみが公開対象のため、
+  `metrics`・`info`も含めて明示的に設定した
+- テストでは他クラスが共有DBに残すデータの影響を避けるため、`lowStockCount`を絶対値ではなく
+  「作成前後の差分」で検証している(46番のページングテストと同じ方針)
+
 ## テスト
 ```bash
 cd 44_JpaRestApi
