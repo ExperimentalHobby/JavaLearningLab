@@ -72,6 +72,14 @@ Dockerコンテナで実際のPostgreSQLを起動し、`ProductService`が本物
 - テストでは他クラスが共有DBに残すデータの影響を避けるため、`lowStockCount`を絶対値ではなく
   「作成前後の差分」で検証している(46番のページングテストと同じ方針)
 
+## VSCode警告の解消(#130)
+VSCode(Eclipse JDT)のnull解析で、`ProductService`の`findAll`/`delete`/`findProductOrThrow`に
+「unchecked conversion」の誤検知警告が出ていた。
+
+- Spring Data(`org.springframework.data.repository`)はパッケージ単位で`@NonNullApi`が宣言されており、`CrudRepository.findById`/`delete`、`PagingAndSortingRepository.findAll`の引数は暗黙的に`@NonNull`になる
+- 一方`ProductService`側の引数(`id`/`pageable`)や`findProductOrThrow`の戻り値にはnull許容性の注釈が無いため、この不一致が誤検知の原因だった
+- `id`/戻り値に`@NonNull`を波及させると、その呼び出し元(`findById`/`update`/`delete`/`fulfillOrder`)にも同様の注釈が必要になりクラス全体に変更が広がるため、影響範囲を抑えて該当3メソッドに`@SuppressWarnings("null")`を付与する方針にした
+
 ## テスト
 ```bash
 cd 44_JpaRestApi
