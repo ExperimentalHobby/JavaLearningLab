@@ -39,7 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String username = jwtService.extractUsername(token);
                 var authentication = new UsernamePasswordAuthenticationToken(username, null, List.of());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-            } catch (JwtException e) {
+            } catch (JwtException _) {
                 // 不正・期限切れトークンは認証情報を設定しない。未認証として扱われ、
                 // 保護対象エンドポイントへのアクセスはSecurityConfigの認可設定により401になる。
                 SecurityContextHolder.clearContext();

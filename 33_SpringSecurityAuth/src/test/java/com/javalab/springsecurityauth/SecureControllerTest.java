@@ -10,6 +10,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.Objects;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -24,7 +26,7 @@ class SecureControllerTest {
     private String issueToken() {
         AuthResponse response = restTemplate.postForObject(
                 "/api/auth/login", new AuthRequest("alice", "password"), AuthResponse.class);
-        return response.token();
+        return Objects.requireNonNull(response, "login response must not be null").token();
     }
 
     @Test
