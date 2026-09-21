@@ -10,4 +10,16 @@ import java.math.BigDecimal;
  * @param quantity 数量
  */
 public record SalesRecord(String product, String category, BigDecimal amount, int quantity) {
+
+    /**
+     * @throws IllegalArgumentException amountまたはquantityが負の値の場合
+     */
+    public SalesRecord {
+        if (amount.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("金額は負の値にできません: " + amount);
+        }
+        if (quantity < 0) {
+            throw new IllegalArgumentException("数量は負の値にできません: " + quantity);
+        }
+    }
 }

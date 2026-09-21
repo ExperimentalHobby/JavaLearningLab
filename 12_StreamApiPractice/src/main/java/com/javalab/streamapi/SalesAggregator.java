@@ -1,18 +1,24 @@
 package com.javalab.streamapi;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /**
  * 売上レコードをStream APIで集計するユーティリティ。
  * すべて副作用のない静的メソッドとして実装し、map/filter/reduceなど中間・終端操作の
- * 組み合わせ方を示すことに主眼を置いている。
+ * 組み合わせ方を示すことに主眼を置いている。static メソッドのみのユーティリティクラスのため、
+ * インスタンス化を禁止する({@code 17_GenericCollectionLib}の{@code CollectionUtils}と同じ方針)。
  */
-public class SalesAggregator {
+public final class SalesAggregator {
+
+    private SalesAggregator() {
+    }
 
     /**
      * @param records 集計対象のレコード一覧
@@ -43,6 +49,9 @@ public class SalesAggregator {
         return records.stream()
                 .collect(Collectors.groupingBy(
                         SalesRecord::category,
+                        // Collectors.groupingByの既定(HashMap)だと表示順が実行のたびに変わりうるため、
+                        // TreeMap(カテゴリ名の昇順)を明示する。
+                        TreeMap::new,
                         Collectors.reducing(BigDecimal.ZERO, SalesRecord::amount, BigDecimal::add)));
     }
 
@@ -68,15 +77,19 @@ public class SalesAggregator {
                 .toList();
     }
 
+    // 金額の平均値を計算する際の丸め桁数(通貨として妥当なスケール2)。
+    private static final int AVERAGE_SCALE = 2;
+
     /**
      * @param records 集計対象のレコード一覧
-     * @return 金額の平均値。recordsが空の場合は0.0
+     * @return 金額の平均値(スケール2・{@link RoundingMode#HALF_UP}で丸め)。recordsが空の場合は0
      */
-    public static double averageAmount(List<SalesRecord> records) {
-        return records.stream()
-                .mapToDouble(record -> record.amount().doubleValue())
-                .average()
-                .orElse(0.0);
+    public static BigDecimal averageAmount(List<SalesRecord> records) {
+        if (records.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        // BigDecimal#doubleValue()を経由すると精度が落ちるため、BigDecimalのまま計算する。
+        return totalSales(records).divide(BigDecimal.valueOf(records.size()), AVERAGE_SCALE, RoundingMode.HALF_UP);
     }
 
     /**
