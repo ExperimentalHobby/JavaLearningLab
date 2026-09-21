@@ -1,8 +1,12 @@
 package com.javalab.budget;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -17,6 +21,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class BudgetManagerTest {
 
     private final BudgetManager manager = new BudgetManager();
+
+    @TempDir
+    Path tempDir;
 
     @Test
     void addEntryIncreasesTotalIncomeForIncomeEntry() {
@@ -47,6 +54,81 @@ class BudgetManagerTest {
                 new BudgetEntry(LocalDate.of(2026, 8, 1), "給与", BigDecimal.ZERO, EntryType.INCOME);
 
         assertThrows(BudgetException.class, () -> manager.addEntry(invalidEntry));
+    }
+
+    @Test
+    void addEntryThrowsExceptionForBlankCategory() {
+        // addEntryは金額しか検証しておらず、カテゴリが空文字でも登録できてしまっていた。
+        BudgetEntry blankCategoryEntry =
+                new BudgetEntry(LocalDate.of(2026, 8, 1), "  ", new BigDecimal("1000"), EntryType.INCOME);
+
+        assertThrows(BudgetException.class, () -> manager.addEntry(blankCategoryEntry));
+    }
+
+    @Test
+    void removeEntryDeletesEntryAtIndex() {
+        // 登録した行の削除ができなかった問題への対応。
+        manager.addEntry(new BudgetEntry(LocalDate.of(2026, 8, 1), "給与", new BigDecimal("300000"), EntryType.INCOME));
+        manager.addEntry(new BudgetEntry(LocalDate.of(2026, 8, 2), "食費", new BigDecimal("5000"), EntryType.EXPENSE));
+
+        manager.removeEntry(0);
+
+        assertEquals(1, manager.getEntries().size());
+        assertEquals("食費", manager.getEntries().get(0).category());
+    }
+
+    @Test
+    void removeEntryThrowsExceptionForInvalidIndex() {
+        assertThrows(BudgetException.class, () -> manager.removeEntry(0));
+    }
+
+    @Test
+    void updateEntryReplacesEntryAtIndex() {
+        // 登録した行の編集ができなかった問題への対応。
+        manager.addEntry(new BudgetEntry(LocalDate.of(2026, 8, 1), "給与", new BigDecimal("300000"), EntryType.INCOME));
+        BudgetEntry updated = new BudgetEntry(LocalDate.of(2026, 8, 1), "賞与", new BigDecimal("500000"), EntryType.INCOME);
+
+        manager.updateEntry(0, updated);
+
+        assertEquals("賞与", manager.getEntries().get(0).category());
+        assertEquals(0, new BigDecimal("500000").compareTo(manager.getEntries().get(0).amount()));
+    }
+
+    @Test
+    void updateEntryThrowsExceptionForInvalidIndex() {
+        BudgetEntry entry = new BudgetEntry(LocalDate.of(2026, 8, 1), "給与", new BigDecimal("300000"), EntryType.INCOME);
+
+        assertThrows(BudgetException.class, () -> manager.updateEntry(0, entry));
+    }
+
+    @Test
+    void updateEntryThrowsExceptionForInvalidNewEntry() {
+        // 更新後の内容も追加時と同じバリデーション(金額・カテゴリ)を通ることを確認する。
+        manager.addEntry(new BudgetEntry(LocalDate.of(2026, 8, 1), "給与", new BigDecimal("300000"), EntryType.INCOME));
+        BudgetEntry invalidEntry =
+                new BudgetEntry(LocalDate.of(2026, 8, 1), "給与", BigDecimal.ZERO, EntryType.INCOME);
+
+        assertThrows(BudgetException.class, () -> manager.updateEntry(0, invalidEntry));
+    }
+
+    @Test
+    void saveToAndLoadFromRoundTripsEntries() throws IOException {
+        // 保存・読込がなくアプリを閉じるとデータが消えていた問題への対応。
+        // 収入・支出が混在した状態で保存し、別のBudgetManagerへ読み込んだ結果が
+        // 元の内容と完全に一致することを確認する「ラウンドトリップテスト」。
+        manager.addEntry(new BudgetEntry(LocalDate.of(2026, 8, 1), "給与", new BigDecimal("300000"), EntryType.INCOME));
+        manager.addEntry(new BudgetEntry(LocalDate.of(2026, 8, 2), "食費", new BigDecimal("5000"), EntryType.EXPENSE));
+        File file = tempDir.resolve("budget.csv").toFile();
+
+        manager.saveTo(file);
+        BudgetManager loaded = new BudgetManager();
+        loaded.loadFrom(file);
+
+        assertEquals(2, loaded.getEntries().size());
+        assertEquals("給与", loaded.getEntries().get(0).category());
+        assertEquals(EntryType.INCOME, loaded.getEntries().get(0).type());
+        assertEquals("食費", loaded.getEntries().get(1).category());
+        assertEquals(EntryType.EXPENSE, loaded.getEntries().get(1).type());
     }
 
     @Test
