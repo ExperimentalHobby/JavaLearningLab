@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * {@link BmiRecord} のCSV形式変換({@link BmiRecord#toCsvLine()} / {@link BmiRecord#fromCsvLine(String)})を検証するテスト。
@@ -30,5 +31,21 @@ class BmiRecordTest {
         assertEquals(65.0, record.getWeightKg());
         assertEquals(22.49, record.getBmi());
         assertEquals("普通体重", record.getCategory());
+    }
+
+    @Test
+    void fromCsvLineThrowsIllegalArgumentExceptionForTooFewColumns() {
+        // カラム数不足の行はArrayIndexOutOfBoundsExceptionになっていた。
+        // Main.runの既存のcatch節(IllegalArgumentException)で拾えるよう変換する。
+        assertThrows(IllegalArgumentException.class,
+                () -> BmiRecord.fromCsvLine("2026-08-01,170.0"));
+    }
+
+    @Test
+    void fromCsvLineThrowsIllegalArgumentExceptionForInvalidDate() {
+        // 不正な日付はDateTimeParseException(IllegalArgumentExceptionのサブクラスではない)になっていた。
+        // 同様にIllegalArgumentExceptionへ変換する。
+        assertThrows(IllegalArgumentException.class,
+                () -> BmiRecord.fromCsvLine("not-a-date,170.0,65.0,22.49,普通体重"));
     }
 }

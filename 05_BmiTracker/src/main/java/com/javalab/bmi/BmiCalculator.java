@@ -10,8 +10,13 @@ public class BmiCalculator {
      * @param heightCm 身長(cm)
      * @param weightKg 体重(kg)
      * @return BMI(小数第2位で丸め)
+     * @throws IllegalArgumentException heightCmまたはweightKgが0以下の場合
+     *         (0以下を許容すると0除算でBMIがInfinityになりclassify()が誤判定するため)
      */
     public static double calculate(double heightCm, double weightKg) {
+        if (heightCm <= 0 || weightKg <= 0) {
+            throw new IllegalArgumentException("身長・体重は0より大きい値を入力してください");
+        }
         double heightM = heightCm / 100.0;
         double bmi = weightKg / (heightM * heightM);
         return Math.round(bmi * 100) / 100.0;

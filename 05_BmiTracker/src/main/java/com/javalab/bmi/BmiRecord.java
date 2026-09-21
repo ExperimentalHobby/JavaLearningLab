@@ -1,6 +1,7 @@
 package com.javalab.bmi;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 
 /**
  * ある日時点のBMI測定記録(日付・身長・体重・BMI・判定区分)。
@@ -53,14 +54,23 @@ public class BmiRecord {
      * {@link #toCsvLine()} で書き出した形式の1行からBmiRecordを復元する。
      * @param line CSVファイルから読み込んだ1行
      * @return 復元されたBmiRecord
+     * @throws IllegalArgumentException lineのカラム数が不足している、または日付・数値の形式が不正な場合
+     *         (手編集等で壊れたCSVをloadしてもクラッシュせず、Main.run側でエラー表示できるようにするため)
      */
     public static BmiRecord fromCsvLine(String line) {
         String[] parts = line.split(",", 5);
-        LocalDate parsedDate = LocalDate.parse(parts[0]);
-        double parsedHeightCm = Double.parseDouble(parts[1]);
-        double parsedWeightKg = Double.parseDouble(parts[2]);
-        double parsedBmi = Double.parseDouble(parts[3]);
-        String parsedCategory = parts[4];
-        return new BmiRecord(parsedDate, parsedHeightCm, parsedWeightKg, parsedBmi, parsedCategory);
+        if (parts.length != 5) {
+            throw new IllegalArgumentException("CSVの行形式が不正です: " + line);
+        }
+        try {
+            LocalDate parsedDate = LocalDate.parse(parts[0]);
+            double parsedHeightCm = Double.parseDouble(parts[1]);
+            double parsedWeightKg = Double.parseDouble(parts[2]);
+            double parsedBmi = Double.parseDouble(parts[3]);
+            String parsedCategory = parts[4];
+            return new BmiRecord(parsedDate, parsedHeightCm, parsedWeightKg, parsedBmi, parsedCategory);
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("CSVの日付形式が不正です: " + line, e);
+        }
     }
 }
