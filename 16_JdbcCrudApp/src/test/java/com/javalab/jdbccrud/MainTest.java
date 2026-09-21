@@ -59,6 +59,39 @@ class MainTest {
     }
 
     @Test
+    void runHandlesUpdateCommand() {
+        // 更新(U)がタイトル変更に対応していなかった問題への対応。
+        Scanner scanner = new Scanner(
+                "add 牛乳を買う\n"
+                        + "update 1 牛乳とパンを買う\n"
+                        + "list\n"
+                        + "exit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out, repository);
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains("更新しました"));
+        assertTrue(result.contains("牛乳とパンを買う"));
+    }
+
+    @Test
+    void runHandlesAddBatchCommand() {
+        // トランザクション・バッチ更新が未収録だった学習テーマへの対応。
+        Scanner scanner = new Scanner("addBatch 1件目,2件目,3件目\nlist\nexit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out, repository);
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains("3件のタスクを一括登録しました"));
+        assertTrue(result.contains("1件目"));
+        assertTrue(result.contains("3件目"));
+    }
+
+    @Test
     void runShowsErrorAndContinuesForUnknownCommand() {
         Scanner scanner = new Scanner("foobar\nlist\nexit\n");
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();

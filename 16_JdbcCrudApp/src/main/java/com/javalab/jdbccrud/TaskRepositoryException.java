@@ -5,6 +5,13 @@ package com.javalab.jdbccrud;
  */
 public class TaskRepositoryException extends RuntimeException {
 
+    /**
+     * @param message エラー内容を説明するメッセージ
+     */
+    public TaskRepositoryException(String message) {
+        super(message);
+    }
+
     public TaskRepositoryException(String message, Throwable cause) {
         super(message, cause);
     }
