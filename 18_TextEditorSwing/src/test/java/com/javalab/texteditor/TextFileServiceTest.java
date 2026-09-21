@@ -3,10 +3,13 @@ package com.javalab.texteditor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * {@link TextFileService} のファイル読み書きロジックを検証するテスト。
@@ -38,6 +41,19 @@ class TextFileServiceTest {
         Path file = tempDir.resolve("does-not-exist.txt");
 
         assertThrows(TextFileException.class, () -> service.load(file));
+    }
+
+    @Test
+    void loadThrowsExceptionWithEncodingHintForNonUtf8File() throws Exception {
+        // TextFileService.loadがUTF-8固定のため、Shift_JISのファイルはMalformedInputExceptionになり
+        // 「ファイルの読み込みに失敗しました」としか出ず原因が分からなかった問題への対応。
+        // 文字コードが原因である可能性が分かるメッセージになることを確認する。
+        Path file = tempDir.resolve("shiftjis.txt");
+        Files.write(file, "こんにちは".getBytes(Charset.forName("Shift_JIS")));
+
+        TextFileException exception = assertThrows(TextFileException.class, () -> service.load(file));
+
+        assertTrue(exception.getMessage().contains("文字コード"));
     }
 
     @Test

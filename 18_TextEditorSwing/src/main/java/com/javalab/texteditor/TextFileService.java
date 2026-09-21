@@ -1,6 +1,7 @@
 package com.javalab.texteditor;
 
 import java.io.IOException;
+import java.nio.charset.MalformedInputException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,6 +21,12 @@ public class TextFileService {
     public String load(Path path) {
         try {
             return Files.readString(path, StandardCharsets.UTF_8);
+        } catch (MalformedInputException e) {
+            // UTF-8として不正なバイト列(例: Shift_JISで保存されたファイル)の場合、
+            // 「ファイルの読み込みに失敗しました」とだけ出ても原因が分からなかったため、
+            // 文字コードが原因である可能性を明示する。
+            throw new TextFileException(
+                    "ファイルの文字コードが不正です(UTF-8以外で保存されている可能性があります): " + path, e);
         } catch (IOException e) {
             throw new TextFileException("ファイルの読み込みに失敗しました: " + path, e);
         }
