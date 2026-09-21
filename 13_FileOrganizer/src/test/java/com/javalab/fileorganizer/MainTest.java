@@ -39,6 +39,22 @@ class MainTest {
     }
 
     @Test
+    void dryRunCommandDoesNotMoveFilesButShowsPlannedResult() throws Exception {
+        // ドライラン(実際には動かさず結果だけ表示)がなく、実行前に影響範囲を確認できなかった
+        // 問題への対応。organize --dry-runで実際には移動せず結果のみ表示されることを確認する。
+        Files.createFile(tempDir.resolve("photo.jpg"));
+        Scanner scanner = new Scanner(new StringReader("organize --dry-run " + tempDir + "\nexit\n"));
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(outContent, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out);
+
+        String output = outContent.toString(StandardCharsets.UTF_8);
+        assertTrue(output.contains("1件のファイルを整理しました"));
+        assertTrue(Files.exists(tempDir.resolve("photo.jpg")));
+    }
+
+    @Test
     void organizeCommandShowsResultSummary() throws Exception {
         Files.createFile(tempDir.resolve("photo.jpg"));
         Scanner scanner = new Scanner(new StringReader("organize " + tempDir + "\nexit\n"));

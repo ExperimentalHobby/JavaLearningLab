@@ -3,7 +3,6 @@ package com.javalab.fileorganizer;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -24,7 +23,8 @@ public class Main {
      * @param out 出力先
      */
     static void run(Scanner scanner, PrintStream out) {
-        out.println("ファイル整理ツールへようこそ。コマンド: organize <ディレクトリパス> / exit");
+        out.println("ファイル整理ツールへようこそ。コマンド: organize <ディレクトリパス> / "
+                + "organize --dry-run <ディレクトリパス> / exit");
 
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine().trim();
@@ -55,15 +55,28 @@ public class Main {
      * @throws IllegalArgumentException コマンドが不明な場合
      */
     private static void handleCommand(String line, PrintStream out) throws IOException {
-        if (line.startsWith("organize ")) {
-            Path sourceDir = Path.of(line.substring(9).trim());
-            List<Path> moved = FileOrganizer.organize(sourceDir);
-            for (Path path : moved) {
-                out.println("移動しました: " + path);
-            }
-            out.println(moved.size() + "件のファイルを整理しました");
+        if (line.startsWith("organize --dry-run ")) {
+            Path sourceDir = Path.of(line.substring("organize --dry-run ".length()).trim());
+            printResult(FileOrganizer.organize(sourceDir, true), out, true);
+        } else if (line.startsWith("organize ")) {
+            Path sourceDir = Path.of(line.substring("organize ".length()).trim());
+            printResult(FileOrganizer.organize(sourceDir, false), out, false);
         } else {
             throw new IllegalArgumentException("不明なコマンドです: " + line);
+        }
+    }
+
+    private static void printResult(OrganizeResult result, PrintStream out, boolean dryRun) {
+        String verb = dryRun ? "移動予定です" : "移動しました";
+        for (Path path : result.movedFiles()) {
+            out.println(verb + ": " + path);
+        }
+        for (String failure : result.failures()) {
+            out.println("失敗: " + failure);
+        }
+        out.println(result.movedFiles().size() + "件のファイルを整理しました");
+        if (!result.failures().isEmpty()) {
+            out.println(result.failures().size() + "件のファイルの移動に失敗しました");
         }
     }
 }
