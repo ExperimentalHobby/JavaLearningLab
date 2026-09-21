@@ -19,11 +19,13 @@ class OrderStateTransitionTest {
     }
 
     @Test
-    void ship_fromShipped_throwsIllegalStateException() {
+    void ship_fromShipped_throwsIllegalStateExceptionWithJapaneseMessage() {
         OrderState shipped = new OrderState.Shipped(LocalDate.of(2026, 1, 1), "TRACK-001", LocalDate.of(2026, 1, 3));
 
-        assertThrows(IllegalStateException.class,
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
                 () -> OrderStateTransition.ship(shipped, "TRACK-002", LocalDate.of(2026, 1, 4)));
+
+        assertEquals("発送済みの注文は発送できません", ex.getMessage());
     }
 
     @Test
@@ -36,10 +38,13 @@ class OrderStateTransitionTest {
     }
 
     @Test
-    void deliver_fromPlaced_throwsIllegalStateException() {
+    void deliver_fromPlaced_throwsIllegalStateExceptionWithJapaneseMessage() {
         OrderState placed = new OrderState.Placed(LocalDate.of(2026, 1, 1));
 
-        assertThrows(IllegalStateException.class, () -> OrderStateTransition.deliver(placed, LocalDate.of(2026, 1, 5)));
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> OrderStateTransition.deliver(placed, LocalDate.of(2026, 1, 5)));
+
+        assertEquals("注文受付の注文は配達完了にできません", ex.getMessage());
     }
 
     @Test
@@ -61,9 +66,12 @@ class OrderStateTransitionTest {
     }
 
     @Test
-    void cancel_fromDelivered_throwsIllegalStateException() {
+    void cancel_fromDelivered_throwsIllegalStateExceptionWithJapaneseMessage() {
         OrderState delivered = new OrderState.Delivered(LocalDate.of(2026, 1, 1), "TRACK-001", LocalDate.of(2026, 1, 5));
 
-        assertThrows(IllegalStateException.class, () -> OrderStateTransition.cancel(delivered, "返品希望"));
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> OrderStateTransition.cancel(delivered, "返品希望"));
+
+        assertEquals("配達完了の注文はキャンセルできません", ex.getMessage());
     }
 }
