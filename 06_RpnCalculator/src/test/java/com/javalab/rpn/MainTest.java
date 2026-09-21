@@ -31,6 +31,21 @@ class MainTest {
     }
 
     @Test
+    void divisionResultDoesNotShowFixedScaleZeros() {
+        // RpnCalculator.evaluate()は除算をスケール10で丸めるため、割り切れるケースでも
+        // "= 5.0000000000"のように表示されていた。末尾の余分なゼロを取り除いた"= 5"になることを確認する。
+        Scanner scanner = new Scanner(new StringReader("20 4 /\nexit\n"));
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(outContent, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out);
+
+        String output = outContent.toString(StandardCharsets.UTF_8);
+        assertTrue(output.contains("= 5"));
+        org.junit.jupiter.api.Assertions.assertFalse(output.contains("5.0000000000"));
+    }
+
+    @Test
     void validExpressionShowsResult() {
         Scanner scanner = new Scanner(new StringReader("2 3 4 + *\nexit\n"));
         ByteArrayOutputStream outContent = new ByteArrayOutputStream();
