@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -43,5 +44,29 @@ class TaskTest {
 
         assertEquals("洗濯する", task.getDescription());
         assertFalse(task.isDone());
+    }
+
+    @Test
+    void toDisplayLineIsIndependentFromFileLineFormat() {
+        // printTasksが永続化用のtoFileLine()を画面表示に流用していると、保存形式と表示形式が
+        // 結合してしまう。表示専用のtoDisplayLine()を持つことを確認する
+        // (現時点では見た目はtoFileLine()と同じだが、以後どちらかを変更しても他方に影響しない)。
+        Task task = new Task("買い物に行く");
+
+        assertEquals("[ ] 買い物に行く", task.toDisplayLine());
+    }
+
+    @Test
+    void fromFileLineThrowsExceptionForEmptyLine() {
+        // 空行はline.substring(4)が無条件に呼ばれるとStringIndexOutOfBoundsExceptionで
+        // クラッシュしていた。手編集されたtodo.txt等を安全にloadできるよう、
+        // 空行や短すぎる行はToDoListExceptionとして扱う。
+        assertThrows(ToDoListException.class, () -> Task.fromFileLine(""));
+    }
+
+    @Test
+    void fromFileLineThrowsExceptionForLineWithoutValidPrefix() {
+        // "[x] "/"[ ] "のいずれのプレフィックスも持たない行は不正な形式として扱う。
+        assertThrows(ToDoListException.class, () -> Task.fromFileLine("不正な行"));
     }
 }

@@ -37,6 +37,21 @@ class MainTest {
     }
 
     @Test
+    void listWithNoTasksShowsEmptyMessage() {
+        // タスクが1件もない状態で"list"を実行すると、これまでは何も表示されなかった。
+        // 「タスクはありません」と表示されることを確認する。
+        Scanner scanner = new Scanner(new StringReader("list\nexit\n"));
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(outContent, true, StandardCharsets.UTF_8);
+        File file = tempDir.resolve("todo.txt").toFile();
+
+        Main.run(scanner, out, file);
+
+        String output = outContent.toString(StandardCharsets.UTF_8);
+        assertTrue(output.contains("タスクはありません"));
+    }
+
+    @Test
     void addListDoneSequenceWorksCorrectly() {
         // add→list→done→listという一連のコマンドで、1回目のlistでは未完了([ ])、
         // done後の2回目のlistでは完了済み([x])と表示が変わることを確認する。

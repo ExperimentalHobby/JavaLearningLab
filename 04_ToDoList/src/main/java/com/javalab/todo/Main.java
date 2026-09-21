@@ -89,8 +89,12 @@ public class Main {
 
     private static void printTasks(ToDoList toDoList, PrintStream out) {
         List<Task> tasks = toDoList.getTasks();
+        if (tasks.isEmpty()) {
+            out.println("タスクはありません");
+            return;
+        }
         for (int i = 0; i < tasks.size(); i++) {
-            out.println(i + ": " + tasks.get(i).toFileLine());
+            out.println(i + ": " + tasks.get(i).toDisplayLine());
         }
     }
 }
