@@ -34,11 +34,25 @@ public class Task {
     }
 
     /**
+     * 画面表示用の1行形式に変換する。現時点の見た目は{@link #toFileLine()}と同じだが、
+     * 保存形式と表示形式を別メソッドに分けることで、一方の変更が他方に影響しないようにしている。
+     * @return 画面表示用の文字列
+     */
+    public String toDisplayLine() {
+        return (done ? "[x] " : "[ ] ") + description;
+    }
+
+    /**
      * {@link #toFileLine()} で書き出した形式の1行からTaskを復元する。
      * @param line ファイルから読み込んだ1行
      * @return 復元されたTask
+     * @throws ToDoListException lineが"[x] "/"[ ] "のいずれのプレフィックスも持たない場合
+     *         (空行や、手編集で壊れた行を含む)
      */
     public static Task fromFileLine(String line) {
+        if (!line.startsWith("[x] ") && !line.startsWith("[ ] ")) {
+            throw new ToDoListException("タスクの行形式が不正です: " + line);
+        }
         boolean fileDone = line.startsWith("[x] ");
         // "[x] " / "[ ] " はどちらも4文字なので、共通のオフセットで説明部分を取り出せる。
         String fileDescription = line.substring(4);

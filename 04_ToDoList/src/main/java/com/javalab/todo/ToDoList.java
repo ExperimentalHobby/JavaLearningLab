@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,8 +20,13 @@ public class ToDoList {
     /**
      * 新しい未完了タスクを末尾に追加する。
      * @param description タスクの説明
+     * @throws ToDoListException descriptionが改行(\n・\r)を含む場合。
+     *         1行1タスクという保存形式(saveTo/loadFrom)の前提が崩れ、ファイルが壊れるため。
      */
     public void add(String description) {
+        if (description.indexOf('\n') >= 0 || description.indexOf('\r') >= 0) {
+            throw new ToDoListException("タスクの説明に改行は含められません: " + description);
+        }
         tasks.add(new Task(description));
     }
 
@@ -56,7 +62,7 @@ public class ToDoList {
      * @throws IOException 書き込みに失敗した場合
      */
     public void saveTo(File file) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file, StandardCharsets.UTF_8))) {
             for (Task task : tasks) {
                 writer.write(task.toFileLine());
                 writer.newLine();
@@ -72,7 +78,7 @@ public class ToDoList {
     public void loadFrom(File file) throws IOException {
         // 読込前にクリアすることで、load後の状態がファイル内容と完全に一致するようにする。
         tasks.clear();
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(file, StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 tasks.add(Task.fromFileLine(line));
@@ -80,7 +86,12 @@ public class ToDoList {
         }
     }
 
+    /**
+     * 現在のタスク一覧を返す。呼び出し側からの{@code add}/{@code remove}/{@code clear}を防ぐため、
+     * 内部の{@link ArrayList}をそのまま返さず変更不可なコピーを返す。
+     * @return タスク一覧(変更不可)
+     */
     public List<Task> getTasks() {
-        return tasks;
+        return List.copyOf(tasks);
     }
 }

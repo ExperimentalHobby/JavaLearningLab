@@ -78,6 +78,24 @@ class ToDoListTest {
     }
 
     @Test
+    void addThrowsExceptionForDescriptionContainingNewline() {
+        // 説明文に改行(\n)を含めると、1行1タスクという保存形式の前提が崩れ、
+        // saveTo/loadFromのラウンドトリップでタスクの行数がずれてファイルが壊れる。
+        // add()の時点で防ぐことを確認する。
+        assertThrows(ToDoListException.class, () -> toDoList.add("買い物\nに行く"));
+    }
+
+    @Test
+    void getTasksReturnsUnmodifiableListThatDoesNotAffectInternalState() {
+        // getTasks()が内部のArrayListをそのまま返すと、呼び出し側からadd/remove/clearできてしまい
+        // カプセル化が崩れる。List.copyOf()で防御的コピーを返すことを確認する。
+        toDoList.add("牛乳を買う");
+
+        assertThrows(UnsupportedOperationException.class,
+                () -> toDoList.getTasks().add(new Task("勝手に追加")));
+    }
+
+    @Test
     void saveToAndLoadFromRoundTripsTaskState() throws IOException {
         // 完了/未完了が混在した状態でファイルに保存し、別のToDoListインスタンスへ読み込んだ結果が
         // 元の状態(説明・完了フラグ・順序)と完全に一致することを確認する「ラウンドトリップテスト」。
