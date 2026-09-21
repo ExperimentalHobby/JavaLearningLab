@@ -45,6 +45,66 @@ class MainTest {
     }
 
     @Test
+    void runShowsSkippedLineDetails() throws IOException {
+        // 空のcatchブロックでスキップした行の内容が追えなかった問題への対応。
+        Path logFile = tempDir.resolve("app.log");
+        Files.writeString(logFile, String.join("\n",
+                "2026-08-13 10:15:30 [ERROR] エラー",
+                "これはログ行ではありません"), StandardCharsets.UTF_8);
+
+        Scanner scanner = new Scanner("load " + logFile + "\nexit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out);
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains("2行目"));
+    }
+
+    @Test
+    void runHandlesFilterByLevelAndErrorsCommands() throws IOException {
+        // 「レベル絞り込み・期間指定・ERROR抽出がない」という学習テーマへの対応。
+        Path logFile = tempDir.resolve("app.log");
+        Files.writeString(logFile, String.join("\n",
+                "2026-08-13 10:15:30 [ERROR] エラーです",
+                "2026-08-13 10:16:00 [INFO] 情報です"), StandardCharsets.UTF_8);
+
+        Scanner scanner = new Scanner(
+                "load " + logFile + "\n"
+                        + "filterByLevel ERROR\n"
+                        + "errors\n"
+                        + "exit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out);
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains("エラーです"));
+    }
+
+    @Test
+    void runHandlesFilterByPeriodCommand() throws IOException {
+        Path logFile = tempDir.resolve("app.log");
+        Files.writeString(logFile, String.join("\n",
+                "2026-08-13 09:00:00 [INFO] 早すぎる",
+                "2026-08-13 10:30:00 [INFO] 範囲内"), StandardCharsets.UTF_8);
+
+        Scanner scanner = new Scanner(
+                "load " + logFile + "\n"
+                        + "filterByPeriod 2026-08-13T10:00:00 2026-08-13T11:00:00\n"
+                        + "exit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out);
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains("範囲内"));
+    }
+
+    @Test
     void runShowsErrorAndContinuesForUnknownCommand() {
         Scanner scanner = new Scanner("foobar\nexit\n");
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
