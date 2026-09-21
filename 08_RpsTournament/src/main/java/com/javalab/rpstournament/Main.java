@@ -62,15 +62,33 @@ public class Main {
             List<Player> players, String line, PrintStream out, Function<Player, Hand> handSupplier) {
         if (line.equals("start")) {
             Tournament tournament = new Tournament(players);
-            Player champion = tournament.runTournament(handSupplier);
+            Player champion = tournament.runTournament(handSupplier, results -> printRoundResults(results, out));
             out.println("優勝: " + champion.getName());
+            // 参加者一覧をリセットし、続けてregister→startすると新しい大会として扱われるようにする。
+            players.clear();
         } else if (line.startsWith("register ")) {
             String[] names = line.substring(9).trim().split("\\s+");
             for (String name : names) {
-                players.add(new Player(name));
+                Player player = new Player(name);
+                if (players.contains(player)) {
+                    throw new IllegalArgumentException("重複したプレイヤー名です: " + name);
+                }
+                players.add(player);
             }
+            out.println("登録人数: " + players.size() + "人");
         } else {
             throw new IllegalArgumentException("不明なコマンドです: " + line);
+        }
+    }
+
+    private static void printRoundResults(List<Tournament.MatchResult> results, PrintStream out) {
+        for (Tournament.MatchResult result : results) {
+            if (result.playerB() == null) {
+                out.println(result.playerA().getName() + ": 不戦勝");
+            } else {
+                out.println(result.playerA().getName() + " vs " + result.playerB().getName()
+                        + " -> " + result.winner().getName() + "の勝ち");
+            }
         }
     }
 }
