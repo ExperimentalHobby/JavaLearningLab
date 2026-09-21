@@ -65,4 +65,42 @@ class MainTest {
 
         assertTrue(output.contains("エラー: 不明なコマンドです: foo bar"));
     }
+
+    @Test
+    void fromJsonMalformedInput_showsErrorAndContinues() {
+        // 修正前はREPLごと落ちていた。
+        String output = runCommands("""
+                fromJson {bad
+                list
+                exit
+                """);
+
+        assertTrue(output.contains("エラー: 不正なJSON形式です"));
+    }
+
+    @Test
+    void fromXmlThenList_addsProduct() {
+        // fromXmlを呼び出す手段がなかった問題への対応。
+        String xml = ProductXmlMapper.toXml(
+                new Product("P001", "ノート", new java.math.BigDecimal("150"), java.time.LocalDate.of(2026, 4, 1)));
+
+        String output = runCommands("""
+                fromXml %s
+                list
+                exit
+                """.formatted(xml));
+
+        assertTrue(output.contains("ID: P001"));
+    }
+
+    @Test
+    void list_showsFormattedFieldsInsteadOfRawToString() {
+        String output = runCommands("""
+                add P001 ノート 150 2026-04-01
+                list
+                exit
+                """);
+
+        assertTrue(output.contains("ID: P001, 商品名: ノート, 価格: 150円, 発売日: 2026-04-01"));
+    }
 }

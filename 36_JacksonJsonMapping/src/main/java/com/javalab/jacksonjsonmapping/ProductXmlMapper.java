@@ -1,7 +1,7 @@
 package com.javalab.jacksonjsonmapping;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
@@ -38,10 +38,11 @@ public final class ProductXmlMapper {
     public static Product fromXml(String xml) {
         try {
             return MAPPER.readValue(xml, Product.class);
-        } catch (MismatchedInputException e) {
+        } catch (JsonProcessingException e) {
+            // 構文エラー・型不一致いずれもIllegalArgumentExceptionに変換する(ProductJsonMapper.fromJsonと同じ方針)。
+            // readValue(String, Class)はJsonProcessingExceptionしか宣言しないため、
+            // 汎用のIOExceptionをここで捕捉することはない。
             throw new IllegalArgumentException("不正なXML形式です: " + xml, e);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
         }
     }
 }
