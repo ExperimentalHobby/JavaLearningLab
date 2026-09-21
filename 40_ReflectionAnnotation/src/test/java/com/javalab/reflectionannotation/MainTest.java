@@ -39,7 +39,7 @@ class MainTest {
                 exit
                 """);
 
-        assertTrue(output.contains("違反: age must be <= 150"));
+        assertTrue(output.contains("違反: ageは150以下である必要があります"));
     }
 
     @Test

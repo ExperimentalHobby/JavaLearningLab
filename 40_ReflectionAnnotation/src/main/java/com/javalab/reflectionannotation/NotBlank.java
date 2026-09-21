@@ -9,4 +9,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface NotBlank {
+    /** 違反メッセージ。{@code {field}}はフィールド名に置換される。 */
+    String message() default "{field}は空白にできません";
 }
