@@ -5,9 +5,22 @@ import org.junit.jupiter.api.Test;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class EmployeeRepositoryTest {
+
+    @Test
+    void add_duplicateId_throwsIllegalArgumentException() {
+        EmployeeRepository repository = new EmployeeRepository();
+        repository.add(new Employee("E001", "山田太郎", "yamada@example.com"));
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> repository.add(new Employee("E001", "鈴木花子", "suzuki@example.com")));
+
+        assertEquals("既に存在する社員IDです: E001", ex.getMessage());
+        assertEquals("山田太郎", repository.findById("E001").orElseThrow().name());
+    }
 
     @Test
     void findById_existingId_returnsOptionalWithEmployee() {

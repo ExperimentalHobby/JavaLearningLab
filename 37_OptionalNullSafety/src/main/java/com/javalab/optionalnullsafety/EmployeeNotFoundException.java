@@ -4,6 +4,6 @@ package com.javalab.optionalnullsafety;
 public class EmployeeNotFoundException extends RuntimeException {
 
     public EmployeeNotFoundException(String id) {
-        super("employee not found: id=" + id);
+        super("該当する社員が見つかりません: id=" + id);
     }
 }

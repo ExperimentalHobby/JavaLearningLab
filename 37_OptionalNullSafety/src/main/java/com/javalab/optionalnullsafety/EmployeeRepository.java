@@ -16,6 +16,9 @@ public class EmployeeRepository {
     private final Map<String, Employee> employeesById = new LinkedHashMap<>();
 
     public void add(Employee employee) {
+        if (employeesById.containsKey(employee.id())) {
+            throw new IllegalArgumentException("既に存在する社員IDです: " + employee.id());
+        }
         employeesById.put(employee.id(), employee);
     }
 
