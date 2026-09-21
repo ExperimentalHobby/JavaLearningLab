@@ -13,9 +13,13 @@ public class TextStatisticsCalculator {
         if (content.isEmpty()) {
             return new TextStatistics(0, 0, 0);
         }
-        int lines = content.split("\n", -1).length;
-        int words = content.trim().isEmpty() ? 0 : content.trim().split("\\s+").length;
-        int chars = content.length();
+        // 改行をLF(\n)に正規化する。CRLFの\rが文字数に含まれたり行末に残ったりしないようにするため。
+        String normalized = content.replace("\r\n", "\n").replace("\r", "\n");
+        // wc -lと同じく「改行文字の出現回数」を行数とする。split("\n", -1).lengthだと
+        // 末尾が改行で終わる通常のテキストファイルで末尾の空要素が数に入り1多くなってしまう。
+        int lines = (int) normalized.chars().filter(c -> c == '\n').count();
+        int words = normalized.trim().isEmpty() ? 0 : normalized.trim().split("\\s+").length;
+        int chars = normalized.length();
         return new TextStatistics(lines, words, chars);
     }
 }
