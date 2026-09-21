@@ -31,4 +31,23 @@ class CircleTest {
         // 負の半径は物理的に成立しないため、コンストラクタでShapeExceptionをスローする。
         assertThrows(ShapeException.class, () -> new Circle(-1));
     }
+
+    @Test
+    void equalsAndHashCodeAreBasedOnRadius() {
+        // 同じ半径のCircleは等価とみなせることを確認する(equals/hashCodeが未定義だった問題への対応)。
+        Circle circle1 = new Circle(5);
+        Circle circle2 = new Circle(5);
+        Circle differentCircle = new Circle(3);
+
+        assertEquals(circle1, circle2);
+        assertEquals(circle1.hashCode(), circle2.hashCode());
+        org.junit.jupiter.api.Assertions.assertNotEquals(circle1, differentCircle);
+    }
+
+    @Test
+    void toStringContainsRadius() {
+        Circle circle = new Circle(5);
+
+        org.junit.jupiter.api.Assertions.assertTrue(circle.toString().contains("5"));
+    }
 }
