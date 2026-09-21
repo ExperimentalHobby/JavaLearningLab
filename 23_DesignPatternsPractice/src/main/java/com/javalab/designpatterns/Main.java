@@ -1,15 +1,19 @@
 package com.javalab.designpatterns;
 
+import com.javalab.designpatterns.decorator.DiscountedPayment;
 import com.javalab.designpatterns.factory.Shape;
 import com.javalab.designpatterns.factory.ShapeFactory;
+import com.javalab.designpatterns.observer.WeatherObserver;
 import com.javalab.designpatterns.observer.WeatherStation;
 import com.javalab.designpatterns.singleton.AppLogger;
 import com.javalab.designpatterns.strategy.Checkout;
 import com.javalab.designpatterns.strategy.CreditCardPayment;
 import com.javalab.designpatterns.strategy.PayPalPayment;
+import com.javalab.designpatterns.strategy.PaymentStrategy;
 
 import java.io.PrintStream;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -32,12 +36,17 @@ public class Main {
         ShapeFactory shapeFactory = new ShapeFactory();
         WeatherStation weatherStation = new WeatherStation();
         // Observerパターンの動作を目に見える形で示すため、通知内容を出力するObserverを1つ登録しておく。
-        weatherStation.subscribe(temperature -> out.println("気温が変化しました: " + temperature + "℃"));
+        // 変数として保持しておくことで、CLIから"weather unsubscribe"を受け取った際に
+        // unsubscribe()を呼び出せるようにする(unsubscribeをCLIから呼ぶ手段がなかった問題への対応)。
+        WeatherObserver consoleObserver = temperature -> out.println("気温が変化しました: " + temperature + "℃");
+        weatherStation.subscribe(consoleObserver);
         Checkout checkout = new Checkout(new CreditCardPayment());
 
         out.println("デザインパターン実践集。コマンド: "
-                + "log <メッセージ>(Singleton) / shape <circle|rectangle> <params...>(Factory) / "
-                + "weather <温度>(Observer) / pay <creditcard|paypal> <金額>(Strategy) / exit");
+                + "log <メッセージ>(Singleton) / logs(Singleton) / "
+                + "shape <circle|rectangle> <params...>(Factory) / "
+                + "weather <温度>(Observer) / weather unsubscribe(Observer) / "
+                + "pay <creditcard|paypal> <金額> [割引率](Strategy/Decorator) / exit");
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine().trim();
             if (line.isEmpty()) {
@@ -51,8 +60,9 @@ public class Main {
                         return;
                     }
                     case "log" -> handleLog(parts, out);
+                    case "logs" -> handleLogs(out);
                     case "shape" -> handleShape(shapeFactory, parts, out);
-                    case "weather" -> weatherStation.setTemperature(Double.parseDouble(parts[1]));
+                    case "weather" -> handleWeather(weatherStation, consoleObserver, parts);
                     case "pay" -> handlePay(checkout, parts, out);
                     default -> out.println("不明なコマンドです: " + line);
                 }
@@ -68,6 +78,23 @@ public class Main {
         out.println("ログに記録しました: " + message);
     }
 
+    private static void handleWeather(WeatherStation weatherStation, WeatherObserver consoleObserver, String[] parts) {
+        if (parts.length >= 2 && parts[1].equals("unsubscribe")) {
+            weatherStation.unsubscribe(consoleObserver);
+            return;
+        }
+        weatherStation.setTemperature(Double.parseDouble(parts[1]));
+    }
+
+    private static void handleLogs(PrintStream out) {
+        List<String> logs = AppLogger.getInstance().logs();
+        if (logs.isEmpty()) {
+            out.println("ログはありません");
+            return;
+        }
+        logs.forEach(out::println);
+    }
+
     private static void handleShape(ShapeFactory shapeFactory, String[] parts, PrintStream out) {
         double[] params = new double[parts.length - 2];
         for (int i = 2; i < parts.length; i++) {
@@ -78,11 +105,18 @@ public class Main {
     }
 
     private static void handlePay(Checkout checkout, String[] parts, PrintStream out) {
-        checkout.setStrategy(switch (parts[1]) {
+        PaymentStrategy strategy = switch (parts[1]) {
             case "creditcard" -> new CreditCardPayment();
             case "paypal" -> new PayPalPayment();
             default -> throw new IllegalArgumentException("未知の決済方法です: " + parts[1]);
-        });
+        };
+        // 第4引数(割引率)が指定された場合、Decoratorパターンで既存のPaymentStrategyをラップする。
+        // Strategy(決済方法の丸ごと差し替え)とDecorator(既存実装への振る舞いの追加)の
+        // 組み合わせを体験できる。
+        if (parts.length >= 4) {
+            strategy = new DiscountedPayment(strategy, Integer.parseInt(parts[3]));
+        }
+        checkout.setStrategy(strategy);
         out.println(checkout.checkout(Integer.parseInt(parts[2])));
     }
 }

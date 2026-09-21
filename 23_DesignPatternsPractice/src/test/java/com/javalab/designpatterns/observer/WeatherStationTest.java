@@ -43,4 +43,21 @@ class WeatherStationTest {
 
         assertEquals(List.of(), received);
     }
+
+    @Test
+    void setTemperatureDoesNotThrowConcurrentModificationExceptionWhenObserverUnsubscribesDuringNotification() {
+        // observersを直接for-eachで反復していると、通知中にObserverが自分自身をunsubscribeした際に
+        // ConcurrentModificationExceptionになっていた問題への対応。
+        List<Double> received = new ArrayList<>();
+        WeatherObserver[] selfUnsubscribing = new WeatherObserver[1];
+        selfUnsubscribing[0] = temperature -> {
+            received.add(temperature);
+            station.unsubscribe(selfUnsubscribing[0]);
+        };
+        station.subscribe(selfUnsubscribing[0]);
+
+        station.setTemperature(25.0);
+
+        assertEquals(List.of(25.0), received);
+    }
 }
