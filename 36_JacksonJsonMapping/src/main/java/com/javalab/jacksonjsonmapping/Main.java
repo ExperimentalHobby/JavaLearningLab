@@ -22,7 +22,8 @@ public class Main {
         List<Product> products = new ArrayList<>();
 
         out.println("商品カタログJSON/XML変換ツールへようこそ。"
-                + "コマンド: add <ID> <商品名> <価格> <発売日yyyy-MM-dd> / list / toJson / toXml / fromJson <JSON> / exit");
+                + "コマンド: add <ID> <商品名> <価格> <発売日yyyy-MM-dd> / list / toJson / toXml / "
+                + "fromJson <JSON> / fromXml <XML> / exit");
 
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine().trim();
@@ -45,7 +46,7 @@ public class Main {
 
     private static void handleCommand(List<Product> products, String line, PrintStream out) {
         if (line.equals("list")) {
-            products.forEach(p -> out.println(p));
+            products.forEach(p -> out.println(formatForList(p)));
         } else if (line.equals("toJson")) {
             out.println(ProductJsonMapper.toJson(products));
         } else if (line.equals("toXml")) {
@@ -58,8 +59,15 @@ public class Main {
             products.add(new Product(parts[0], parts[1], new BigDecimal(parts[2]), LocalDate.parse(parts[3])));
         } else if (line.startsWith("fromJson ")) {
             products.add(ProductJsonMapper.fromJson(line.substring(9).trim()));
+        } else if (line.startsWith("fromXml ")) {
+            products.add(ProductXmlMapper.fromXml(line.substring(8).trim()));
         } else {
             throw new IllegalArgumentException("不明なコマンドです: " + line);
         }
+    }
+
+    private static String formatForList(Product product) {
+        return "ID: %s, 商品名: %s, 価格: %s円, 発売日: %s"
+                .formatted(product.id(), product.name(), product.price(), product.releaseDate());
     }
 }

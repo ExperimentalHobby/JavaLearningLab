@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
-import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.List;
 
@@ -40,8 +39,12 @@ public final class ProductJsonMapper {
     public static Product fromJson(String json) {
         try {
             return MAPPER.readValue(json, Product.class);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+        } catch (JsonProcessingException e) {
+            // 構文エラー(JsonParseException)・型不一致(MismatchedInputException)いずれも
+            // ProductXmlMapper.fromXmlと同じ方針でIllegalArgumentExceptionに変換する。
+            // readValue(String, Class)はJsonProcessingExceptionしか宣言しないため、
+            // 汎用のIOExceptionをここで捕捉することはない。
+            throw new IllegalArgumentException("不正なJSON形式です: " + json, e);
         }
     }
 }
