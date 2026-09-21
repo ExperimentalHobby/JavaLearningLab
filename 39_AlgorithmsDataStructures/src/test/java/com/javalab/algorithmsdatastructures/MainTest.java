@@ -33,6 +33,19 @@ class MainTest {
     }
 
     @Test
+    void sortSelection_showsComparisonAndMoveCounts() {
+        // 「ソートアルゴリズム比較」なのに比較する手段がなかった問題への対応。
+        String output = runCommands("""
+                sort selection 5 3 8 3 1
+                exit
+                """);
+
+        assertTrue(output.contains("比較回数: "));
+        assertTrue(output.contains("移動回数: "));
+        assertTrue(output.contains("所要時間: "));
+    }
+
+    @Test
     void bstInsertThenInorder_showsSortedValues() {
         String output = runCommands("""
                 bst insert 5

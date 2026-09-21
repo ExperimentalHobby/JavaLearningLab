@@ -59,15 +59,18 @@ public class Main {
         }
         List<Integer> values = parseInts(parts[1]);
 
-        List<Integer> sorted = switch (parts[0]) {
-            case "selection" -> SortAlgorithms.selectionSort(values);
-            case "insertion" -> SortAlgorithms.insertionSort(values);
-            case "quick" -> SortAlgorithms.quickSort(values);
-            case "merge" -> SortAlgorithms.mergeSort(values);
+        SortResult<Integer> result = switch (parts[0]) {
+            case "selection" -> SortAlgorithms.selectionSortWithMetrics(values);
+            case "insertion" -> SortAlgorithms.insertionSortWithMetrics(values);
+            case "quick" -> SortAlgorithms.quickSortWithMetrics(values);
+            case "merge" -> SortAlgorithms.mergeSortWithMetrics(values);
             default -> throw new IllegalArgumentException("不明なアルゴリズムです: " + parts[0]);
         };
 
-        out.println(sorted.stream().map(String::valueOf).collect(Collectors.joining(" ")));
+        out.println(result.sorted().stream().map(String::valueOf).collect(Collectors.joining(" ")));
+        SortMetrics metrics = result.metrics();
+        out.println("比較回数: %d, 移動回数: %d, 所要時間: %.3fms"
+                .formatted(metrics.comparisons(), metrics.moves(), metrics.elapsedNanos() / 1_000_000.0));
     }
 
     private static void handleBst(BinarySearchTree<Integer> tree, String rest, String line, PrintStream out) {
