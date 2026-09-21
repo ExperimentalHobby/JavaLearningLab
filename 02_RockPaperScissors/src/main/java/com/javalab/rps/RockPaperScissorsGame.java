@@ -4,8 +4,12 @@ import java.util.Random;
 
 /**
  * じゃんけんの手の抽選と勝敗判定を行うロジック。
+ * static メソッドのみを提供するユーティリティクラスのため、インスタンス化を禁止する。
  */
-public class RockPaperScissorsGame {
+public final class RockPaperScissorsGame {
+
+    private RockPaperScissorsGame() {
+    }
 
     /**
      * コンピュータの手を乱数で決定する。

@@ -1,6 +1,7 @@
 package com.javalab.rps;
 
 import java.io.PrintStream;
+import java.util.Locale;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.function.Supplier;
@@ -28,6 +29,11 @@ public class Main {
         out.println("じゃんけんゲームへようこそ。「グー」「チョキ」「パー」のいずれかを入力してください。");
         out.println("終了: exit");
 
+        // ラウンドごとの結果だけでなく通算成績も見せるための集計カウンタ。
+        int playerWins = 0;
+        int computerWins = 0;
+        int draws = 0;
+
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine().trim();
             if (line.isEmpty()) {
@@ -48,19 +54,29 @@ public class Main {
             Result result = RockPaperScissorsGame.judge(playerHand, computerHand);
             out.println("あなた: " + toDisplayName(playerHand) + " / コンピュータ: " + toDisplayName(computerHand));
             out.println(toMessage(result));
+
+            switch (result) {
+                case PLAYER_WIN -> playerWins++;
+                case COMPUTER_WIN -> computerWins++;
+                case DRAW -> draws++;
+            }
+            out.println("現在の成績: " + playerWins + "勝" + computerWins + "敗" + draws + "分け");
         }
     }
 
     /**
-     * 入力文字列を {@link Hand} に変換する。
+     * 入力文字列を {@link Hand} に変換する。全角カタカナ(グー/チョキ/パー)に加え、
+     * ひらがな・英語(大小問わず)・頭文字(r/s/p)も受け付ける。
      * @param input 標準入力から読み取った1行
      * @return 対応するHand、いずれにも一致しない場合はnull
      */
     private static Hand parseHand(String input) {
-        return switch (input) {
-            case "グー" -> Hand.ROCK;
-            case "チョキ" -> Hand.SCISSORS;
-            case "パー" -> Hand.PAPER;
+        // 英語表記は大小文字を区別しないよう小文字化する(カタカナ・ひらがなは影響を受けない)。
+        String normalized = input.toLowerCase(Locale.ROOT);
+        return switch (normalized) {
+            case "グー", "ぐー", "rock", "r" -> Hand.ROCK;
+            case "チョキ", "ちょき", "scissors", "s" -> Hand.SCISSORS;
+            case "パー", "ぱー", "paper", "p" -> Hand.PAPER;
             default -> null;
         };
     }
