@@ -5,9 +5,11 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.Scanner;
@@ -37,6 +39,95 @@ class MainTest {
 
         String output = outContent.toString(StandardCharsets.UTF_8);
         assertTrue(output.contains("エラー"));
+    }
+
+    @Test
+    void loadingCorruptedCsvShowsErrorAndContinuesWithoutCrashing() throws IOException {
+        // 手編集等でカラム数が壊れたCSVをloadすると、以前はArrayIndexOutOfBoundsExceptionが
+        // Main.runの例外処理をすり抜けてクラッシュしていた。エラー表示のみで継続することを確認する。
+        File file = tempDir.resolve("bmi.csv").toFile();
+        Files.writeString(file.toPath(), "date,height_cm,weight_kg,bmi,category\n2026-08-01,170.0\n");
+        Scanner scanner = new Scanner(new StringReader("load\nexit\n"));
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(outContent, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out, file, () -> LocalDate.of(2026, 8, 1));
+
+        String output = outContent.toString(StandardCharsets.UTF_8);
+        assertTrue(output.contains("エラー"));
+    }
+
+    @Test
+    void listShowsBmiDifferenceFromPreviousRecord() {
+        // 「1回ごとの結果しか出ない」という指摘への対応。2件目のlist表示に前回比が出ることを確認する。
+        Scanner scanner = new Scanner(new StringReader("add 170 65\nadd 170 80\nlist\nexit\n"));
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(outContent, true, StandardCharsets.UTF_8);
+        File file = tempDir.resolve("bmi.csv").toFile();
+
+        Main.run(scanner, out, file, () -> LocalDate.of(2026, 8, 1));
+
+        String output = outContent.toString(StandardCharsets.UTF_8);
+        assertTrue(output.contains("初回"));
+        assertTrue(output.contains("前回比: +5.19"));
+    }
+
+    @Test
+    void statsCommandShowsAverageMaxAndMin() {
+        Scanner scanner = new Scanner(new StringReader("add 170 65\nadd 170 80\nstats\nexit\n"));
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(outContent, true, StandardCharsets.UTF_8);
+        File file = tempDir.resolve("bmi.csv").toFile();
+
+        Main.run(scanner, out, file, () -> LocalDate.of(2026, 8, 1));
+
+        String output = outContent.toString(StandardCharsets.UTF_8);
+        assertTrue(output.contains("平均BMI: 25.09"));
+        assertTrue(output.contains("最大BMI: 27.68"));
+        assertTrue(output.contains("最小BMI: 22.49"));
+    }
+
+    @Test
+    void statsCommandShowsMessageWhenHistoryIsEmpty() {
+        Scanner scanner = new Scanner(new StringReader("stats\nexit\n"));
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(outContent, true, StandardCharsets.UTF_8);
+        File file = tempDir.resolve("bmi.csv").toFile();
+
+        Main.run(scanner, out, file, () -> LocalDate.of(2026, 8, 1));
+
+        String output = outContent.toString(StandardCharsets.UTF_8);
+        assertTrue(output.contains("履歴がありません"));
+    }
+
+    @Test
+    void listWithDateRangeFiltersOutRecordsOutsideRange() {
+        // 測定日は常に2026-08-01固定(dateSupplier)。範囲外の期間を指定すると
+        // 該当なしメッセージになり、記録のCSV行は表示されないことを確認する。
+        Scanner scanner = new Scanner(new StringReader(
+                "add 170 65\nlist 2026-07-01 2026-07-31\nexit\n"));
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(outContent, true, StandardCharsets.UTF_8);
+        File file = tempDir.resolve("bmi.csv").toFile();
+
+        Main.run(scanner, out, file, () -> LocalDate.of(2026, 8, 1));
+
+        String output = outContent.toString(StandardCharsets.UTF_8);
+        assertTrue(output.contains("該当する記録がありません"));
+    }
+
+    @Test
+    void listWithDateRangeIncludesRecordsWithinRange() {
+        Scanner scanner = new Scanner(new StringReader(
+                "add 170 65\nlist 2026-08-01 2026-08-01\nexit\n"));
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(outContent, true, StandardCharsets.UTF_8);
+        File file = tempDir.resolve("bmi.csv").toFile();
+
+        Main.run(scanner, out, file, () -> LocalDate.of(2026, 8, 1));
+
+        String output = outContent.toString(StandardCharsets.UTF_8);
+        assertTrue(output.contains("2026-08-01,170.0,65.0,22.49,普通体重"));
     }
 
     @Test

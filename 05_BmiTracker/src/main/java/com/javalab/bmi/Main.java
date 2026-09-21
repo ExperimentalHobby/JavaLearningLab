@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Scanner;
 import java.util.function.Supplier;
@@ -31,7 +32,7 @@ public class Main {
     static void run(Scanner scanner, PrintStream out, File file, Supplier<LocalDate> dateSupplier) {
         BmiHistory history = new BmiHistory();
 
-        out.println("BMIトラッカーへようこそ。コマンド: add <身長cm> <体重kg> / list / save / load / exit");
+        out.println("BMIトラッカーへようこそ。コマンド: add <身長cm> <体重kg> / list / list <開始日> <終了日> / stats / save / load / exit");
 
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine().trim();
@@ -71,7 +72,23 @@ public class Main {
             BmiHistory history, String line, PrintStream out, File file, Supplier<LocalDate> dateSupplier)
             throws IOException {
         if (line.equals("list")) {
-            printRecords(history, out);
+            printRecords(history.getRecords(), out);
+        } else if (line.startsWith("list ")) {
+            String[] range = line.substring(5).split("\\s+");
+            if (range.length != 2) {
+                throw new IllegalArgumentException("入力形式が不正です: " + line);
+            }
+            try {
+                LocalDate from = LocalDate.parse(range[0]);
+                LocalDate to = LocalDate.parse(range[1]);
+                printRecords(history.getRecords(from, to), out);
+            } catch (DateTimeParseException e) {
+                // DateTimeParseExceptionはIllegalArgumentExceptionのサブクラスではないため、
+                // Main.runの既存のcatch節で拾えるよう変換する(BmiRecord.fromCsvLineと同じ方針)。
+                throw new IllegalArgumentException("日付の形式が不正です: " + line, e);
+            }
+        } else if (line.equals("stats")) {
+            printStats(history, out);
         } else if (line.equals("save")) {
             history.saveTo(file);
             out.println("保存しました");
@@ -91,10 +108,43 @@ public class Main {
         }
     }
 
-    private static void printRecords(BmiHistory history, PrintStream out) {
-        List<BmiRecord> records = history.getRecords();
-        for (BmiRecord record : records) {
-            out.println(record.toCsvLine());
+    /**
+     * 記録一覧を表示する。各行に前回(直前)の記録とのBMI差(前回比)を付記する
+     * (先頭の記録は比較対象がないため「初回」と表示する)。
+     * @param records 表示対象の記録一覧
+     * @param out 出力先
+     */
+    private static void printRecords(List<BmiRecord> records, PrintStream out) {
+        if (records.isEmpty()) {
+            out.println("該当する記録がありません");
+            return;
         }
+        BmiRecord previous = null;
+        for (BmiRecord record : records) {
+            String diff = previous == null
+                    ? "初回"
+                    : "前回比: " + formatDiff(record.getBmi() - previous.getBmi());
+            out.println(record.toCsvLine() + " (" + diff + ")");
+            previous = record;
+        }
+    }
+
+    private static String formatDiff(double diff) {
+        return diff >= 0 ? String.format("+%.2f", diff) : String.format("%.2f", diff);
+    }
+
+    /**
+     * 平均・最大・最小BMIを表示する。履歴が1件もない場合はその旨を表示する。
+     * @param history 集計対象の履歴
+     * @param out 出力先
+     */
+    private static void printStats(BmiHistory history, PrintStream out) {
+        if (history.getRecords().isEmpty()) {
+            out.println("履歴がありません");
+            return;
+        }
+        out.printf("平均BMI: %.2f%n", history.averageBmi());
+        history.maxRecord().ifPresent(record -> out.printf("最大BMI: %.2f (%s)%n", record.getBmi(), record.getDate()));
+        history.minRecord().ifPresent(record -> out.printf("最小BMI: %.2f (%s)%n", record.getBmi(), record.getDate()));
     }
 }

@@ -3,6 +3,7 @@ package com.javalab.bmi;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * {@link BmiCalculator} のBMI計算と、日本肥満学会基準による4区分判定を検証するテスト。
@@ -14,6 +15,18 @@ class BmiCalculatorTest {
     void calculatesBmiFromHeightAndWeight() {
         // 身長170cm・体重65kgのBMI = 65 / 1.7^2 ≒ 22.49(小数第2位で丸め)。
         assertEquals(22.49, BmiCalculator.calculate(170, 65), 0.001);
+    }
+
+    @Test
+    void calculateThrowsExceptionForZeroHeight() {
+        // 身長0での計算は0除算によりBMI = Infinityとなり、classifyが「肥満(2度以上)」を
+        // 返してしまう不具合があった。0以下の身長はIllegalArgumentExceptionとして拒否する。
+        assertThrows(IllegalArgumentException.class, () -> BmiCalculator.calculate(0, 65));
+    }
+
+    @Test
+    void calculateThrowsExceptionForNegativeWeight() {
+        assertThrows(IllegalArgumentException.class, () -> BmiCalculator.calculate(170, -1));
     }
 
     @Test

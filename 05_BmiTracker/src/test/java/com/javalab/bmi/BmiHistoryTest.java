@@ -7,8 +7,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * {@link BmiHistory} の記録追加・CSVファイル保存/読込を検証するテスト。
@@ -32,6 +35,57 @@ class BmiHistoryTest {
         BmiRecord record = history.getRecords().get(0);
         assertEquals(22.49, record.getBmi(), 0.001);
         assertEquals("普通体重", record.getCategory());
+    }
+
+    @Test
+    void averageBmiComputesMeanOfAllRecords() {
+        // 「トラッカー」なのに推移の集計(平均等)がなかった問題への対応。
+        // BMI 22.49 と 27.68(170cm/80kg)の平均を確認する。
+        history.add(LocalDate.of(2026, 8, 1), 170, 65);
+        history.add(LocalDate.of(2026, 8, 2), 170, 80);
+
+        assertEquals((22.49 + 27.68) / 2, history.averageBmi(), 0.001);
+    }
+
+    @Test
+    void averageBmiThrowsExceptionWhenHistoryIsEmpty() {
+        assertThrows(IllegalStateException.class, history::averageBmi);
+    }
+
+    @Test
+    void maxRecordAndMinRecordFindHighestAndLowestBmi() {
+        history.add(LocalDate.of(2026, 8, 1), 170, 65); // BMI 22.49
+        history.add(LocalDate.of(2026, 8, 2), 170, 80); // BMI 27.68(最大)
+        history.add(LocalDate.of(2026, 8, 3), 170, 60); // BMI 20.76(最小)
+
+        Optional<BmiRecord> max = history.maxRecord();
+        Optional<BmiRecord> min = history.minRecord();
+
+        assertTrue(max.isPresent());
+        assertEquals(LocalDate.of(2026, 8, 2), max.get().getDate());
+        assertTrue(min.isPresent());
+        assertEquals(LocalDate.of(2026, 8, 3), min.get().getDate());
+    }
+
+    @Test
+    void getRecordsWithDateRangeFiltersInclusively() {
+        // 期間絞り込み(両端含む)を確認する。
+        history.add(LocalDate.of(2026, 8, 1), 170, 65);
+        history.add(LocalDate.of(2026, 8, 15), 170, 68);
+        history.add(LocalDate.of(2026, 9, 1), 170, 70);
+
+        assertEquals(2, history.getRecords(LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31)).size());
+        assertEquals(1, history.getRecords(LocalDate.of(2026, 8, 2), LocalDate.of(2026, 8, 31)).size());
+    }
+
+    @Test
+    void getRecordsReturnsUnmodifiableListThatDoesNotAffectInternalState() {
+        // getRecords()が内部のArrayListをそのまま返すと、呼び出し側からadd/remove/clearできてしまい
+        // カプセル化が崩れる(04_ToDoListと同じ問題)。List.copyOf()で防御的コピーを返すことを確認する。
+        history.add(LocalDate.of(2026, 8, 1), 170, 65);
+
+        assertThrows(UnsupportedOperationException.class,
+                () -> history.getRecords().clear());
     }
 
     @Test
