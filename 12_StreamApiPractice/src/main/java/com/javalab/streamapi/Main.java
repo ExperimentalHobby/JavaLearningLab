@@ -27,7 +27,8 @@ public class Main {
     static void run(Scanner scanner, PrintStream out) {
         List<SalesRecord> records = new ArrayList<>();
 
-        out.println("データ集計ツールへようこそ。コマンド: add <商品名> <カテゴリ> <金額> <数量> / list / byCategory / exit");
+        out.println("データ集計ツールへようこそ。コマンド: add <商品名> <カテゴリ> <金額> <数量> / list / byCategory / "
+                + "filterByCategory <カテゴリ> / filterAboveAmount <閾値> / productNames / exit");
 
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine().trim();
@@ -63,6 +64,14 @@ public class Main {
             printList(records, out);
         } else if (line.equals("byCategory")) {
             printByCategory(records, out);
+        } else if (line.equals("productNames")) {
+            SalesAggregator.productNamesSorted(records).forEach(out::println);
+        } else if (line.startsWith("filterByCategory ")) {
+            String category = line.substring("filterByCategory ".length()).trim();
+            printRecords(SalesAggregator.filterByCategory(records, category), out);
+        } else if (line.startsWith("filterAboveAmount ")) {
+            BigDecimal threshold = new BigDecimal(line.substring("filterAboveAmount ".length()).trim());
+            printRecords(SalesAggregator.filterAboveAmount(records, threshold), out);
         } else if (line.startsWith("add ")) {
             String[] parts = line.substring(4).trim().split("\\s+");
             if (parts.length != 4) {
@@ -75,9 +84,7 @@ public class Main {
     }
 
     private static void printList(List<SalesRecord> records, PrintStream out) {
-        for (SalesRecord record : records) {
-            out.println(record.product() + " " + record.category() + " " + record.amount() + " " + record.quantity());
-        }
+        printRecords(records, out);
         out.println("合計金額: " + SalesAggregator.totalSales(records));
         out.println("合計数量: " + SalesAggregator.totalQuantity(records));
         out.printf("平均金額: %.2f%n", SalesAggregator.averageAmount(records));
@@ -89,6 +96,12 @@ public class Main {
         Map<String, BigDecimal> totals = SalesAggregator.totalByCategory(records);
         for (Map.Entry<String, BigDecimal> entry : totals.entrySet()) {
             out.println(entry.getKey() + ": " + entry.getValue());
+        }
+    }
+
+    private static void printRecords(List<SalesRecord> records, PrintStream out) {
+        for (SalesRecord record : records) {
+            out.println(record.product() + " " + record.category() + " " + record.amount() + " " + record.quantity());
         }
     }
 }

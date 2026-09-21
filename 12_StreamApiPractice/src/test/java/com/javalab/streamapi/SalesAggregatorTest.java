@@ -6,8 +6,10 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 /**
  * {@link SalesAggregator} の各種Stream API集計メソッドを検証するテスト。
@@ -48,6 +50,16 @@ class SalesAggregatorTest {
     }
 
     @Test
+    void totalByCategoryReturnsMapWithDeterministicOrder() {
+        // Collectors.groupingByの既定(HashMap)だと表示順が不定だった。
+        // TreeMap(カテゴリ名の昇順)を明示していることを確認する。
+        Map<String, BigDecimal> totals = SalesAggregator.totalByCategory(records);
+
+        assertInstanceOf(TreeMap.class, totals);
+        assertEquals(List.of("果物", "野菜"), List.copyOf(totals.keySet()));
+    }
+
+    @Test
     void filterByCategoryReturnsOnlyMatchingRecords() {
         // 「果物」カテゴリの2件(りんご・バナナ)のみが元の順序を保ったまま抽出されることを確認する。
         List<SalesRecord> fruits = SalesAggregator.filterByCategory(records, "果物");
@@ -69,9 +81,18 @@ class SalesAggregatorTest {
 
     @Test
     void averageAmountCalculatesCorrectAverage() {
-        double average = SalesAggregator.averageAmount(records);
+        // BigDecimal#doubleValue()を経由すると精度が落ちるため、BigDecimalのまま
+        // 合計÷件数(スケール2・HALF_UP)を計算する。350/3 = 116.666... -> 116.67。
+        BigDecimal average = SalesAggregator.averageAmount(records);
 
-        assertEquals(350.0 / 3, average, 0.001);
+        assertEquals(0, new BigDecimal("116.67").compareTo(average));
+    }
+
+    @Test
+    void averageAmountReturnsZeroForEmptyList() {
+        BigDecimal average = SalesAggregator.averageAmount(List.of());
+
+        assertEquals(0, BigDecimal.ZERO.compareTo(average));
     }
 
     @Test
