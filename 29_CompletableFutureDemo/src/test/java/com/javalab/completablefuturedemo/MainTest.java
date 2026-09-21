@@ -82,4 +82,61 @@ class MainTest {
         // 不明なコマンドでループを抜けず、後続のコマンドが処理されることまで確認する
         assertTrue(result.contains("最安値"));
     }
+
+    @Test
+    void runFindsCheapestViaCheapestCommand() {
+        // findCheapestAsyncは実装もテストもあるのにCLIから呼び出せなかった問題への対応。
+        List<ShopPriceFetcher> fetchers = List.of(
+                new SimulatedShopPriceFetcher("ShopA", 1000, 10, false),
+                new SimulatedShopPriceFetcher("ShopB", 900, 10, false));
+        Scanner scanner = new Scanner("cheapest ノートPC\nexit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out, service, fetchers);
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains("最安値: ShopB 900円"));
+    }
+
+    @Test
+    void runShowsNoAvailablePriceMessageForCheapestCommandWhenAllShopsFail() {
+        List<ShopPriceFetcher> fetchers = List.of(new SimulatedShopPriceFetcher("ShopA", 1000, 10, true));
+        Scanner scanner = new Scanner("cheapest ノートPC\nexit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out, service, fetchers);
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains("入手可能な価格がありませんでした"));
+    }
+
+    @Test
+    void runShowsClearErrorForCompareCommandWithMissingProductName() {
+        // 修正前はparts[1]でArrayIndexOutOfBoundsExceptionとなり、
+        // 「エラー: Index 1 out of bounds for length 1」という英語の内部例外メッセージが表示されていた。
+        List<ShopPriceFetcher> fetchers = List.of(new SimulatedShopPriceFetcher("ShopA", 1000, 10, false));
+        Scanner scanner = new Scanner("compare\nexit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out, service, fetchers);
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains("使用方法: compare <商品名>"));
+    }
+
+    @Test
+    void runShowsClearErrorForCheapestCommandWithMissingProductName() {
+        List<ShopPriceFetcher> fetchers = List.of(new SimulatedShopPriceFetcher("ShopA", 1000, 10, false));
+        Scanner scanner = new Scanner("cheapest\nexit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out, service, fetchers);
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains("使用方法: cheapest <商品名>"));
+    }
 }

@@ -5,6 +5,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -41,7 +42,7 @@ public class Main {
      * @param fetchers 問い合わせ対象の店舗一覧
      */
     static void run(Scanner scanner, PrintStream out, PriceComparisonService service, List<ShopPriceFetcher> fetchers) {
-        out.println("並行処理デモ(CompletableFuture)。コマンド: compare <商品名> / exit");
+        out.println("並行処理デモ(CompletableFuture)。コマンド: compare <商品名> / cheapest <商品名> / exit");
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine().trim();
             if (line.isEmpty()) {
@@ -55,6 +56,7 @@ public class Main {
                         return;
                     }
                     case "compare" -> handleCompare(service, fetchers, parts, out);
+                    case "cheapest" -> handleCheapest(service, fetchers, parts, out);
                     default -> out.println("不明なコマンドです: " + line);
                 }
             } catch (RuntimeException e) {
@@ -65,6 +67,9 @@ public class Main {
 
     private static void handleCompare(PriceComparisonService service, List<ShopPriceFetcher> fetchers,
                                        String[] parts, PrintStream out) {
+        if (parts.length < 2) {
+            throw new IllegalArgumentException("使用方法: compare <商品名>");
+        }
         String productName = parts[1];
         List<PriceQuote> quotes = service.compareAsync(productName, fetchers).join();
         for (PriceQuote quote : quotes) {
@@ -76,6 +81,24 @@ public class Main {
             out.println("最安値: " + quote.shopName() + " " + quote.price() + "円");
         } else {
             out.println("入手可能な価格がありませんでした");
+        }
+    }
+
+    private static void handleCheapest(PriceComparisonService service, List<ShopPriceFetcher> fetchers,
+                                        String[] parts, PrintStream out) {
+        if (parts.length < 2) {
+            throw new IllegalArgumentException("使用方法: cheapest <商品名>");
+        }
+        String productName = parts[1];
+        try {
+            PriceQuote quote = service.findCheapestAsync(productName, fetchers).join();
+            out.println("最安値: " + quote.shopName() + " " + quote.price() + "円");
+        } catch (CompletionException e) {
+            if (e.getCause() instanceof NoAvailablePriceException) {
+                out.println("入手可能な価格がありませんでした");
+                return;
+            }
+            throw e;
         }
     }
 
