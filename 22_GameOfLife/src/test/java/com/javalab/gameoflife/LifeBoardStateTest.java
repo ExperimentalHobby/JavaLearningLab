@@ -99,4 +99,83 @@ class LifeBoardStateTest {
 
         assertEquals(0, state.generation());
     }
+
+    @Test
+    void stepUsesWrapAroundNeighborCountingWhenTorusModeIsEnabled() {
+        // トーラスモード有効時、(0,0)は(2,0)・(0,2)経由で2つの隣接生存マスとなり生存継続する
+        // (GameOfLifeTest.nextGenerationWithWrapAroundCountsNeighborsAcrossOppositeEdgesと同じ配置)。
+        state.toggleCell(0, 0);
+        state.toggleCell(0, 2);
+        state.toggleCell(2, 0);
+
+        state.setTorusMode(true);
+        state.step();
+
+        assertTrue(state.grid().isAlive(0, 0));
+    }
+
+    @Test
+    void stepDetectsStableStateWhenGridDoesNotChange() {
+        // 全マス非生存の盤面は次世代も全マス非生存のまま(安定状態)。
+        assertFalse(state.isStable());
+
+        state.step();
+
+        assertTrue(state.isStable());
+    }
+
+    @Test
+    void loadPresetPlacesGliderPatternAtOriginAndResetsState() {
+        LifeBoardState state5 = new LifeBoardState(5, 5, new GameOfLife(), new Random(42L));
+        state5.toggleCell(4, 4);
+        state5.step();
+        assertEquals(1, state5.generation());
+
+        state5.loadPreset(Preset.GLIDER);
+
+        assertEquals(0, state5.generation());
+        assertTrue(state5.grid().isAlive(0, 1));
+        assertTrue(state5.grid().isAlive(1, 2));
+        assertTrue(state5.grid().isAlive(2, 0));
+        assertTrue(state5.grid().isAlive(2, 1));
+        assertTrue(state5.grid().isAlive(2, 2));
+        assertFalse(state5.grid().isAlive(0, 0));
+    }
+
+    @Test
+    void toggleCellIsIgnoredWhileRunning() {
+        // 実行中にセルをクリックしても、次の世代で即座に上書きされてしまう問題への対応。
+        // 実行中は編集を無視することで、意図しない変更を防ぐ。
+        state.setRunning(true);
+
+        state.toggleCell(1, 1);
+
+        assertFalse(state.grid().isAlive(1, 1));
+    }
+
+    @Test
+    void toggleCellAppliesAfterRunningIsStoppedAgain() {
+        state.setRunning(true);
+        state.setRunning(false);
+
+        state.toggleCell(1, 1);
+
+        assertTrue(state.grid().isAlive(1, 1));
+    }
+
+    @Test
+    void stepDetectsOscillationWhenGridReturnsToPreviousGeneration() {
+        // 「ブリンカー」は周期2で振動する(水平→垂直→水平→…)ため、
+        // 2世代進めると1世代前と同じ盤面に戻り振動として検出されるべき。
+        state.toggleCell(1, 0);
+        state.toggleCell(1, 1);
+        state.toggleCell(1, 2);
+
+        state.step();
+        assertFalse(state.isStable());
+
+        state.step();
+
+        assertTrue(state.isStable());
+    }
 }
