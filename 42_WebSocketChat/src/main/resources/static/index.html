@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>WebSocketチャット</title>
+<style>
+  body { font-family: sans-serif; max-width: 480px; margin: 2em auto; }
+  #messages { list-style: none; padding: 0; border: 1px solid #ccc; height: 300px; overflow-y: auto; margin-bottom: 0.5em; }
+  #messages li { padding: 0.25em 0.5em; border-bottom: 1px solid #eee; }
+  #status { color: #888; font-size: 0.9em; }
+  form { display: flex; gap: 0.5em; }
+  input[type=text] { flex: 1; padding: 0.4em; }
+</style>
+</head>
+<body>
+<h1>WebSocketチャット</h1>
+<p id="status">未接続</p>
+<ul id="messages"></ul>
+<form id="chat-form">
+  <input type="text" id="chat-input" placeholder="メッセージを入力(最初の送信はユーザー名になります)" autocomplete="off">
+  <button type="submit">送信</button>
+</form>
+
+<script>
+  const statusEl = document.getElementById("status");
+  const messagesEl = document.getElementById("messages");
+  const form = document.getElementById("chat-form");
+  const input = document.getElementById("chat-input");
+
+  function addMessage(text) {
+    const li = document.createElement("li");
+    li.textContent = text;
+    messagesEl.appendChild(li);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+  const socket = new WebSocket(protocol + "//" + location.host + "/chat");
+
+  socket.onopen = () => {
+    statusEl.textContent = "接続しました。最初のメッセージでユーザー名を登録してください。";
+  };
+
+  socket.onmessage = (event) => {
+    addMessage(event.data);
+  };
+
+  socket.onclose = () => {
+    statusEl.textContent = "切断されました。";
+  };
+
+  socket.onerror = () => {
+    statusEl.textContent = "エラーが発生しました。";
+  };
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const text = input.value.trim();
+    if (text === "" || socket.readyState !== WebSocket.OPEN) {
+      return;
+    }
+    socket.send(text);
+    input.value = "";
+  });
+</script>
+</body>
+</html>
