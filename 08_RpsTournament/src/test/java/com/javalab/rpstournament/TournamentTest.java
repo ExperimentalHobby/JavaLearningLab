@@ -1,11 +1,13 @@
 package com.javalab.rpstournament;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -23,12 +25,17 @@ class TournamentTest {
     private final Player dave = new Player("Dave");
 
     @Test
-    void constructorThrowsExceptionWhenPlayerCountIsNotPowerOfTwo() {
-        // 3人はトーナメント表を組めない(誰かが不戦勝になってしまう)人数のため、
-        // コンストラクタの時点でTournamentExceptionをスローする。
-        List<Player> players = List.of(new Player("Alice"), new Player("Bob"), new Player("Carol"));
+    void playRoundGivesByeToLastPlayerWhenCountIsOdd() {
+        // 参加人数が2のべき乗でなくても大会を組めるよう、奇数人数のラウンドでは
+        // 最後の1人が不戦勝として次ラウンドに進むことを確認する。
+        List<Player> players = List.of(alice, bob, carol);
+        Tournament tournament = new Tournament(players);
+        Map<Player, Hand> hands = Map.of(alice, Hand.ROCK, bob, Hand.SCISSORS);
 
-        assertThrows(TournamentException.class, () -> new Tournament(players));
+        List<Player> winners = tournament.playRound(players, hands::get);
+
+        // (alice,bob)はaliceの勝ち、carolは不戦勝でそのまま残る。
+        assertEquals(List.of(alice, carol), winners);
     }
 
     @Test
@@ -69,6 +76,19 @@ class TournamentTest {
                 player == alice ? aliceHands.poll() : bobHands.poll());
 
         assertEquals(List.of(bob), winners);
+    }
+
+    @Test
+    @Timeout(value = 5, unit = TimeUnit.SECONDS)
+    void playRoundThrowsExceptionWhenDrawsExceedRerollLimit() {
+        // 決定的に常に引き分けの手を返すhandSupplierを渡すと、以前は
+        // while (winner == null) が無限ループしていた。再戦回数の上限を超えたら
+        // TournamentExceptionをスローして中断することを確認する。
+        List<Player> players = List.of(alice, bob);
+        Tournament tournament = new Tournament(List.of(alice, bob, carol, dave));
+
+        assertThrows(TournamentException.class,
+                () -> tournament.playRound(players, player -> Hand.ROCK));
     }
 
     @Test
