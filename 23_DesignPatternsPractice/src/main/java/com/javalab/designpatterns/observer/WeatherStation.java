@@ -37,7 +37,9 @@ public class WeatherStation {
     public void setTemperature(double temperature) {
         // 登録済みの全Observerへ、登録順に同じ気温を通知する(いわゆる「ブロードキャスト」)。
         // WeatherStationは各Observerが通知を受けて何をするかには関与しない。
-        for (WeatherObserver observer : observers) {
+        // observersを直接for-eachで反復すると、通知中にObserverが自身をunsubscribeした際に
+        // ConcurrentModificationExceptionになるため、反復前にコピーを取っておく。
+        for (WeatherObserver observer : List.copyOf(observers)) {
             observer.onTemperatureChanged(temperature);
         }
     }
