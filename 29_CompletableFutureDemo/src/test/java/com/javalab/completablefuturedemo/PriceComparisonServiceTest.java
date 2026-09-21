@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -101,6 +102,84 @@ class PriceComparisonServiceTest {
 
         assertTrue(cheapest.isPresent());
         assertEquals("ShopB", cheapest.get().shopName());
+    }
+
+    @Test
+    void timeoutInterruptsUnderlyingTaskSoThreadPoolIsFreedPromptly() throws Exception {
+        // orTimeout()はFutureをタイムアウト例外で完了させるだけで、supplyAsyncに投入済みの
+        // タスク本体(Thread.sleep中)は動き続けてしまっていた問題への対応。
+        // 修正前は、1スレッドしかないプールでタイムアウト発生後もそのスレッドが
+        // ずっとThread.sleep(2000ms)で占有され続けるため、別のタスクをすぐには実行できなかった。
+        // 修正後は実際にスレッドへ割り込むため、タイムアウト後すぐにプールが解放されるはずである。
+        ExecutorService singleThreadPool = Executors.newFixedThreadPool(1);
+        try {
+            PriceComparisonService shortTimeoutService =
+                    new PriceComparisonService(singleThreadPool, Duration.ofMillis(50));
+            List<ShopPriceFetcher> slowFetcher =
+                    List.of(new SimulatedShopPriceFetcher("ShopSlow", 1000, 2000, false));
+
+            long start = System.currentTimeMillis();
+            shortTimeoutService.compareAsync("ノートPC", slowFetcher).join();
+
+            // プールが解放されていれば、この軽量タスクはすぐに実行できるはず。
+            CompletableFuture<String> probe = CompletableFuture.supplyAsync(() -> "ok", singleThreadPool);
+            String result = probe.get(500, TimeUnit.MILLISECONDS);
+            long elapsed = System.currentTimeMillis() - start;
+
+            assertEquals("ok", result);
+            assertTrue(elapsed < 1000, "elapsed=" + elapsed + "ms (修正前は2000ms近くかかっていたはず)");
+        } finally {
+            singleThreadPool.shutdownNow();
+        }
+    }
+
+    @Test
+    void findCombinedCheapestTotalAsyncCombinesTwoIndependentCheapestSearchesViaThenCombine() {
+        // thenCombine: 2つの独立した非同期結果(2商品それぞれの最安値検索)を1つに合成する題材。
+        List<ShopPriceFetcher> fetchers = List.of(
+                new SimulatedShopPriceFetcher("ShopA", 1000, 10, false),
+                new SimulatedShopPriceFetcher("ShopB", 900, 10, false));
+
+        int total = service.findCombinedCheapestTotalAsync("ノートPC", "マウス", fetchers).join();
+
+        // 商品名によらずShopBが常に最安値(900円)を返すシミュレータ構成のため、
+        // ノートPC(900) + マウス(900) = 1800円になるはず。
+        assertEquals(1800, total);
+    }
+
+    @Test
+    void findCheapestAndConfirmAsyncReconfirmsPriceWithSameShopViaThenCompose() {
+        // thenCompose: 最安値を求めた「後」で、その店舗へ再確認問い合わせをする非同期処理の連鎖。
+        // (2つ目の非同期処理が1つ目の結果に依存するため、thenCombineでは表現できない)。
+        List<ShopPriceFetcher> fetchers = List.of(
+                new SimulatedShopPriceFetcher("ShopA", 1000, 10, false),
+                new SimulatedShopPriceFetcher("ShopB", 900, 10, false));
+
+        PriceQuote confirmed = service.findCheapestAndConfirmAsync("ノートPC", fetchers).join();
+
+        assertEquals("ShopB", confirmed.shopName());
+        assertEquals(PriceQuote.Status.OK, confirmed.status());
+        assertEquals(900, confirmed.price());
+    }
+
+    @Test
+    void describeCheapestAsyncDescribesSuccessCaseViaHandle() {
+        // handle: 成功(quote)/失敗(ex)のどちらか一方が必ずnullで渡され、
+        // 両方のケースを1箇所で処理できる(exceptionallyは失敗時のみ、thenApplyは成功時のみ)。
+        List<ShopPriceFetcher> fetchers = List.of(new SimulatedShopPriceFetcher("ShopA", 1000, 10, false));
+
+        String description = service.describeCheapestAsync("ノートPC", fetchers).join();
+
+        assertEquals("ShopAが最安値: 1000円", description);
+    }
+
+    @Test
+    void describeCheapestAsyncDescribesFailureCaseViaHandle() {
+        List<ShopPriceFetcher> fetchers = List.of(new SimulatedShopPriceFetcher("ShopA", 1000, 10, true));
+
+        String description = service.describeCheapestAsync("ノートPC", fetchers).join();
+
+        assertEquals("取得できませんでした: ノートPC", description);
     }
 
     @Test

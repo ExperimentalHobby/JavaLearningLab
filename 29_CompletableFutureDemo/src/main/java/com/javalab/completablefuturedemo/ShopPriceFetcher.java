@@ -16,7 +16,7 @@ public interface ShopPriceFetcher {
      * 指定商品の価格を取得する。
      * @param productName 商品名
      * @return 価格
-     * @throws Exception 取得に失敗した場合
+     * @throws ShopFetchException 取得処理中に例外が発生した場合(通信断・割り込み等)
      */
-    int fetchPrice(String productName) throws Exception;
+    int fetchPrice(String productName) throws ShopFetchException;
 }

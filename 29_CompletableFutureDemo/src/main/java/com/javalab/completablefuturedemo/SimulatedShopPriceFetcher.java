@@ -25,8 +25,14 @@ public class SimulatedShopPriceFetcher implements ShopPriceFetcher {
     }
 
     @Override
-    public int fetchPrice(String productName) throws InterruptedException {
-        Thread.sleep(delayMillis);
+    public int fetchPrice(String productName) throws ShopFetchException {
+        try {
+            Thread.sleep(delayMillis);
+        } catch (InterruptedException e) {
+            // 割り込みフラグを復元してから専用の検査例外へラップする(呼び出し元が割り込みを検知できるようにする)。
+            Thread.currentThread().interrupt();
+            throw new ShopFetchException(shopName, e);
+        }
         if (shouldFail) {
             throw new ShopUnavailableException(shopName);
         }
