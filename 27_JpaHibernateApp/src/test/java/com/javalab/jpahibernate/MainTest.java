@@ -1,6 +1,5 @@
 package com.javalab.jpahibernate;
 
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 import org.junit.jupiter.api.AfterEach;
@@ -21,19 +20,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class MainTest {
 
     private EntityManagerFactory entityManagerFactory;
-    private EntityManager entityManager;
     private ProductRepository repository;
 
     @BeforeEach
     void setUp() {
-        entityManagerFactory = Persistence.createEntityManagerFactory("productPU");
-        entityManager = entityManagerFactory.createEntityManager();
-        repository = new ProductRepository(entityManager);
+        entityManagerFactory = Persistence.createEntityManagerFactory("productPU-test");
+        repository = new ProductRepository(entityManagerFactory);
     }
 
     @AfterEach
     void tearDown() {
-        entityManager.close();
         entityManagerFactory.close();
     }
 
@@ -115,6 +111,35 @@ class MainTest {
         assertTrue(result.contains("該当する商品が見つかりません: id=999"));
         // 更新処理そのものが実行されていないことを確認する
         assertFalse(result.contains("更新しました"));
+    }
+
+    @Test
+    void runShowsClearErrorForAddCommandWithMissingArguments() {
+        // 修正前はparts[3]でArrayIndexOutOfBoundsExceptionとなり、
+        // 「エラー: Index 3 out of bounds for length 3」という英語の内部例外メッセージが表示されていた。
+        Scanner scanner = new Scanner("add ノート 150\nexit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out, repository);
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains("使用方法: add <商品名> <価格> <在庫数>"));
+    }
+
+    @Test
+    void runSearchCommandShowsOnlyMatchingProducts() {
+        // search自体の出力(一覧形式"価格=...")で判定する。"追加しました"のechoに商品名が
+        // 含まれてしまうため、それだけでは検索コマンドが実際に機能しているか確認できない。
+        Scanner scanner = new Scanner("add ノート 150 100\nadd ペン 100 50\nsearch ノート\nexit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out, repository);
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains("価格=150"));
+        assertFalse(result.contains("価格=100"));
     }
 
     @Test
