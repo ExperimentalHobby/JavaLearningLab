@@ -75,4 +75,72 @@ class EditorDocumentTest {
 
         assertEquals("簡易テキストエディタ - report.txt", document.windowTitle());
     }
+
+    @Test
+    void isDirtyIsFalseInitially() {
+        // 未保存の変更が警告なしに失われる問題への対応。まずdirtyフラグの初期状態を確認する。
+        assertFalse(document.isDirty());
+    }
+
+    @Test
+    void markDirtySetsDirtyFlag() {
+        document.markDirty();
+
+        assertTrue(document.isDirty());
+    }
+
+    @Test
+    void openClearsDirtyFlag() throws Exception {
+        Path file = tempDir.resolve("sample.txt");
+        Files.writeString(file, "hello", StandardCharsets.UTF_8);
+        document.markDirty();
+
+        document.open(file);
+
+        assertFalse(document.isDirty());
+    }
+
+    @Test
+    void saveClearsDirtyFlag() throws Exception {
+        Path file = tempDir.resolve("sample.txt");
+        Files.writeString(file, "hello", StandardCharsets.UTF_8);
+        document.open(file);
+        document.markDirty();
+
+        document.save("updated");
+
+        assertFalse(document.isDirty());
+    }
+
+    @Test
+    void saveAsClearsDirtyFlag() throws Exception {
+        document.markDirty();
+
+        document.saveAs(tempDir.resolve("new.txt"), "content");
+
+        assertFalse(document.isDirty());
+    }
+
+    @Test
+    void windowTitleShowsAsteriskWhenDirty() {
+        // タイトルバーに変更マーク(*)が出なかった問題への対応。
+        document.markDirty();
+
+        assertEquals("簡易テキストエディタ - *無題", document.windowTitle());
+    }
+
+    @Test
+    void newDocumentResetsCurrentFileAndDirtyFlag() throws Exception {
+        // 「新規作成」メニューがなく、一度ファイルを開くと「無題」状態に戻せなかった問題への対応。
+        Path file = tempDir.resolve("sample.txt");
+        Files.writeString(file, "hello", StandardCharsets.UTF_8);
+        document.open(file);
+        document.markDirty();
+
+        document.newDocument();
+
+        assertFalse(document.hasCurrentFile());
+        assertFalse(document.isDirty());
+        assertEquals("簡易テキストエディタ - 無題", document.windowTitle());
+    }
 }
