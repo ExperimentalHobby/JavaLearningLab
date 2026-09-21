@@ -18,7 +18,8 @@ public class Main {
         EmployeeService service = new EmployeeService(repository);
 
         out.println("社員名簿検索ツールへようこそ。"
-                + "コマンド: add <ID> <氏名> <メール> / find <IDまたはメール> / email <ID> / list / exit");
+                + "コマンド: add <ID> <氏名> <メール> / find <IDまたはメール> / email <ID> / "
+                + "domain <ID> / exists <ID> / list / exit");
 
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine().trim();
@@ -57,6 +58,15 @@ public class Main {
         } else if (line.startsWith("email ")) {
             String id = line.substring(6).trim();
             out.println(service.emailOf(id));
+        } else if (line.startsWith("domain ")) {
+            String id = line.substring(7).trim();
+            service.emailDomainOf(id)
+                    .ifPresentOrElse(
+                            out::println,
+                            () -> out.println("該当する社員が見つかりません: " + id));
+        } else if (line.startsWith("exists ")) {
+            String id = line.substring(7).trim();
+            repository.findById(id).ifPresent(e -> out.println("見つかりました: " + e.name()));
         } else {
             throw new IllegalArgumentException("不明なコマンドです: " + line);
         }

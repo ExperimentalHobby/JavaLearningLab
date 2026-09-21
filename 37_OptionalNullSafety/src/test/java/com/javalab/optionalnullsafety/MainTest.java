@@ -61,7 +61,50 @@ class MainTest {
                 exit
                 """);
 
-        assertTrue(output.contains("エラー: employee not found: id=E999"));
+        assertTrue(output.contains("エラー: 該当する社員が見つかりません: id=E999"));
+    }
+
+    @Test
+    void domainForExistingId_showsEmailDomain() {
+        String output = runCommands("""
+                add E001 山田太郎 yamada@example.com
+                domain E001
+                exit
+                """);
+
+        assertTrue(output.contains("example.com"));
+    }
+
+    @Test
+    void domainForUnknownId_showsNotFoundMessage() {
+        String output = runCommands("""
+                domain E999
+                exit
+                """);
+
+        assertTrue(output.contains("該当する社員が見つかりません: E999"));
+    }
+
+    @Test
+    void existsForExistingId_showsFoundMessage() {
+        // ifPresent(elseなし)の活用例。
+        String output = runCommands("""
+                add E001 山田太郎 yamada@example.com
+                exists E001
+                exit
+                """);
+
+        assertTrue(output.contains("見つかりました: 山田太郎"));
+    }
+
+    @Test
+    void existsForUnknownId_printsNothing() {
+        String output = runCommands("""
+                exists E999
+                exit
+                """);
+
+        assertTrue(output.lines().noneMatch(line -> line.contains("見つかりました")));
     }
 
     @Test
