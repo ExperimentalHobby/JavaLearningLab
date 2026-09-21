@@ -53,6 +53,28 @@ class QuizLoaderTest {
     }
 
     @Test
+    void throwsQuizLoaderExceptionWhenQuestionCountIsNotANumber() throws IOException {
+        // Integer.parseInt(countText)がそのまま呼ばれるとNumberFormatExceptionが漏れ、
+        // 他の異常系(QuizLoaderException)と扱いが不整合だった。同じ例外型に統一する。
+        File file = tempDir.resolve("invalid-count.properties").toFile();
+        try (PrintWriter writer = new PrintWriter(file, "UTF-8")) {
+            writer.println("question.count=abc");
+        }
+
+        assertThrows(QuizLoaderException.class, () -> QuizLoader.loadFromProperties(file));
+    }
+
+    @Test
+    void throwsQuizLoaderExceptionWhenQuestionCountIsNegative() throws IOException {
+        File file = tempDir.resolve("negative-count.properties").toFile();
+        try (PrintWriter writer = new PrintWriter(file, "UTF-8")) {
+            writer.println("question.count=-1");
+        }
+
+        assertThrows(QuizLoaderException.class, () -> QuizLoader.loadFromProperties(file));
+    }
+
+    @Test
     void throwsExceptionWhenAnswerKeyIsMissing() throws IOException {
         // question.countは1問分あるが、対応するq1.answerキーが欠落しているケース。
         // 問題文だけあって正解が無いという不完全なデータを検出できることを確認する。

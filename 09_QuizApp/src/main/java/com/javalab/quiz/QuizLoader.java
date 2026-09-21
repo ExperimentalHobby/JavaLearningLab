@@ -54,7 +54,17 @@ public class QuizLoader {
         if (countText == null) {
             throw new QuizLoaderException("question.count が見つかりません: " + source);
         }
-        int count = Integer.parseInt(countText);
+        int count;
+        try {
+            count = Integer.parseInt(countText);
+        } catch (NumberFormatException e) {
+            // 他の異常系(question.count欠落、question/answer欠落)と同じQuizLoaderExceptionに
+            // 統一することで、呼び出し側(Main)が一律に扱えるようにする。
+            throw new QuizLoaderException("question.count が数値ではありません: " + source);
+        }
+        if (count < 0) {
+            throw new QuizLoaderException("question.count は0以上である必要があります: " + source);
+        }
 
         List<Question> questions = new ArrayList<>();
         for (int i = 1; i <= count; i++) {

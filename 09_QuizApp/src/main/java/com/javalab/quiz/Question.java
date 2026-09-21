@@ -18,6 +18,13 @@ public class Question {
     }
 
     /**
+     * @return 正解(不正解時にユーザーへ表示する用途)
+     */
+    public String getAnswer() {
+        return answer;
+    }
+
+    /**
      * ユーザーの回答が正解かを判定する。前後の空白・大文字小文字の違いは無視する。
      * @param userAnswer ユーザーが入力した回答
      * @return 正解の場合true
