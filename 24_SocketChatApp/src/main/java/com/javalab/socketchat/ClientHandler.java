@@ -14,6 +14,8 @@ import java.nio.charset.StandardCharsets;
  */
 class ClientHandler implements Runnable {
 
+    private static final int MAX_USERNAME_LENGTH = 20;
+
     private final Socket socket;
     private final ChatServer server;
     private final PrintWriter out;
@@ -28,11 +30,28 @@ class ClientHandler implements Runnable {
     @Override
     public void run() {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8))) {
-            username = in.readLine();
-            if (username == null) {
+            String requestedUsername = in.readLine();
+            if (requestedUsername == null) {
                 return;
             }
+            requestedUsername = requestedUsername.trim();
+            if (requestedUsername.isEmpty()) {
+                send("SERVER: ユーザー名を空にすることはできません");
+                return;
+            }
+            if (requestedUsername.length() > MAX_USERNAME_LENGTH) {
+                send("SERVER: ユーザー名は" + MAX_USERNAME_LENGTH + "文字以内で入力してください");
+                return;
+            }
+            if (server.isUsernameTaken(requestedUsername)) {
+                send("SERVER: そのユーザー名は既に使用されています: " + requestedUsername);
+                return;
+            }
+            username = requestedUsername;
             send("SERVER: ようこそ、" + username + "さん");
+            // 退出時はserver.broadcast()で全員に通知しているのに対し、入室時は本人にしか
+            // 通知していなかったため、既存の参加者は誰が入ってきたか分からなかった問題への対応。
+            server.broadcast("SERVER: " + username + "が入室しました", this);
 
             String line;
             while ((line = in.readLine()) != null) {
@@ -49,8 +68,19 @@ class ClientHandler implements Runnable {
         }
     }
 
+    String username() {
+        return username;
+    }
+
     void send(String message) {
         out.println(message);
+        if (out.checkError()) {
+            // PrintWriterはIOExceptionを握り潰す仕様のため、checkError()で送信失敗を検知する。
+            // 検知したら自ら接続をクローズすることで、切断済みクライアントへ送り続けるのを防ぐ。
+            // クローズにより、このクライアント自身のrun()内のin.readLine()もIOException/EOFとなり、
+            // finallyブロックで通常の退出処理(server.remove・退出通知)が行われる。
+            close();
+        }
     }
 
     void close() {

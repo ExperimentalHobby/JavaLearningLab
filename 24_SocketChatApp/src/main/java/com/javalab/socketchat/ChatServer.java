@@ -46,8 +46,14 @@ public class ChatServer {
                 clients.add(handler);
                 clientExecutor.execute(handler);
             } catch (IOException e) {
-                // stop()によるServerSocketのクローズで発生する例外はループ終了の合図なので無視する。
-                break;
+                // 修正前は原因を問わずbreakしていたため、1クライアントの接続処理失敗
+                // (例: new ClientHandler(socket, this)がgetOutputStream()でIOExceptionを
+                // 投げる)だけでacceptループを抜け、以降一切の接続を受け付けなくなっていた。
+                // stop()によるServerSocketのクローズ(意図した終了)だけをループ終了の合図とし、
+                // それ以外の例外は該当接続をスキップして受け付けを継続する。
+                if (serverSocket.isClosed()) {
+                    break;
+                }
             }
         }
     }
@@ -55,13 +61,26 @@ public class ChatServer {
     /**
      * 実際にバインドされたポート番号を返す。
      * @return バインド済みポート番号
+     * @throws IllegalStateException {@link #start()}を呼ぶ前に呼び出した場合
      */
     public int port() {
+        if (serverSocket == null) {
+            throw new IllegalStateException("start()を呼ぶ前にport()は呼び出せません");
+        }
         return serverSocket.getLocalPort();
     }
 
     void remove(ClientHandler handler) {
         clients.remove(handler);
+    }
+
+    /**
+     * 指定ユーザー名が既に登録済みのクライアントで使用されているかを判定する。
+     * @param username 判定対象のユーザー名
+     * @return 使用中であればtrue
+     */
+    boolean isUsernameTaken(String username) {
+        return clients.stream().anyMatch(client -> username.equals(client.username()));
     }
 
     void broadcast(String message, ClientHandler exclude) {
