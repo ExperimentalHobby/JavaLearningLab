@@ -33,6 +33,34 @@ class MainTest {
     }
 
     @Test
+    void evaluatesExpressionWithoutSpaces() {
+        // split("\\s+")ベースの解析だと"3+5"(空白なし)は3要素に分割できず
+        // 「入力形式が不正です」になっていた。トークナイズ方式の変更後は計算できることを確認する。
+        Scanner scanner = new Scanner(new StringReader("3+5\nexit\n"));
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(outContent, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out);
+
+        String output = outContent.toString(StandardCharsets.UTF_8);
+        assertTrue(output.contains("= 8"));
+    }
+
+    @Test
+    void memoryCommandsAreCaseInsensitive() {
+        // "exit" がequalsIgnoreCaseで大小文字を無視しているのに対し、メモリコマンドは
+        // 大文字完全一致のみだった不整合を解消する。小文字の"m+"/"mr"でも動作することを確認する。
+        Scanner scanner = new Scanner(new StringReader("2 + 3\nm+\nmr\nexit\n"));
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(outContent, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out);
+
+        String output = outContent.toString(StandardCharsets.UTF_8);
+        assertTrue(output.contains("メモリ: 5"));
+    }
+
+    @Test
     void memoryCommandsAccumulateAcrossMultipleCalculations() {
         // 「2+3を計算してM+」→「10-4を計算してM+」→「MRで参照」という一連の操作で、
         // メモリが単発の値ではなく複数回の計算結果を積算した値(5+6=11)になることを確認する。

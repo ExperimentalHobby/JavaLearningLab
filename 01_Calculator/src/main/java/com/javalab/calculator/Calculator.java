@@ -48,14 +48,17 @@ public class Calculator {
 
     /**
      * 除算する。
-     * ゼロ除算は {@link BigDecimal#divide(BigDecimal, int, RoundingMode)} が自動的に
-     * {@link ArithmeticException} をスローする。
+     * ゼロ除算は {@link BigDecimal#divide(BigDecimal, int, RoundingMode)} がスローする
+     * 英語メッセージの {@link ArithmeticException} をそのまま利用者に見せないよう、事前に検証する。
      * @param a 被除数
      * @param b 除数
      * @return a / b(スケール10・{@link RoundingMode#HALF_UP} で丸めた値)
-     * @throws ArithmeticException b がゼロの場合
+     * @throws CalculatorException b がゼロの場合
      */
     public BigDecimal divide(BigDecimal a, BigDecimal b) {
+        if (b.compareTo(BigDecimal.ZERO) == 0) {
+            throw new CalculatorException("ゼロで割ることはできません");
+        }
         return a.divide(b, DIVISION_SCALE, RoundingMode.HALF_UP);
     }
 

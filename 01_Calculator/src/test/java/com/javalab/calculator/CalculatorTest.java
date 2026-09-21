@@ -60,11 +60,13 @@ class CalculatorTest {
     }
 
     @Test
-    void divisionByZeroThrowsArithmeticException() {
-        // ゼロ除算はCalculator側で特別扱いしておらず、BigDecimal#divide()が
-        // 自動的にスローする例外がそのまま伝播することを確認する。
-        assertThrows(ArithmeticException.class,
+    void divisionByZeroThrowsCalculatorExceptionWithJapaneseMessage() {
+        // BigDecimal#divide()由来の英語メッセージ("Division by zero")をそのまま
+        // ユーザーに見せないよう、Calculator側で事前検証して日本語メッセージのCalculatorExceptionに変換する。
+        CalculatorException exception = assertThrows(CalculatorException.class,
                 () -> calculator.divide(new BigDecimal("1"), BigDecimal.ZERO));
+
+        assertEquals("ゼロで割ることはできません", exception.getMessage());
     }
 
     @Test
