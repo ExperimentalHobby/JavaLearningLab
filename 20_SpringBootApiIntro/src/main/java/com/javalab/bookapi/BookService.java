@@ -2,6 +2,7 @@ package com.javalab.bookapi;
 
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,10 +33,14 @@ public class BookService {
 
     /**
      * 登録済み書籍を全件取得する。
-     * @return 書籍一覧
+     * @return 書籍一覧(ID昇順)
      */
     public List<Book> findAll() {
-        return List.copyOf(books.values());
+        // ConcurrentHashMap.values()の反復順序はハッシュ値依存で不定なため、
+        // 呼び出し側から見て安定した順序になるようID昇順にソートする。
+        return books.values().stream()
+                .sorted(Comparator.comparingLong(Book::id))
+                .toList();
     }
 
     /**
@@ -50,6 +55,21 @@ public class BookService {
             throw new BookNotFoundException(id);
         }
         return book;
+    }
+
+    /**
+     * 指定IDの書籍を更新する。
+     * @param id 書籍ID
+     * @param title 新しいタイトル
+     * @param author 新しい著者
+     * @return 更新後の{@link Book}
+     * @throws BookNotFoundException 該当する書籍が存在しない場合
+     */
+    public Book update(long id, String title, String author) {
+        findById(id);
+        Book updated = new Book(id, title, author);
+        books.put(id, updated);
+        return updated;
     }
 
     /**

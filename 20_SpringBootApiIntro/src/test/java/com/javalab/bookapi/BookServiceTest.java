@@ -30,6 +30,19 @@ class BookServiceTest {
     }
 
     @Test
+    void findAllReturnsBooksOrderedById() {
+        // ConcurrentHashMap.values()由来のList.copyOfを返しており、一覧の順序が不定だった問題への対応。
+        // 複数件登録した後、常にID昇順で返ることを確認する。
+        service.create("三四郎", "夏目漱石");
+        service.create("坊っちゃん", "夏目漱石");
+        service.create("こころ", "夏目漱石");
+
+        List<Long> ids = service.findAll().stream().map(Book::id).toList();
+
+        assertEquals(ids.stream().sorted().toList(), ids);
+    }
+
+    @Test
     void findByIdThrowsBookNotFoundExceptionForNonExistentId() {
         assertThrows(BookNotFoundException.class, () -> service.findById(999));
     }

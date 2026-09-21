@@ -1,10 +1,12 @@
 package com.javalab.bookapi;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -16,7 +18,7 @@ import java.util.List;
  * 書籍管理REST APIのコントローラー。
  * {@link BookService}をコンストラクタインジェクションで受け取る(DIの実践)。
  * 書籍が見つからない場合の404応答は{@link BookNotFoundException}の{@code @ResponseStatus}に委譲するため、
- * 各メソッドで個別に例外処理は行わない。
+ * 各メソッドで個別に例外処理は行わない。入力検証エラーは{@link GlobalExceptionHandler}が一元的に処理する。
  */
 @RestController
 @RequestMapping("/api/books")
@@ -44,7 +46,7 @@ public class BookController {
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Book create(@RequestBody BookRequest request) {
+    public Book create(@Valid @RequestBody BookRequest request) {
         return bookService.create(request.title(), request.author());
     }
 
@@ -56,6 +58,17 @@ public class BookController {
     @GetMapping("/{id}")
     public Book findById(@PathVariable long id) {
         return bookService.findById(id);
+    }
+
+    /**
+     * 指定IDの書籍を更新する。
+     * @param id 書籍ID
+     * @param request タイトル・著者を含むリクエストボディ
+     * @return 更新後の書籍(200)。存在しない場合は{@link BookNotFoundException}により404
+     */
+    @PutMapping("/{id}")
+    public Book update(@PathVariable long id, @Valid @RequestBody BookRequest request) {
+        return bookService.update(id, request.title(), request.author());
     }
 
     /**

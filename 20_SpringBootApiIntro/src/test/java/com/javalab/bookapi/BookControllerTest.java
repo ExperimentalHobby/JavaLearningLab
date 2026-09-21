@@ -4,9 +4,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.List;
 
@@ -20,8 +22,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * {@code webEnvironment = RANDOM_PORT}により実際に組み込みTomcatを起動し、
  * {@link TestRestTemplate}で本物のHTTPリクエストを送ることで、
  * {@code MockMvc}のようなモックを使わず結合的に検証している。
+ * {@code @DirtiesContext}でテストメソッドごとにSpringコンテナ(と{@link BookService}シングルトン)を
+ * 再生成し、テスト間で登録した書籍の状態が残らないようにしている。
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class BookControllerTest {
 
     @Autowired
@@ -70,6 +75,52 @@ class BookControllerTest {
     @Test
     void getBookByIdReturns404ForNonExistentId() {
         ResponseEntity<String> response = restTemplate.getForEntity("/api/books/999999", String.class);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    void postBooksReturns400ForBlankTitle() {
+        // titleがnullでも空文字でも201が返り、そのまま登録できてしまっていた問題への対応。
+        BookRequest request = new BookRequest("", "夏目漱石");
+
+        ResponseEntity<String> response = restTemplate.postForEntity("/api/books", request, String.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void postBooksReturns400ForBlankAuthor() {
+        BookRequest request = new BookRequest("坊っちゃん", "");
+
+        ResponseEntity<String> response = restTemplate.postForEntity("/api/books", request, String.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void putBookUpdatesTitleAndAuthor() {
+        // 更新(PUT/PATCH)がなく登録・取得・削除のみでCRUDが不完全だった問題への対応。
+        Book created = bookService.create("坊っちゃん", "夏目漱石");
+        BookRequest updateRequest = new BookRequest("坊っちゃん(改訂版)", "夏目漱石");
+
+        ResponseEntity<Book> response = restTemplate.exchange(
+                "/api/books/" + created.id(), HttpMethod.PUT,
+                new HttpEntity<>(updateRequest), Book.class);
+        Book updated = response.getBody();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(updated);
+        assertEquals("坊っちゃん(改訂版)", updated.title());
+    }
+
+    @Test
+    void putBookReturns404ForNonExistentId() {
+        BookRequest updateRequest = new BookRequest("存在しない本", "存在しない著者");
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                "/api/books/999999", HttpMethod.PUT,
+                new HttpEntity<>(updateRequest), String.class);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
