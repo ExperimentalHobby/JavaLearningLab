@@ -44,13 +44,13 @@ public class Main {
             }
             int poolSize = parsePoolSize(parts[0], line);
             List<String> urls = Arrays.asList(parts).subList(1, parts.length);
-            printResults(new PlatformThreadEndpointChecker(poolSize).checkAll(urls), out);
+            checkAndPrint(new PlatformThreadEndpointChecker(poolSize), urls, out);
         } else if (line.startsWith("check ")) {
             String[] parts = line.substring(6).trim().split("\\s+");
             if (parts.length < 1 || parts[0].isBlank()) {
                 throw new IllegalArgumentException("入力形式が不正です: " + line);
             }
-            printResults(new VirtualThreadEndpointChecker().checkAll(List.of(parts)), out);
+            checkAndPrint(new VirtualThreadEndpointChecker(), List.of(parts), out);
         } else {
             throw new IllegalArgumentException("不明なコマンドです: " + line);
         }
@@ -64,7 +64,23 @@ public class Main {
         }
     }
 
+    // Virtual ThreadとPlatform Threadで所要時間を比較できるよう、checkAll全体の経過時間を計測・表示する。
+    private static void checkAndPrint(EndpointChecker checker, List<String> urls, PrintStream out) {
+        long start = System.nanoTime();
+        List<CheckResult> results = checker.checkAll(urls);
+        long elapsedMillis = (System.nanoTime() - start) / 1_000_000;
+
+        printResults(results, out);
+        out.println("所要時間: " + elapsedMillis + "ms");
+    }
+
     private static void printResults(List<CheckResult> results, PrintStream out) {
-        results.forEach(r -> out.println(r.url() + " -> " + r.statusCode()));
+        results.forEach(r -> {
+            if (r.success()) {
+                out.println(r.url() + " -> " + r.statusCode());
+            } else {
+                out.println(r.url() + " -> エラー: " + r.errorMessage());
+            }
+        });
     }
 }

@@ -49,6 +49,28 @@ class MainTest {
     }
 
     @Test
+    void check_showsElapsedTime() throws Exception {
+        try (SlowHttpServerSupport server = SlowHttpServerSupport.start(1, 10)) {
+            String output = runCommands("check " + server.urls().get(0) + "\nexit\n");
+
+            assertTrue(output.contains("所要時間: "));
+            assertTrue(output.contains("ms"));
+        }
+    }
+
+    @Test
+    void check_unreachableUrlMixedWithValid_showsErrorForFailedUrlOnly() throws Exception {
+        // 修正前はREPLごと落ちていた。
+        try (SlowHttpServerSupport server = SlowHttpServerSupport.start(1, 10)) {
+            String validUrl = server.urls().get(0);
+            String output = runCommands("check " + validUrl + " http://localhost:1/unreachable\nexit\n");
+
+            assertTrue(output.contains(validUrl + " -> 200"));
+            assertTrue(output.contains("http://localhost:1/unreachable -> エラー: "));
+        }
+    }
+
+    @Test
     void unknownCommand_showsErrorAndContinues() {
         String output = runCommands("""
                 foo bar

@@ -2,9 +2,11 @@ package com.javalab.virtualthreadsdemo;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class VirtualThreadEndpointCheckerTest {
@@ -19,6 +21,35 @@ class VirtualThreadEndpointCheckerTest {
             assertEquals(3, results.size());
             assertTrue(results.stream().allMatch(r -> r.statusCode() == 200));
         }
+    }
+
+    @Test
+    void checkAll_oneUnreachableUrl_stillReturnsResultsForOthers() throws Exception {
+        // 修正前は1件の疎通失敗(IOException)がExecutionException→IllegalStateExceptionとなって
+        // checkAll全体から伝播し、他の正常なURLの結果も失われていた。
+        try (SlowHttpServerSupport server = SlowHttpServerSupport.start(1, 10)) {
+            VirtualThreadEndpointChecker checker = new VirtualThreadEndpointChecker();
+            List<String> urls = new ArrayList<>(server.urls());
+            urls.add("http://localhost:1/unreachable");
+
+            List<CheckResult> results = checker.checkAll(urls);
+
+            assertEquals(2, results.size());
+            assertTrue(results.stream().anyMatch(CheckResult::success));
+            assertTrue(results.stream().anyMatch(r -> !r.success()));
+        }
+    }
+
+    @Test
+    void checkAll_invalidUrlSyntax_returnsFailureResultInsteadOfThrowing() {
+        // 修正前はURI.create(url)のIllegalArgumentExceptionがExecutionException経由で
+        // IllegalStateExceptionに包まれ、Main.runのcatch (IllegalArgumentException)をすり抜けていた。
+        VirtualThreadEndpointChecker checker = new VirtualThreadEndpointChecker();
+
+        List<CheckResult> results = checker.checkAll(List.of("not a url"));
+
+        assertEquals(1, results.size());
+        assertFalse(results.get(0).success());
     }
 
     @Test

@@ -5,6 +5,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -16,7 +17,11 @@ import java.util.concurrent.Future;
  */
 abstract class AbstractEndpointChecker implements EndpointChecker {
 
-    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private static final Duration TIMEOUT = Duration.ofSeconds(5);
+
+    private final HttpClient httpClient = HttpClient.newBuilder()
+            .connectTimeout(TIMEOUT)
+            .build();
 
     /** このチェッカーが使う{@link ExecutorService}を生成する。呼び出しごとに新規生成し、{@code checkAll}内でクローズされる。 */
     protected abstract ExecutorService createExecutor();
@@ -32,10 +37,21 @@ abstract class AbstractEndpointChecker implements EndpointChecker {
         }
     }
 
-    private CheckResult check(String url) throws IOException, InterruptedException {
-        HttpRequest request = HttpRequest.newBuilder(URI.create(url)).GET().build();
-        HttpResponse<Void> response = httpClient.send(request, HttpResponse.BodyHandlers.discarding());
-        return new CheckResult(url, response.statusCode());
+    // 例外を伝播させず、失敗もCheckResultとして返す。1件のURL不到達・URL形式不正が
+    // checkAll全体(=他のURLの結果)を道連れにしないようにするため。
+    private CheckResult check(String url) {
+        try {
+            HttpRequest request = HttpRequest.newBuilder(URI.create(url)).GET().timeout(TIMEOUT).build();
+            HttpResponse<Void> response = httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+            return CheckResult.success(url, response.statusCode());
+        } catch (IllegalArgumentException e) {
+            return CheckResult.failure(url, "不正なURLです: " + url);
+        } catch (IOException e) {
+            return CheckResult.failure(url, e.getMessage());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return CheckResult.failure(url, e.getMessage());
+        }
     }
 
     private CheckResult join(Future<CheckResult> future) {
