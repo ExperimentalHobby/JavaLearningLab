@@ -9,6 +9,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
@@ -38,6 +39,7 @@ public class MazeVisualizerApp extends Application {
 
     private final Canvas canvas = new Canvas(COLS * CELL_SIZE, ROWS * CELL_SIZE);
     private final ComboBox<String> algorithmBox = new ComboBox<>();
+    private final Label statusLabel = new Label();
     private Timeline animation;
 
     @Override
@@ -51,7 +53,7 @@ public class MazeVisualizerApp extends Application {
         Button solveButton = new Button("探索アニメーション開始");
         solveButton.setOnAction(e -> animateSolve());
 
-        HBox controls = new HBox(10, algorithmBox, generateButton, solveButton);
+        HBox controls = new HBox(10, algorithmBox, generateButton, solveButton, statusLabel);
         controls.setPadding(new Insets(10));
 
         BorderPane root = new BorderPane();
@@ -70,11 +72,13 @@ public class MazeVisualizerApp extends Application {
             animation.stop();
         }
         state.generateMaze(COLS, ROWS, System.nanoTime());
+        statusLabel.setText("");
         drawMaze();
     }
 
     /**
      * 選択中のアルゴリズムで経路を探索し、{@link Timeline}で経路上のマスを1つずつ塗りつぶしていく。
+     * 経路が見つからなかった場合はアニメーションを開始せず、ステータス表示のみ行う。
      */
     private void animateSolve() {
         if (state.currentMaze() == null) {
@@ -85,6 +89,13 @@ public class MazeVisualizerApp extends Application {
         }
         List<Cell> path = state.startAnimation(algorithmBox.getValue());
 
+        if (path.isEmpty()) {
+            statusLabel.setText("経路が見つかりませんでした");
+            state.finishAnimation();
+            return;
+        }
+
+        statusLabel.setText("");
         drawMaze();
         animation = new Timeline();
         for (int i = 0; i < path.size(); i++) {
@@ -92,6 +103,7 @@ public class MazeVisualizerApp extends Application {
             KeyFrame frame = new KeyFrame(Duration.millis(40.0 * i), e -> fillCell(cell, Color.CORNFLOWERBLUE));
             animation.getKeyFrames().add(frame);
         }
+        animation.setOnFinished(e -> state.finishAnimation());
         animation.play();
     }
 

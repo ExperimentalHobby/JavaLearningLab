@@ -17,6 +17,14 @@ BFS/DFS/A*、Canvas描画、アニメーション
 - 依存関係のクラシファイアは開発機がWindows専用のため`win`に固定した(`javafx-controls`/`javafx-graphics` 24.0.1)。Java 25でもビルド・実行とも問題なく動作することを確認済み。
 - 実機での手動確認では、通常のハードウェアアクセラレーション(Direct3D)描画だとスクリーンショット取得環境で画面キャプチャに描画内容が反映されなかったため、確認時のみ`-Dprism.order=sw`(ソフトウェアレンダリング)を指定して迷路描画・探索アニメーションが正しく動作することを確認した。通常の対話的環境では既定のハードウェアアクセラレーションで問題なく動作する想定。
 
+### コードレビュー指摘への対応(Issue #155)
+- **A\*の優先度キューが壊れていた問題**: `PriorityQueue<Cell>`の比較器が可変の`costSoFar`マップを比較のたびに参照していたため、要素がキューに入った後にコストが更新されるとヒープの不変条件が崩れ、`poll()`が最小要素を返す保証がなくなっていた。`record Entry(Cell cell, int priority)`をキューに入れ、優先度を挿入時点の値として確定させる方式に変更した。完全迷路(閉路なし)では経路が一意なため再現できなかったが、閉路のあるグラフをランダム生成して探索したところ`size=18, seed=91`でA\*がBFSの最短経路長(35)より長い経路(37)を返す再現ケースを見つけ、これをテストとして追加した(`AStarMazeSolverTest`)。
+- **`animating`が`true`のまま戻らない問題**: `MazeVisualizerState`に`finishAnimation()`を追加し、`MazeVisualizerApp`の`Timeline.setOnFinished`から呼び出してアニメーション完了時に状態をリセットするようにした。
+- **`Maze.passages()`の浅いコピー問題**: `Map.copyOf`だけでは値の`Set<Cell>`が可変の実体のまま共有されるため、`Set.copyOf`で値も防御的コピーするよう修正した。
+- **`MazeGenerator.generate`の幅・高さ未検証問題**: `width <= 0 || height <= 0`の場合に`IllegalArgumentException`をスローするよう検証を追加した(修正前は`ArrayIndexOutOfBoundsException`という意図の分かりにくい例外になっていた)。
+- **経路未発見時のUI表示がない問題**: `MazeVisualizerApp`にステータス表示用`Label`を追加し、探索結果が空リストの場合は「経路が見つかりませんでした」と表示してアニメーションを開始しないようにした(GUI変更のため自動テスト対象外、`mvn compile`/既存テストで検証)。
+- **`DfsMazeSolver`の前提が未記載だった問題**: 完全迷路(閉路なし)を前提としており、閉路のある一般グラフでは`cameFrom`が実際の経路と一致しないことがある旨をJavaDocに明記した。
+
 ## ステータス
 - [ ] 未着手
 - [ ] 実装中

@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -47,5 +48,15 @@ class MazeGeneratorTest {
         }
 
         assertTrue(visited.contains(maze.goal()));
+    }
+
+    @Test
+    void generateThrowsIllegalArgumentExceptionForZeroWidth() {
+        assertThrows(IllegalArgumentException.class, () -> generator.generate(0, 5, 42L));
+    }
+
+    @Test
+    void generateThrowsIllegalArgumentExceptionForZeroHeight() {
+        assertThrows(IllegalArgumentException.class, () -> generator.generate(5, 0, 42L));
     }
 }

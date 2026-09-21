@@ -71,4 +71,12 @@ public class MazeVisualizerState {
         animating = true;
         return path;
     }
+
+    /**
+     * アニメーションの完了を通知し、実行中状態を解除する。
+     * アニメーション本体({@code javafx.animation.Timeline})の完了コールバックから呼び出す想定。
+     */
+    public void finishAnimation() {
+        animating = false;
+    }
 }
