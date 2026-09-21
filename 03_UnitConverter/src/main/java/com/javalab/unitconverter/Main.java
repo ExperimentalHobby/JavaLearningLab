@@ -1,6 +1,7 @@
 package com.javalab.unitconverter;
 
 import java.io.PrintStream;
+import java.math.BigDecimal;
 import java.util.Scanner;
 
 /**
@@ -24,7 +25,7 @@ public class Main {
         UnitConverter converter = new UnitConverter();
 
         out.println("単位変換ツールへようこそ。'数値 変換元単位 変換先単位'の形式で入力してください(例: 5 km m)。");
-        out.println("対応単位: 長さ(m, km, cm, mm) / 重さ(g, kg, mg)、終了: exit");
+        out.println("対応単位: 長さ(m, km, cm, mm) / 重さ(g, kg, mg) / 温度(c, f, k)、終了: exit");
 
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine().trim();
@@ -40,9 +41,9 @@ public class Main {
                 if (parts.length != 3) {
                     throw new UnitConverterException("入力形式が不正です: " + line);
                 }
-                double value = Double.parseDouble(parts[0]);
-                double result = converter.convert(value, parts[1], parts[2]);
-                out.println("= " + result + " " + parts[2]);
+                BigDecimal value = new BigDecimal(parts[0]);
+                BigDecimal result = converter.convert(value, parts[1], parts[2]);
+                out.println("= " + format(result) + " " + parts[2]);
             } catch (NumberFormatException e) {
                 // 不正な数値入力(例: "abc km m")はクラッシュさせず、エラー表示して次の入力へ進む。
                 out.println("エラー: 数値の形式が不正です");
@@ -51,5 +52,19 @@ public class Main {
                 out.println("エラー: " + e.getMessage());
             }
         }
+    }
+
+    /**
+     * 表示用に整形する。{@code BigDecimal}をそのまま文字列化すると指数表記
+     * (例: {@code 1.0E-6})になり得るため、末尾の余分なゼロを除いた通常表記にする。
+     * @param value 整形対象の値
+     * @return 整形後の文字列
+     */
+    private static String format(BigDecimal value) {
+        // BigDecimal.ZERO.stripTrailingZeros() は "0E-10" のような表記になり得るため、0は個別に扱う。
+        if (value.compareTo(BigDecimal.ZERO) == 0) {
+            return "0";
+        }
+        return value.stripTrailingZeros().toPlainString();
     }
 }
