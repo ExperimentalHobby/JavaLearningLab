@@ -15,9 +15,9 @@ public final class OrderStateTransition {
     public static OrderState ship(OrderState state, String trackingNumber, LocalDate shippedDate) {
         return switch (state) {
             case OrderState.Placed(var orderedDate) -> new OrderState.Shipped(orderedDate, trackingNumber, shippedDate);
-            case OrderState.Shipped _ -> throw new IllegalStateException("cannot ship from Shipped");
-            case OrderState.Delivered _ -> throw new IllegalStateException("cannot ship from Delivered");
-            case OrderState.Cancelled _ -> throw new IllegalStateException("cannot ship from Cancelled");
+            case OrderState.Shipped s -> throw cannotTransition(s, "発送できません");
+            case OrderState.Delivered d -> throw cannotTransition(d, "発送できません");
+            case OrderState.Cancelled c -> throw cannotTransition(c, "発送できません");
         };
     }
 
@@ -26,9 +26,9 @@ public final class OrderStateTransition {
         return switch (state) {
             case OrderState.Shipped(var orderedDate, var trackingNumber, var _) ->
                     new OrderState.Delivered(orderedDate, trackingNumber, deliveredDate);
-            case OrderState.Placed _ -> throw new IllegalStateException("cannot deliver from Placed");
-            case OrderState.Delivered _ -> throw new IllegalStateException("cannot deliver from Delivered");
-            case OrderState.Cancelled _ -> throw new IllegalStateException("cannot deliver from Cancelled");
+            case OrderState.Placed p -> throw cannotTransition(p, "配達完了にできません");
+            case OrderState.Delivered d -> throw cannotTransition(d, "配達完了にできません");
+            case OrderState.Cancelled c -> throw cannotTransition(c, "配達完了にできません");
         };
     }
 
@@ -38,8 +38,12 @@ public final class OrderStateTransition {
             case OrderState.Placed(var orderedDate) -> new OrderState.Cancelled(orderedDate, reason);
             case OrderState.Shipped(var orderedDate, var _, var _) ->
                     new OrderState.Cancelled(orderedDate, reason);
-            case OrderState.Delivered _ -> throw new IllegalStateException("cannot cancel from Delivered");
-            case OrderState.Cancelled _ -> throw new IllegalStateException("cannot cancel from Cancelled");
+            case OrderState.Delivered d -> throw cannotTransition(d, "キャンセルできません");
+            case OrderState.Cancelled c -> throw cannotTransition(c, "キャンセルできません");
         };
+    }
+
+    private static IllegalStateException cannotTransition(OrderState state, String actionMessage) {
+        return new IllegalStateException(state.label() + "の注文は" + actionMessage);
     }
 }

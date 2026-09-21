@@ -1,6 +1,9 @@
 package com.javalab.modernjavasyntax;
 
+import java.io.IOException;
 import java.io.PrintStream;
+import java.io.UncheckedIOException;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -25,7 +28,8 @@ public class Main {
         Map<String, OrderState> orders = new LinkedHashMap<>();
 
         out.println("注文配送状況トラッキングツールへようこそ。"
-                + "コマンド: place <注文ID> / ship <注文ID> <伝票番号> / deliver <注文ID> / cancel <注文ID> <理由> / status <注文ID> / list / exit");
+                + "コマンド: place <注文ID> / ship <注文ID> <伝票番号> / deliver <注文ID> / cancel <注文ID> <理由> / "
+                + "status <注文ID> / list / save <ファイルパス> / load <ファイルパス> / exit");
 
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine().trim();
@@ -38,8 +42,8 @@ public class Main {
 
             try {
                 handleCommand(orders, line, out, today);
-            } catch (IllegalStateException | IllegalArgumentException e) {
-                // 不正な状態遷移・不明なコマンド・存在しない注文IDはクラッシュさせず、エラー表示して次の入力へ進む。
+            } catch (IllegalStateException | IllegalArgumentException | UncheckedIOException e) {
+                // 不正な状態遷移・不明なコマンド・存在しない注文ID・save/loadのI/Oエラーはクラッシュさせず、エラー表示して次の入力へ進む。
                 out.println("エラー: " + e.getMessage());
             }
         }
@@ -53,6 +57,9 @@ public class Main {
         switch (command) {
             case "place" -> {
                 String orderId = requireSingleArg(rest, line);
+                if (orders.containsKey(orderId)) {
+                    throw new IllegalArgumentException("既に存在する注文IDです: " + orderId);
+                }
                 orders.put(orderId, new OrderState.Placed(today.get()));
                 out.println("注文を受け付けました: " + orderId);
             }
@@ -79,7 +86,27 @@ public class Main {
                 OrderState current = requireOrder(orders, orderId);
                 out.print(OrderReceiptFormatter.format(orderId, current));
             }
-            case "list" -> orders.keySet().forEach(out::println);
+            case "list" -> orders.forEach((orderId, state) -> out.println(orderId + ": " + state.label()));
+            case "save" -> {
+                String filePath = requireSingleArg(rest, line);
+                try {
+                    OrderStatePersistence.save(orders, Path.of(filePath));
+                    out.println("保存しました: " + filePath);
+                } catch (IOException e) {
+                    throw new UncheckedIOException("保存に失敗しました: " + filePath, e);
+                }
+            }
+            case "load" -> {
+                String filePath = requireSingleArg(rest, line);
+                try {
+                    Map<String, OrderState> loaded = OrderStatePersistence.load(Path.of(filePath));
+                    orders.clear();
+                    orders.putAll(loaded);
+                    out.println("読み込みました: " + filePath);
+                } catch (IOException e) {
+                    throw new UncheckedIOException("読み込みに失敗しました: " + filePath, e);
+                }
+            }
             default -> throw new IllegalArgumentException("不明なコマンドです: " + line);
         }
     }
