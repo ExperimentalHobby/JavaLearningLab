@@ -81,4 +81,40 @@ class BatchJobRunnerTest {
         assertEquals(1, result.failed());
         assertEquals(1, result.skipped());
     }
+
+    @Test
+    void runAttachesSameBatchIdToAllLogEventsViaMdc() {
+        // MDC(Mapped Diagnostic Context)でリクエストID(ここではバッチID)を相関させる題材。
+        // 1回のrun()呼び出し中に出力される全ログイベントが同じbatchIdを持つことを確認する。
+        runner.run(List.of("job1", "FAIL_job2"));
+
+        List<String> batchIds = appender.list.stream()
+                .map(event -> event.getMDCPropertyMap().get("batchId"))
+                .distinct()
+                .toList();
+
+        assertEquals(1, batchIds.size());
+        assertTrue(batchIds.get(0) != null && !batchIds.get(0).isEmpty());
+    }
+
+    @Test
+    void runDoesNotLeakBatchIdIntoMdcAfterCompletion() {
+        // finallyでMDC.remove()されており、run()完了後に他の処理へbatchIdが漏れ出さないことを確認する。
+        runner.run(List.of("job1"));
+
+        assertEquals(null, org.slf4j.MDC.get("batchId"));
+    }
+
+    @Test
+    void runMarksFailureLogsWithJobFailureMarker() {
+        // マーカーを使い、失敗ログだけを他のログと区別できることを確認する
+        // (例: マーカーでフィルタして障害通知の対象を絞り込む、といった用途を想定)。
+        runner.run(List.of("FAIL_job1"));
+
+        boolean hasFailureMarker = appender.list.stream()
+                .filter(event -> event.getLevel() == ch.qos.logback.classic.Level.ERROR)
+                .anyMatch(event -> event.getMarkerList() != null
+                        && event.getMarkerList().stream().anyMatch(m -> m.contains("JOB_FAILURE")));
+        assertTrue(hasFailureMarker);
+    }
 }

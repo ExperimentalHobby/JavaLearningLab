@@ -1,21 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
+    <!-- 出力先がCWD相対のlogs/固定だと実行ディレクトリによって出力先が変わってしまうため、
+         システムプロパティLOG_DIRで上書きできるようにする(既定値は従来通りlogs)。
+         例: -DLOG_DIR=/var/log/loggingtool -->
+    <property name="LOG_DIR" value="${LOG_DIR:-logs}"/>
+
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} [%X{batchId}] - %msg%n</pattern>
         </encoder>
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/app.log</file>
+        <file>${LOG_DIR}/app.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/app.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${LOG_DIR}/app.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} [%X{batchId}] - %msg%n</pattern>
         </encoder>
+    </appender>
+
+    <!-- 非同期アペンダ: FILEへの書き込み(ディスクI/O)を別スレッドのキューに逃がすことで、
+         アプリのメインスレッドがログ出力のI/O待ちでブロックされにくくする。 -->
+    <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="FILE"/>
     </appender>
 
     <!-- アプリ本体のロガーは詳細な処理経過を追えるようDEBUGにし、それ以外のライブラリ由来のログと区別する。 -->
@@ -23,7 +34,7 @@
 
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="FILE"/>
+        <appender-ref ref="ASYNC_FILE"/>
     </root>
 
 </configuration>
