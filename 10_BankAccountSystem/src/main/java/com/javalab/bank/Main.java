@@ -59,7 +59,7 @@ public class Main {
      */
     private static void handleCommand(Account account, String line, PrintStream out) {
         if (line.equals("balance")) {
-            out.println("残高: " + account.getBalance());
+            out.println("残高: " + format(account.getBalance()));
         } else if (line.equals("history")) {
             printHistory(account, out);
         } else if (line.startsWith("deposit ")) {
@@ -73,8 +73,27 @@ public class Main {
 
     private static void printHistory(Account account, PrintStream out) {
         List<Transaction> history = account.getHistory();
-        for (Transaction transaction : history) {
-            out.println(transaction.type() + " " + transaction.amount() + " (残高: " + transaction.balanceAfter() + ")");
+        if (history.isEmpty()) {
+            out.println("取引履歴はありません");
+            return;
         }
+        for (Transaction transaction : history) {
+            out.println(transaction.timestamp() + " " + transaction.type() + " " + format(transaction.amount())
+                    + " (残高: " + format(transaction.balanceAfter()) + ")");
+        }
+    }
+
+    /**
+     * 表示用に整形する。スケール2に正規化された金額をそのまま表示すると
+     * {@code 1000.00}のように冗長になるため、末尾の余分なゼロを取り除く。
+     * @param value 整形対象の値
+     * @return 整形後の文字列
+     */
+    private static String format(BigDecimal value) {
+        // BigDecimal.ZERO.stripTrailingZeros() は "0E-10" のような表記になり得るため、0は個別に扱う。
+        if (value.compareTo(BigDecimal.ZERO) == 0) {
+            return "0";
+        }
+        return value.stripTrailingZeros().toPlainString();
     }
 }

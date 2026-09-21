@@ -57,4 +57,18 @@ class MainTest {
         assertTrue(output.contains("DEPOSIT 1000 (残高: 1000)"));
         assertTrue(output.contains("WITHDRAWAL 300 (残高: 700)"));
     }
+
+    @Test
+    void historyCommandShowsMessageWhenNoTransactionsExist() {
+        // 取引が1件もない状態でhistoryを実行すると、以前は何も表示されなかった。
+        // 「取引履歴はありません」と表示されることを確認する。
+        Scanner scanner = new Scanner(new StringReader("Alice\nhistory\nexit\n"));
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(outContent, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out);
+
+        String output = outContent.toString(StandardCharsets.UTF_8);
+        assertTrue(output.contains("取引履歴はありません"));
+    }
 }
