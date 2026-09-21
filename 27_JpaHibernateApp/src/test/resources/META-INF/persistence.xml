@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_1.xsd"
+             version="3.1">
+
+    <!--
+        JPAの永続化ユニット探索はクラスパス上の全META-INF/persistence.xmlを走査するため、
+        src/main/resourcesの定義と同じ名前(productPU)にすると「同名の永続化ユニットが複数ある」
+        という警告になってしまう(Spring Bootのapplication.propertiesのような単純な上書きにはならない)。
+        そのため専用の名前(productPU-test)にして、テストコードから明示的に参照する。
+        テストではファイルDBを使うとテスト間・テスト実行間でデータが残ってしまうため、
+        インメモリDB(create-drop、JVM終了時に自動消去)を使う。
+    -->
+    <persistence-unit name="productPU-test" transaction-type="RESOURCE_LOCAL">
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+        <class>com.javalab.jpahibernate.Product</class>
+        <properties>
+            <property name="jakarta.persistence.jdbc.driver" value="org.h2.Driver"/>
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:h2:mem:productdb;DB_CLOSE_DELAY=-1"/>
+            <property name="jakarta.persistence.jdbc.user" value="sa"/>
+            <property name="jakarta.persistence.jdbc.password" value=""/>
+            <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
+            <property name="hibernate.show_sql" value="false"/>
+        </properties>
+    </persistence-unit>
+</persistence>

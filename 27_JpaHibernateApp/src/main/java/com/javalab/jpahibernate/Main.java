@@ -1,10 +1,10 @@
 package com.javalab.jpahibernate;
 
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
@@ -17,12 +17,10 @@ public class Main {
 
     public static void main(String[] args) {
         EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("productPU");
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
         try {
-            ProductRepository repository = new ProductRepository(entityManager);
+            ProductRepository repository = new ProductRepository(entityManagerFactory);
             run(new Scanner(System.in), System.out, repository);
         } finally {
-            entityManager.close();
             entityManagerFactory.close();
         }
     }
@@ -38,7 +36,8 @@ public class Main {
      */
     static void run(Scanner scanner, PrintStream out, ProductRepository repository) {
         out.println("簡易ORM/DB操作アプリ。コマンド: "
-                + "add <商品名> <価格> <在庫数> / list / find <id> / update <id> <価格> <在庫数> / delete <id> / exit");
+                + "add <商品名> <価格> <在庫数> / list / find <id> / search <商品名> / "
+                + "update <id> <価格> <在庫数> / delete <id> / exit");
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine().trim();
             if (line.isEmpty()) {
@@ -54,6 +53,7 @@ public class Main {
                     case "add" -> handleAdd(repository, parts, out);
                     case "list" -> handleList(repository, out);
                     case "find" -> handleFind(repository, parts, out);
+                    case "search" -> handleSearch(repository, parts, out);
                     case "update" -> handleUpdate(repository, parts, out);
                     case "delete" -> handleDelete(repository, parts, out);
                     default -> out.println("不明なコマンドです: " + line);
@@ -65,6 +65,9 @@ public class Main {
     }
 
     private static void handleAdd(ProductRepository repository, String[] parts, PrintStream out) {
+        if (parts.length != 4) {
+            throw new IllegalArgumentException("使用方法: add <商品名> <価格> <在庫数>");
+        }
         Product saved = repository.save(new Product(parts[1], Integer.parseInt(parts[2]), Integer.parseInt(parts[3])));
         out.println("追加しました: id=" + saved.getId() + " " + saved.getName());
     }
@@ -92,6 +95,19 @@ public class Main {
                 + " 価格=" + product.getPrice() + " 在庫=" + product.getStock());
     }
 
+    private static void handleSearch(ProductRepository repository, String[] parts, PrintStream out) {
+        String name = String.join(" ", Arrays.copyOfRange(parts, 1, parts.length));
+        List<Product> found = repository.findByName(name);
+        if (found.isEmpty()) {
+            out.println("該当する商品が見つかりません: " + name);
+            return;
+        }
+        for (Product product : found) {
+            out.println(product.getId() + ": " + product.getName()
+                    + " 価格=" + product.getPrice() + " 在庫=" + product.getStock());
+        }
+    }
+
     private static void handleUpdate(ProductRepository repository, String[] parts, PrintStream out) {
         long id = Long.parseLong(parts[1]);
         Optional<Product> found = repository.findById(id);
@@ -99,6 +115,11 @@ public class Main {
             out.println("該当する商品が見つかりません: id=" + id);
             return;
         }
+        // ProductRepository.findById()は操作ごとにEntityManagerを生成しては即座にcloseするため、
+        // ここで返るproductは既にdetached(非managed)である。detachedエンティティへの変更は
+        // repository.update()(内部でEntityManager.merge()を呼ぶ)を通さない限りDBへ反映されない
+        // ことが自明になっている(EntityManagerを使い回していた頃は、このproductがmanagedのままに
+        // なり得たため、なぜmerge()が必要なのかが読み取りにくかった)。
         Product product = found.get();
         product.setPrice(Integer.parseInt(parts[2]));
         product.setStock(Integer.parseInt(parts[3]));

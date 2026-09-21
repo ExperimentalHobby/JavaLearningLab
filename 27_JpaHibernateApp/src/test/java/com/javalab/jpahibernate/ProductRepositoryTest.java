@@ -1,7 +1,7 @@
 package com.javalab.jpahibernate;
 
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Persistence;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +12,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -23,19 +24,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ProductRepositoryTest {
 
     private EntityManagerFactory entityManagerFactory;
-    private EntityManager entityManager;
     private ProductRepository repository;
 
     @BeforeEach
     void setUp() {
-        entityManagerFactory = Persistence.createEntityManagerFactory("productPU");
-        entityManager = entityManagerFactory.createEntityManager();
-        repository = new ProductRepository(entityManager);
+        entityManagerFactory = Persistence.createEntityManagerFactory("productPU-test");
+        repository = new ProductRepository(entityManagerFactory);
     }
 
     @AfterEach
     void tearDown() {
-        entityManager.close();
         entityManagerFactory.close();
     }
 
@@ -99,5 +97,71 @@ class ProductRepositoryTest {
 
         assertTrue(deleted);
         assertTrue(repository.findById(saved.getId()).isEmpty());
+    }
+
+    @Test
+    void saveRollsBackAndAllowsSubsequentOperationsWhenCommitFails() {
+        // nameは@Column(nullable = false)のため、name=nullの商品はDB制約違反でcommit()時に失敗する。
+        // 修正前はrollback()を呼んでいなかったため、EntityTransactionがactiveのまま残り、
+        // 以降の全操作が「Transaction already active」で失敗するようになっていた。
+        Product invalid = new Product(null, 100, 10);
+
+        assertThrows(PersistenceException.class, () -> repository.save(invalid));
+
+        // ロールバック後も正常に操作を継続できることを確認する(修正前はここで例外になっていた)。
+        Product valid = repository.save(new Product("ノート", 150, 100));
+        assertNotNull(valid.getId());
+    }
+
+    @Test
+    void findByNameReturnsProductsMatchingExactName() {
+        // @NamedQueryによるJPQLのパラメータバインドを扱う題材として、名前検索を追加した。
+        repository.save(new Product("ノート", 150, 100));
+        repository.save(new Product("ペン", 100, 50));
+        repository.save(new Product("ノート", 180, 30));
+
+        List<Product> found = repository.findByName("ノート");
+
+        assertEquals(2, found.size());
+    }
+
+    @Test
+    void findByNameReturnsEmptyListWhenNoProductMatches() {
+        repository.save(new Product("ノート", 150, 100));
+
+        List<Product> found = repository.findByName("存在しない商品");
+
+        assertTrue(found.isEmpty());
+    }
+
+    @Test
+    void findAllWithPagingReturnsOnlyRequestedPage() {
+        // ページングを扱う題材として、findAllにoffset/limitを指定できるオーバーロードを追加した。
+        for (int i = 1; i <= 5; i++) {
+            repository.save(new Product("商品" + i, 100 * i, 10));
+        }
+
+        List<Product> page = repository.findAll(2, 2);
+
+        assertEquals(2, page.size());
+        assertEquals("商品3", page.get(0).getName());
+        assertEquals("商品4", page.get(1).getName());
+    }
+
+    @Test
+    void findByIdReturnsDetachedEntityNotAutomaticallyPersisted() {
+        // EntityManagerをアプリ起動から終了まで使い回す設計だと、find()で取得したエンティティが
+        // managedのままになり、update()を呼ばなくても後続の操作で1次キャッシュ経由で
+        // 変更が「反映されたように見えてしまう」(実際にはDBへcommitされていない)という
+        // 追いにくい挙動になっていた。操作ごとにEntityManagerを閉じることで、find()の戻り値は
+        // 即座にdetachedとなり、update()を呼ばない限り変更が反映されないことを確認する。
+        Product saved = repository.save(new Product("ノート", 150, 100));
+
+        Product found = repository.findById(saved.getId()).orElseThrow();
+        found.setPrice(999);
+        // 意図的にupdate()を呼ばない。
+
+        Product reloaded = repository.findById(saved.getId()).orElseThrow();
+        assertEquals(150, reloaded.getPrice());
     }
 }

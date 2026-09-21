@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 
 /**
@@ -13,6 +14,9 @@ import jakarta.persistence.Table;
  */
 @Entity
 @Table(name = "products")
+@NamedQuery(
+        name = "Product.findByName",
+        query = "SELECT p FROM Product p WHERE p.name = :name")
 public class Product {
 
     @Id
@@ -67,5 +71,30 @@ public class Product {
 
     public void setStock(int stock) {
         this.stock = stock;
+    }
+
+    /**
+     * id基準の同一性判定。JPAエンティティのequalsは、Hibernateのプロキシ化やid未採番の
+     * 永続化前インスタンスとの比較で問題を起こしやすいため、idがnullの場合は
+     * (同一インスタンスでない限り)等しいとみなさない定石に沿っている。
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Product other)) {
+            return false;
+        }
+        return id != null && id.equals(other.id);
+    }
+
+    /**
+     * hashCodeをidに依存させると、id採番前後でハッシュ値が変化しHashSet等で要素を
+     * 見失う恐れがあるため、id採番前後で不変なクラス固定値を返す。
+     */
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }
