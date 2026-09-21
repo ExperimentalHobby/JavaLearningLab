@@ -85,6 +85,30 @@ class MainTest {
     }
 
     @Test
+    void runShowsResponseForPostCommand() {
+        // POSTが未対応だった学習テーマへの対応。CLIからpost <URL> <ボディ>で送信できることを確認する。
+        String responseBody = "{\"id\":1}";
+        server.createContext("/users", exchange -> {
+            byte[] bytes = responseBody.getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(200, bytes.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(bytes);
+            }
+        });
+        server.start();
+
+        Scanner scanner = new Scanner(
+                "post http://localhost:" + port + "/users {\"name\":\"Alice\"}\nexit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out);
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains(responseBody));
+    }
+
+    @Test
     void runShowsErrorAndContinuesWhenConnectionFails() {
         String responseBody = "{\"id\":2,\"name\":\"Bob\",\"email\":\"bob@example.com\"}";
         server.createContext("/user", exchange -> {
