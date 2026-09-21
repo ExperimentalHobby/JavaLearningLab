@@ -56,6 +56,12 @@ public class Main {
                         out.println("支払方法を設定しました: " + parts[1]);
                     }
                     case "wrap" -> {
+                        // parts[1].equals("on")がfalseの場合、"on"/"off"以外の入力でも
+                        // 黙ってoffとして扱われ、表示("設定しました: xyz")と実際の設定が
+                        // 食い違っていた問題への対応。"on"/"off"以外は明示的にエラーとする。
+                        if (!parts[1].equals("on") && !parts[1].equals("off")) {
+                            throw new IllegalArgumentException("使用方法: wrap on|off");
+                        }
                         builder.giftWrap(parts[1].equals("on"));
                         out.println("ギフトラッピングを設定しました: " + parts[1]);
                     }

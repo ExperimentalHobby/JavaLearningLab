@@ -15,4 +15,13 @@ class OrderItemTest {
 
         assertEquals(450, item.subtotal());
     }
+
+    @Test
+    void subtotalDoesNotOverflowForLargeQuantityAndUnitPrice() {
+        // int演算だとquantity * unitPriceがオーバーフローし、
+        // 100000 * 100000 = 1410065408(本来10000000000)になってしまっていた問題への対応。
+        OrderItem item = new OrderItem("高額商品", 100000, 100000);
+
+        assertEquals(10_000_000_000L, item.subtotal());
+    }
 }
