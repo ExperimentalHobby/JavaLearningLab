@@ -1,6 +1,7 @@
 package com.javalab.fileorganizer;
 
 import java.nio.file.Path;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -34,6 +35,9 @@ public class FileCategorizer {
         if (dotIndex < 0) {
             return "";
         }
-        return fileName.substring(dotIndex + 1).toLowerCase();
+        // ロケール依存のtoLowerCase()は、トルコ語ロケールで大文字"I"が"i"ではなく"ı"(ドットなしi)に
+        // なるなど、実行環境によって結果が変わりうる。拡張子判定はロケールに依存させたくないため
+        // Locale.ROOTを明示する。
+        return fileName.substring(dotIndex + 1).toLowerCase(Locale.ROOT);
     }
 }

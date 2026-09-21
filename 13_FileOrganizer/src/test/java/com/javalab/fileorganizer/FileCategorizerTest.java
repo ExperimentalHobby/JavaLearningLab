@@ -3,6 +3,7 @@ package com.javalab.fileorganizer;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -39,5 +40,19 @@ class FileCategorizerTest {
         // 拡張子が無いファイル名(ドットを含まない)は、extensionOf()が空文字を返し、
         // 結果的に"others"に分類されることを確認する。
         assertEquals("others", FileCategorizer.categoryOf(Path.of("noextension")));
+    }
+
+    @Test
+    void categorizesUppercaseExtensionCaseInsensitivelyUnderTurkishLocale() {
+        // toLowerCase()にロケール指定がないと、トルコ語ロケールでは大文字"I"が"i"ではなく
+        // "ı"(ドットなしi)になる特殊な対応のため、"GIF"が"gif"ではなく"gıf"になり
+        // 拡張子判定が壊れる。Locale.ROOTを明示することでロケールに依存せず判定できることを確認する。
+        Locale original = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.forLanguageTag("tr"));
+            assertEquals("images", FileCategorizer.categoryOf(Path.of("PHOTO.GIF")));
+        } finally {
+            Locale.setDefault(original);
+        }
     }
 }
