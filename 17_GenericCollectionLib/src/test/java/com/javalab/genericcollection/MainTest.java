@@ -52,6 +52,59 @@ class MainTest {
     }
 
     @Test
+    void runHandlesListMaxMinFilterMapCommands() {
+        // CollectionUtils.maxは実装もテストもあるのにCLIから呼び出す手段がなく、
+        // min/filter/mapなど汎用操作も未提供だった問題への対応。
+        Scanner scanner = new Scanner(
+                "list add banana\n"
+                        + "list add apple\n"
+                        + "list add cherry\n"
+                        + "list max\n"
+                        + "list min\n"
+                        + "list filter an\n"
+                        + "list map upper\n"
+                        + "exit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out);
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains("max: cherry"));
+        assertTrue(result.contains("min: apple"));
+        assertTrue(result.contains("filter: [banana]"));
+        assertTrue(result.contains("map: [BANANA, APPLE, CHERRY]"));
+    }
+
+    @Test
+    void runShowsErrorAndContinuesForStackPushWithoutValue() {
+        // "stack push"(値省略)はhandleStackがparts[2]へ無条件にアクセスし
+        // ArrayIndexOutOfBoundsExceptionでREPLごと落ちていた問題への対応。
+        Scanner scanner = new Scanner("stack push\nstack push A\nstack pop\nexit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out);
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains("使い方") || result.contains("エラー"));
+        assertTrue(result.contains("pop しました: A"));
+    }
+
+    @Test
+    void runShowsErrorAndContinuesForQueueEnqueueWithoutValue() {
+        Scanner scanner = new Scanner("queue enqueue\nqueue enqueue X\nqueue dequeue\nexit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out);
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains("使い方") || result.contains("エラー"));
+        assertTrue(result.contains("dequeue しました: X"));
+    }
+
+    @Test
     void runShowsErrorAndContinuesForUnknownCommand() {
         Scanner scanner = new Scanner("foobar\nstack push A\nstack pop\nexit\n");
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();

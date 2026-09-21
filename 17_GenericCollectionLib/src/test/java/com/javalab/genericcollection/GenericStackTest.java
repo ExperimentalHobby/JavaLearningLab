@@ -2,6 +2,9 @@ package com.javalab.genericcollection;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -37,5 +40,31 @@ class GenericStackTest {
         GenericStack<String> stack = new GenericStack<>();
 
         assertThrows(EmptyCollectionException.class, stack::peek);
+    }
+
+    @Test
+    void toStringShowsElementsFromTopToBottom() {
+        // デバッグ時に中身を確認しづらかった問題への対応。
+        GenericStack<String> stack = new GenericStack<>();
+        stack.push("A");
+        stack.push("B");
+
+        assertEquals("[B, A]", stack.toString());
+    }
+
+    @Test
+    void iteratesElementsFromTopToBottom() {
+        // Iterable<T>を実装していないため拡張forが使えなかった問題への対応。
+        GenericStack<String> stack = new GenericStack<>();
+        stack.push("A");
+        stack.push("B");
+        stack.push("C");
+
+        List<String> collected = new ArrayList<>();
+        for (String value : stack) {
+            collected.add(value);
+        }
+
+        assertEquals(List.of("C", "B", "A"), collected);
     }
 }
