@@ -10,4 +10,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Min {
     int value();
+
+    /** 違反メッセージ。{@code {field}}はフィールド名、{@code {value}}は{@link #value()}に置換される。 */
+    String message() default "{field}は{value}以上である必要があります";
 }
