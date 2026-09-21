@@ -2,6 +2,7 @@ package com.javalab.builderorder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 注文を表す不変オブジェクト。必須項目とオプション項目が混在するため、
@@ -50,8 +51,8 @@ public class Order {
      * 全明細の小計を合計した注文合計金額を返す。
      * @return 合計金額
      */
-    public int totalAmount() {
-        return items.stream().mapToInt(OrderItem::subtotal).sum();
+    public long totalAmount() {
+        return items.stream().mapToLong(OrderItem::subtotal).sum();
     }
 
     /**
@@ -97,6 +98,34 @@ public class Order {
         return sb.toString();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Order other)) {
+            return false;
+        }
+        return giftWrapping == other.giftWrapping
+                && customerName.equals(other.customerName)
+                && shippingAddress.equals(other.shippingAddress)
+                && items.equals(other.items)
+                && paymentMethod.equals(other.paymentMethod)
+                && note.equals(other.note);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(customerName, shippingAddress, items, paymentMethod, giftWrapping, note);
+    }
+
+    @Override
+    public String toString() {
+        return "Order{customerName='" + customerName + "', shippingAddress='" + shippingAddress + "', items="
+                + items + ", paymentMethod='" + paymentMethod + "', giftWrapping=" + giftWrapping + ", note='"
+                + note + "'}";
+    }
+
     /**
      * {@link Order}を段階的に組み立てるBuilder。
      * 顧客名・配送先住所は必須のためコンストラクタで受け取り、それ以外はフルーエントAPIで追加する。
@@ -109,6 +138,7 @@ public class Order {
         private String paymentMethod = "代金引換";
         private boolean giftWrapping = false;
         private String note = "";
+        private boolean built = false;
 
         /**
          * 必須項目を指定してBuilderを開始する。
@@ -135,6 +165,13 @@ public class Order {
          * @return このBuilder自身(メソッドチェーン用)
          */
         public Builder addItem(String productName, int quantity, int unitPrice) {
+            checkNotBuilt();
+            if (quantity <= 0) {
+                throw new IllegalArgumentException("数量は1以上である必要があります: " + quantity);
+            }
+            if (unitPrice < 0) {
+                throw new IllegalArgumentException("単価は0以上である必要があります: " + unitPrice);
+            }
             items.add(new OrderItem(productName, quantity, unitPrice));
             return this;
         }
@@ -145,6 +182,10 @@ public class Order {
          * @return このBuilder自身(メソッドチェーン用)
          */
         public Builder paymentMethod(String paymentMethod) {
+            checkNotBuilt();
+            if (paymentMethod == null) {
+                throw new IllegalArgumentException("支払方法にnullは指定できません");
+            }
             this.paymentMethod = paymentMethod;
             return this;
         }
@@ -155,6 +196,7 @@ public class Order {
          * @return このBuilder自身(メソッドチェーン用)
          */
         public Builder giftWrap(boolean giftWrapping) {
+            checkNotBuilt();
             this.giftWrapping = giftWrapping;
             return this;
         }
@@ -165,20 +207,33 @@ public class Order {
          * @return このBuilder自身(メソッドチェーン用)
          */
         public Builder note(String note) {
+            checkNotBuilt();
+            if (note == null) {
+                throw new IllegalArgumentException("メモにnullは指定できません");
+            }
             this.note = note;
             return this;
         }
 
         /**
          * これまでに設定した内容から{@link Order}を生成する。
+         * 同じBuilderで2回目以降のbuild()を呼ぶことはできない(1回きりのビルドとする)。
          * @return 構築済みの注文
-         * @throws IllegalStateException 商品が1件も追加されていない場合
+         * @throws IllegalStateException 商品が1件も追加されていない場合、または既に一度build()済みの場合
          */
         public Order build() {
+            checkNotBuilt();
             if (items.isEmpty()) {
                 throw new IllegalStateException("商品が1件も追加されていません");
             }
+            built = true;
             return new Order(this);
+        }
+
+        private void checkNotBuilt() {
+            if (built) {
+                throw new IllegalStateException("このBuilderは既にbuild()済みです。新しいBuilderを使用してください");
+            }
         }
     }
 }

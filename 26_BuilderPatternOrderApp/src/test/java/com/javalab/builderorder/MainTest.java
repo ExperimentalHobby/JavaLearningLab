@@ -52,4 +52,18 @@ class MainTest {
         assertTrue(result.contains("商品が1件も追加されていません"));
         assertTrue(result.contains("450"));
     }
+
+    @Test
+    void runShowsErrorForWrapCommandWithInvalidArgument() {
+        // wrap xyzはparts[1].equals("on")がfalseなのでoffとして設定されるのに、
+        // 「ギフトラッピングを設定しました: xyz」と表示され実際の設定と表示が食い違っていた問題への対応。
+        Scanner scanner = new Scanner("start 山田太郎 東京都渋谷区1-1-1\nwrap xyz\nexit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out);
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains("使用方法: wrap on|off"));
+    }
 }
