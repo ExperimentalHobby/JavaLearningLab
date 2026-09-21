@@ -39,22 +39,26 @@ class ChatServerTest {
         // "Alice: <メッセージ>" 形式で受信できることを確認する(最も基本的なブロードキャスト)。
         server.start();
 
-        try (Socket clientA = new Socket("localhost", server.port());
-             Socket clientB = new Socket("localhost", server.port())) {
+        // Aliceの登録が完了してからBobを接続する。両方を先に接続してしまうと、Bobの
+        // ソケットは(まだ自分の登録が済んでいなくても)server.clientsに追加済みのため、
+        // Aliceの入室通知ブロードキャストをBobが受け取ってしまい、後続のreadLine()の
+        // 期待値がずれてしまう(入室通知を全員に届けるようにした本Issueの修正で顕在化した)。
+        try (Socket clientA = new Socket("localhost", server.port())) {
             PrintWriter outA = writer(clientA);
-            PrintWriter outB = writer(clientB);
             BufferedReader inA = reader(clientA);
-            BufferedReader inB = reader(clientB);
-
-            // 最初の1行(ようこそメッセージ)を読むことで、サーバー側の登録完了を待ち合わせる。
             outA.println("Alice");
             inA.readLine();
-            outB.println("Bob");
-            inB.readLine();
 
-            outA.println("こんにちは");
+            try (Socket clientB = new Socket("localhost", server.port())) {
+                PrintWriter outB = writer(clientB);
+                BufferedReader inB = reader(clientB);
+                outB.println("Bob");
+                inB.readLine();
 
-            assertEquals("Alice: こんにちは", inB.readLine());
+                outA.println("こんにちは");
+
+                assertEquals("Alice: こんにちは", inB.readLine());
+            }
         }
     }
 
@@ -86,27 +90,34 @@ class ChatServerTest {
         // (2人限定ではなく任意人数へブロードキャストできることの検証)。
         server.start();
 
-        try (Socket clientA = new Socket("localhost", server.port());
-             Socket clientB = new Socket("localhost", server.port());
-             Socket clientC = new Socket("localhost", server.port())) {
+        // 各クライアントの登録が完了してから次を接続する(理由は
+        // messageFromOneClientIsBroadcastToAnotherのコメントを参照)。
+        try (Socket clientA = new Socket("localhost", server.port())) {
             PrintWriter outA = writer(clientA);
-            PrintWriter outB = writer(clientB);
-            PrintWriter outC = writer(clientC);
             BufferedReader inA = reader(clientA);
-            BufferedReader inB = reader(clientB);
-            BufferedReader inC = reader(clientC);
-
             outA.println("Alice");
             inA.readLine();
-            outB.println("Bob");
-            inB.readLine();
-            outC.println("Carol");
-            inC.readLine();
 
-            outA.println("こんにちは");
+            try (Socket clientB = new Socket("localhost", server.port())) {
+                PrintWriter outB = writer(clientB);
+                BufferedReader inB = reader(clientB);
+                outB.println("Bob");
+                inB.readLine();
 
-            assertEquals("Alice: こんにちは", inB.readLine());
-            assertEquals("Alice: こんにちは", inC.readLine());
+                try (Socket clientC = new Socket("localhost", server.port())) {
+                    PrintWriter outC = writer(clientC);
+                    BufferedReader inC = reader(clientC);
+                    outC.println("Carol");
+                    inC.readLine();
+                    // Carol入室時の通知をBobが受け取り済みの状態にしてから本題のメッセージを送る。
+                    assertEquals("SERVER: Carolが入室しました", inB.readLine());
+
+                    outA.println("こんにちは");
+
+                    assertEquals("Alice: こんにちは", inB.readLine());
+                    assertEquals("Alice: こんにちは", inC.readLine());
+                }
+            }
         }
     }
 
@@ -117,30 +128,33 @@ class ChatServerTest {
         // (1クライアントの切断がサーバー全体や他クライアントの接続に影響しないことの検証)。
         server.start();
 
-        try (Socket clientA = new Socket("localhost", server.port());
-             Socket clientB = new Socket("localhost", server.port())) {
+        try (Socket clientA = new Socket("localhost", server.port())) {
             PrintWriter outA = writer(clientA);
-            PrintWriter outB = writer(clientB);
             BufferedReader inA = reader(clientA);
-            BufferedReader inB = reader(clientB);
-
             outA.println("Alice");
             inA.readLine();
-            outB.println("Bob");
-            inB.readLine();
 
-            Socket clientC = new Socket("localhost", server.port());
-            PrintWriter outC = writer(clientC);
-            BufferedReader inC = reader(clientC);
-            outC.println("Carol");
-            inC.readLine();
+            try (Socket clientB = new Socket("localhost", server.port())) {
+                PrintWriter outB = writer(clientB);
+                BufferedReader inB = reader(clientB);
+                outB.println("Bob");
+                inB.readLine();
 
-            clientC.close();
+                Socket clientC = new Socket("localhost", server.port());
+                PrintWriter outC = writer(clientC);
+                BufferedReader inC = reader(clientC);
+                outC.println("Carol");
+                inC.readLine();
+                // Carol入室時の通知をBobが受け取り済みの状態にしてから退出させる。
+                assertEquals("SERVER: Carolが入室しました", inB.readLine());
 
-            assertEquals("SERVER: Carolが退出しました", inB.readLine());
+                clientC.close();
 
-            outA.println("まだ話せますか");
-            assertEquals("Alice: まだ話せますか", inB.readLine());
+                assertEquals("SERVER: Carolが退出しました", inB.readLine());
+
+                outA.println("まだ話せますか");
+                assertEquals("Alice: まだ話せますか", inB.readLine());
+            }
         }
     }
 
@@ -160,6 +174,133 @@ class ChatServerTest {
             server.stop();
 
             assertNull(inA.readLine());
+        }
+    }
+
+    @Test
+    @Timeout(value = 10, unit = TimeUnit.SECONDS)
+    void blankUsernameIsRejectedAndConnectionIsClosed() throws IOException {
+        server.start();
+
+        try (Socket clientA = new Socket("localhost", server.port())) {
+            PrintWriter outA = writer(clientA);
+            BufferedReader inA = reader(clientA);
+
+            outA.println("   ");
+
+            assertEquals("SERVER: ユーザー名を空にすることはできません", inA.readLine());
+            assertNull(inA.readLine());
+        }
+    }
+
+    @Test
+    @Timeout(value = 10, unit = TimeUnit.SECONDS)
+    void tooLongUsernameIsRejectedAndConnectionIsClosed() throws IOException {
+        server.start();
+        String tooLong = "a".repeat(21);
+
+        try (Socket clientA = new Socket("localhost", server.port())) {
+            PrintWriter outA = writer(clientA);
+            BufferedReader inA = reader(clientA);
+
+            outA.println(tooLong);
+
+            assertEquals("SERVER: ユーザー名は20文字以内で入力してください", inA.readLine());
+            assertNull(inA.readLine());
+        }
+    }
+
+    @Test
+    @Timeout(value = 10, unit = TimeUnit.SECONDS)
+    void duplicateUsernameIsRejectedAndConnectionIsClosed() throws IOException {
+        server.start();
+
+        try (Socket clientA = new Socket("localhost", server.port())) {
+            PrintWriter outA = writer(clientA);
+            BufferedReader inA = reader(clientA);
+            outA.println("Alice");
+            inA.readLine();
+
+            try (Socket clientB = new Socket("localhost", server.port())) {
+                PrintWriter outB = writer(clientB);
+                BufferedReader inB = reader(clientB);
+
+                outB.println("Alice");
+
+                assertEquals("SERVER: そのユーザー名は既に使用されています: Alice", inB.readLine());
+                assertNull(inB.readLine());
+            }
+        }
+    }
+
+    @Test
+    @Timeout(value = 10, unit = TimeUnit.SECONDS)
+    void communicationContinuesAfterOneClientConnectionIsAbruptlyReset() throws IOException {
+        // PrintWriterはIOExceptionを握り潰す仕様でcheckError()を確認していないと、
+        // 切断済みクライアントへ送り続けてしまう問題への対応。SO_LINGER(0)で
+        // 正常なFINではなくRSTによる異常切断を発生させ、その後もサーバーが
+        // 他クライアント間の通信を問題なく継続できることを確認する。
+        server.start();
+
+        try (Socket clientA = new Socket("localhost", server.port())) {
+            PrintWriter outA = writer(clientA);
+            BufferedReader inA = reader(clientA);
+            outA.println("Alice");
+            inA.readLine();
+
+            Socket clientB = new Socket("localhost", server.port());
+            PrintWriter outB = writer(clientB);
+            BufferedReader inB = reader(clientB);
+            outB.println("Bob");
+            inB.readLine();
+            assertEquals("SERVER: Bobが入室しました", inA.readLine());
+
+            // Bobの接続を正常なクローズ(FIN)ではなく、SO_LINGER(0)によるRSTで異常切断する。
+            clientB.setSoLinger(true, 0);
+            clientB.close();
+
+            try (Socket clientC = new Socket("localhost", server.port())) {
+                PrintWriter outC = writer(clientC);
+                BufferedReader inC = reader(clientC);
+                outC.println("Carol");
+                inC.readLine();
+
+                outA.println("まだ話せますか");
+                assertEquals("Alice: まだ話せますか", inC.readLine());
+            }
+        }
+    }
+
+    @Test
+    void portThrowsIllegalStateExceptionBeforeStart() {
+        // start()を呼ぶ前はserverSocketがnullのためNPEになっていた問題への対応。
+        // 「起動前に呼んだ」ことが分かる明示的な例外にする。
+        assertThrows(IllegalStateException.class, server::port);
+    }
+
+    @Test
+    @Timeout(value = 10, unit = TimeUnit.SECONDS)
+    void joinNotificationIsBroadcastToExistingParticipants() throws IOException {
+        // 入室通知が本人にしか届かず、既存の参加者は誰が入ってきたか分からなかった問題への対応。
+        server.start();
+
+        try (Socket clientA = new Socket("localhost", server.port())) {
+            PrintWriter outA = writer(clientA);
+            BufferedReader inA = reader(clientA);
+            outA.println("Alice");
+            inA.readLine();
+            // 修正前は入室通知が本人にしか届かず、このreadLine()が永久にブロックしてしまう
+            // (ブロッキングソケット読み取りは@Timeoutでは中断できないため)。安全のため
+            // タイムアウトを設定し、Red確認時はハングせずSocketTimeoutExceptionで失敗させる。
+            clientA.setSoTimeout(3000);
+
+            Socket clientB = new Socket("localhost", server.port());
+            PrintWriter outB = writer(clientB);
+            outB.println("Bob");
+
+            assertEquals("SERVER: Bobが入室しました", inA.readLine());
+
+            clientB.close();
         }
     }
 
