@@ -82,6 +82,58 @@ class UserControllerTest {
     }
 
     @Test
+    void postUsers_malformedJsonBody_returns400WithJapaneseMessage() {
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+        ResponseEntity<String> response = restTemplate.postForEntity("/api/users",
+                new org.springframework.http.HttpEntity<>("{bad", headers), String.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().contains("リクエストボディの形式が不正です"));
+    }
+
+    @Test
+    void getUserById_nonNumericId_returns400WithJapaneseMessage() {
+        ResponseEntity<String> response = restTemplate.getForEntity("/api/users/abc", String.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().contains("パラメータの形式が不正です"));
+    }
+
+    @Test
+    void getUserById_negativeId_returns400() {
+        // idは正の数であるべきというビジネスルールが検証されておらず、findById(-1)がそのまま
+        // UserNotFoundExceptionになって404を返してしまっていた(本来は400であるべき)。
+        ResponseEntity<String> response = restTemplate.getForEntity("/api/users/-1", String.class);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void getUserById_negativeId_returnsFieldErrorForId() {
+        ResponseEntity<FieldErrorResponse[]> response = restTemplate.getForEntity("/api/users/-1", FieldErrorResponse[].class);
+        FieldErrorResponse[] errors = response.getBody();
+
+        assertNotNull(errors);
+        assertTrue(List.of(errors).stream().anyMatch(e -> e.field().equals("id")));
+    }
+
+    @Test
+    void postUsers_duplicateEmail_returns400WithFieldError() {
+        restTemplate.postForEntity("/api/users", new UserRegistrationRequest("山田太郎", "duplicate@example.com", 30), User.class);
+
+        ResponseEntity<FieldErrorResponse[]> response = restTemplate.postForEntity("/api/users",
+                new UserRegistrationRequest("佐藤次郎", "duplicate@example.com", 25), FieldErrorResponse[].class);
+        FieldErrorResponse[] errors = response.getBody();
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(errors);
+        assertTrue(List.of(errors).stream().anyMatch(e -> e.field().equals("email")));
+    }
+
+    @Test
     void getUsers_returnsRegisteredUsers() {
         restTemplate.postForEntity("/api/users", new UserRegistrationRequest("鈴木花子", "suzuki@example.com", 25), User.class);
 
