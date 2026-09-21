@@ -2,6 +2,9 @@ package com.javalab.genericcollection;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -37,5 +40,29 @@ class GenericQueueTest {
         GenericQueue<String> queue = new GenericQueue<>();
 
         assertThrows(EmptyCollectionException.class, queue::peek);
+    }
+
+    @Test
+    void toStringShowsElementsFromHeadToTail() {
+        GenericQueue<String> queue = new GenericQueue<>();
+        queue.enqueue("A");
+        queue.enqueue("B");
+
+        assertEquals("[A, B]", queue.toString());
+    }
+
+    @Test
+    void iteratesElementsFromHeadToTail() {
+        GenericQueue<String> queue = new GenericQueue<>();
+        queue.enqueue("A");
+        queue.enqueue("B");
+        queue.enqueue("C");
+
+        List<String> collected = new ArrayList<>();
+        for (String value : queue) {
+            collected.add(value);
+        }
+
+        assertEquals(List.of("A", "B", "C"), collected);
     }
 }

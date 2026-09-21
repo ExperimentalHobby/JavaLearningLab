@@ -1,11 +1,16 @@
 package com.javalab.genericcollection;
 
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.StringJoiner;
+
 /**
  * 任意の型{@code T}を格納できる汎用スタック(LIFO)。
  * {@code java.util.Stack}等をラップせず、単方向連結リストで自前実装している。
+ * {@link Iterable}を実装しているため拡張forで先頭(直近にpushした要素)から順に走査できる。
  * @param <T> 格納する要素の型
  */
-public class GenericStack<T> {
+public class GenericStack<T> implements Iterable<T> {
 
     private Node<T> top;
     private int size;
@@ -62,5 +67,43 @@ public class GenericStack<T> {
 
     public int size() {
         return size;
+    }
+
+    /**
+     * 先頭(直近にpushした要素)から順に走査するイテレータを返す。
+     * @return イテレータ
+     */
+    @Override
+    public Iterator<T> iterator() {
+        return new Iterator<>() {
+            private Node<T> current = top;
+
+            @Override
+            public boolean hasNext() {
+                return current != null;
+            }
+
+            @Override
+            public T next() {
+                if (current == null) {
+                    throw new NoSuchElementException();
+                }
+                T value = current.value;
+                current = current.next;
+                return value;
+            }
+        };
+    }
+
+    /**
+     * @return 先頭から順に要素を並べた文字列(例: {@code "[B, A]"})
+     */
+    @Override
+    public String toString() {
+        StringJoiner joiner = new StringJoiner(", ", "[", "]");
+        for (T value : this) {
+            joiner.add(String.valueOf(value));
+        }
+        return joiner.toString();
     }
 }

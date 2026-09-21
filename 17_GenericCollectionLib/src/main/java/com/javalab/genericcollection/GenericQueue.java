@@ -1,11 +1,16 @@
 package com.javalab.genericcollection;
 
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.StringJoiner;
+
 /**
  * 任意の型{@code T}を格納できる汎用キュー(FIFO)。
  * {@code java.util.Queue}等をラップせず、head/tailを管理する単方向連結リストで自前実装している。
+ * {@link Iterable}を実装しているため拡張forで先頭(次にdequeueされる要素)から順に走査できる。
  * @param <T> 格納する要素の型
  */
-public class GenericQueue<T> {
+public class GenericQueue<T> implements Iterable<T> {
 
     private Node<T> head;
     private Node<T> tail;
@@ -71,5 +76,43 @@ public class GenericQueue<T> {
 
     public int size() {
         return size;
+    }
+
+    /**
+     * 先頭(次にdequeueされる要素)から順に走査するイテレータを返す。
+     * @return イテレータ
+     */
+    @Override
+    public Iterator<T> iterator() {
+        return new Iterator<>() {
+            private Node<T> current = head;
+
+            @Override
+            public boolean hasNext() {
+                return current != null;
+            }
+
+            @Override
+            public T next() {
+                if (current == null) {
+                    throw new NoSuchElementException();
+                }
+                T value = current.value;
+                current = current.next;
+                return value;
+            }
+        };
+    }
+
+    /**
+     * @return 先頭から順に要素を並べた文字列(例: {@code "[A, B]"})
+     */
+    @Override
+    public String toString() {
+        StringJoiner joiner = new StringJoiner(", ", "[", "]");
+        for (T value : this) {
+            joiner.add(String.valueOf(value));
+        }
+        return joiner.toString();
     }
 }
