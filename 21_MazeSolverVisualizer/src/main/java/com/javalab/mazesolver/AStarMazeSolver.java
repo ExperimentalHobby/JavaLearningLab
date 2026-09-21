@@ -1,6 +1,7 @@
 package com.javalab.mazesolver;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,15 @@ import java.util.PriorityQueue;
  */
 public class AStarMazeSolver implements MazeSolver {
 
+    /**
+     * 優先度キューの要素。優先度は挿入時点の値をそのまま保持する。
+     * 比較のたびに可変のマップを参照すると、挿入後にコストが更新された際にヒープの
+     * 不変条件が壊れ、{@code poll()}が最小要素を返さなくなる(最短経路が保証されない)ため、
+     * 挿入時に確定した値をイミュータブルなrecordとして持たせている。
+     */
+    private record Entry(Cell cell, int priority) {
+    }
+
     @Override
     public List<Cell> solve(Maze maze) {
         // A*はBFSの「これまでのコスト」に加え、ゴールまでの推定距離(ヒューリスティック)を
@@ -19,14 +29,13 @@ public class AStarMazeSolver implements MazeSolver {
         Cell goal = maze.goal();
         Map<Cell, Cell> cameFrom = new HashMap<>();
         Map<Cell, Integer> costSoFar = new HashMap<>();
-        PriorityQueue<Cell> frontier = new PriorityQueue<>(
-                (a, b) -> Integer.compare(priority(a, costSoFar, goal), priority(b, costSoFar, goal)));
+        PriorityQueue<Entry> frontier = new PriorityQueue<>(Comparator.comparingInt(Entry::priority));
 
         costSoFar.put(maze.start(), 0);
-        frontier.add(maze.start());
+        frontier.add(new Entry(maze.start(), manhattanDistance(maze.start(), goal)));
 
         while (!frontier.isEmpty()) {
-            Cell current = frontier.poll();
+            Cell current = frontier.poll().cell();
             if (current.equals(goal)) {
                 return reconstructPath(cameFrom, current);
             }
@@ -35,15 +44,11 @@ public class AStarMazeSolver implements MazeSolver {
                 if (!costSoFar.containsKey(neighbor) || newCost < costSoFar.get(neighbor)) {
                     costSoFar.put(neighbor, newCost);
                     cameFrom.put(neighbor, current);
-                    frontier.add(neighbor);
+                    frontier.add(new Entry(neighbor, newCost + manhattanDistance(neighbor, goal)));
                 }
             }
         }
         return List.of();
-    }
-
-    private int priority(Cell cell, Map<Cell, Integer> costSoFar, Cell goal) {
-        return costSoFar.get(cell) + manhattanDistance(cell, goal);
     }
 
     private int manhattanDistance(Cell a, Cell b) {

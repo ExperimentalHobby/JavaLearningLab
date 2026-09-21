@@ -11,6 +11,9 @@ import java.util.Set;
 
 /**
  * 深さ優先探索(DFS)で迷路を解くソルバー。
+ * {@link MazeGenerator}が生成する完全迷路(任意の2マス間の経路が一意に定まる、閉路のない迷路)を
+ * 前提としている。閉路のある一般のグラフに対しては、{@code cameFrom}をpush時点で確定させる実装のため、
+ * 実際に辿った経路(スタックの積み下ろし順)と一致しない経路を返すことがある。
  */
 public class DfsMazeSolver implements MazeSolver {
 

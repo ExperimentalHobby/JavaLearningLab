@@ -68,4 +68,14 @@ class MazeVisualizerStateTest {
 
         assertFalse(state.isAnimating());
     }
+
+    @Test
+    void finishAnimationResetsAnimatingState() {
+        state.startAnimation("BFS");
+        assertTrue(state.isAnimating());
+
+        state.finishAnimation();
+
+        assertFalse(state.isAnimating());
+    }
 }

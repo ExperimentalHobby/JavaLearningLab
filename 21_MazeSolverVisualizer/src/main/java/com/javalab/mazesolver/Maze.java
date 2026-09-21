@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * グリッド状の迷路を表す。マス同士の接続(壁のない通路)を持つ。
@@ -61,8 +62,11 @@ public class Maze {
 
     /**
      * マス間の接続状態を比較用に取得する(テストでの構造比較に使用)。
+     * {@code Map.copyOf}だけでは値である{@code Set<Cell>}が可変の実体のまま共有されてしまうため、
+     * 値のSetも{@code Set.copyOf}で防御的コピーし、呼び出し側から内部状態を変更できないようにする。
      */
     public Map<Cell, Set<Cell>> passages() {
-        return Map.copyOf(passages);
+        return passages.entrySet().stream()
+                .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, e -> Set.copyOf(e.getValue())));
     }
 }

@@ -19,8 +19,12 @@ public class MazeGenerator {
      * @param height 迷路の高さ(マス数)
      * @param seed 乱数シード。同じ値を指定すると常に同じ迷路が生成される
      * @return 生成された迷路
+     * @throws IllegalArgumentException widthまたはheightが0以下の場合
      */
     public Maze generate(int width, int height, long seed) {
+        if (width <= 0 || height <= 0) {
+            throw new IllegalArgumentException("widthとheightは1以上である必要があります: width=" + width + ", height=" + height);
+        }
         Cell start = new Cell(0, 0);
         Cell goal = new Cell(height - 1, width - 1);
         Maze maze = new Maze(width, height, start, goal);
