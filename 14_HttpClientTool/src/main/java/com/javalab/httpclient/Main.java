@@ -15,14 +15,15 @@ public class Main {
 
     /**
      * REPLループ本体。テストから{@link Scanner}/{@link PrintStream}を差し替えられるよう分離している。
-     * コマンド: {@code fetch <URL>}(生JSON表示) / {@code fetchUser <URL>}(User解析表示) / {@code exit}。
+     * コマンド: {@code fetch <URL>}(生JSON表示) / {@code fetchUser <URL>}(User解析表示) /
+     * {@code post <URL> <ボディ>}(POSTしてレスポンス表示) / {@code exit}。
      * 通信エラーはループを止めずエラー表示のみ行い、次のコマンド入力を継続する。
      * @param scanner コマンド読み取り元
      * @param out 結果出力先
      */
     static void run(Scanner scanner, PrintStream out) {
         JsonHttpFetcher fetcher = new JsonHttpFetcher();
-        out.println("HTTPクライアントツール。コマンド: fetch <URL> / fetchUser <URL> / exit");
+        out.println("HTTPクライアントツール。コマンド: fetch <URL> / fetchUser <URL> / post <URL> <ボディ> / exit");
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine().trim();
             if (line.isEmpty()) {
@@ -42,6 +43,17 @@ public class Main {
                 try {
                     User user = fetcher.fetchUser(parts[1]);
                     out.println("id=" + user.id() + ", name=" + user.name() + ", email=" + user.email());
+                } catch (HttpClientException e) {
+                    out.println("エラー: " + e.getMessage());
+                }
+            } else if (command.equals("post") && parts.length == 2) {
+                String[] urlAndBody = parts[1].split("\\s+", 2);
+                if (urlAndBody.length != 2) {
+                    out.println("不明なコマンドです: " + line);
+                    continue;
+                }
+                try {
+                    out.println(fetcher.postJson(urlAndBody[0], urlAndBody[1]));
                 } catch (HttpClientException e) {
                     out.println("エラー: " + e.getMessage());
                 }
