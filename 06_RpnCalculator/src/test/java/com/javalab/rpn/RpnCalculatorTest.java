@@ -52,6 +52,25 @@ class RpnCalculatorTest {
     }
 
     @Test
+    void raisesToPowerOfNonNegativeIntegerExponent() {
+        // 「べき乗演算子・単項マイナス・中置記法からの変換といった発展余地がある」という
+        // 学習テーマへの対応として、"^"によるべき乗をサポートする。2^10 = 1024。
+        BigDecimal result = RpnCalculator.evaluate("2 10 ^");
+
+        assertEquals(0, new BigDecimal("1024").compareTo(result));
+    }
+
+    @Test
+    void powerOperatorThrowsExceptionForNegativeExponent() {
+        assertThrows(RpnCalculatorException.class, () -> RpnCalculator.evaluate("2 -1 ^"));
+    }
+
+    @Test
+    void powerOperatorThrowsExceptionForNonIntegerExponent() {
+        assertThrows(RpnCalculatorException.class, () -> RpnCalculator.evaluate("2 0.5 ^"));
+    }
+
+    @Test
     void divisionByZeroThrowsArithmeticException() {
         assertThrows(ArithmeticException.class, () -> RpnCalculator.evaluate("1 0 /"));
     }

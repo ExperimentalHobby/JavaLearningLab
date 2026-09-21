@@ -2,11 +2,14 @@ package com.javalab.rpn;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Stack;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 /**
- * 逆ポーランド記法(RPN)の数式を{@link Stack}で評価する電卓ロジック。
+ * 逆ポーランド記法(RPN)の数式を{@link Deque}(スタックとして利用)で評価する電卓ロジック。
  * 数値は{@link BigDecimal}で扱い、除算による丸め誤差を避ける。
+ * {@code java.util.Stack}(全メソッドが同期化された{@code Vector}由来のレガシークラス)ではなく
+ * {@link ArrayDeque}を使うことで、単一スレッドでの利用に不要な同期コストを避けている。
  */
 public class RpnCalculator {
 
@@ -23,7 +26,7 @@ public class RpnCalculator {
      * @throws ArithmeticException ゼロ除算の場合
      */
     public static BigDecimal evaluate(String expression) {
-        Stack<BigDecimal> stack = new Stack<>();
+        Deque<BigDecimal> stack = new ArrayDeque<>();
         String[] tokens = expression.split("\\s+");
         for (String token : tokens) {
             if (isOperator(token)) {
@@ -50,7 +53,7 @@ public class RpnCalculator {
         }
     }
 
-    private static BigDecimal popOperand(Stack<BigDecimal> stack) {
+    private static BigDecimal popOperand(Deque<BigDecimal> stack) {
         if (stack.isEmpty()) {
             throw new RpnCalculatorException("オペランドが不足しています");
         }
@@ -58,7 +61,8 @@ public class RpnCalculator {
     }
 
     private static boolean isOperator(String token) {
-        return token.equals("+") || token.equals("-") || token.equals("*") || token.equals("/");
+        return token.equals("+") || token.equals("-") || token.equals("*") || token.equals("/")
+                || token.equals("^");
     }
 
     private static BigDecimal applyOperator(String operator, BigDecimal a, BigDecimal b) {
@@ -67,7 +71,27 @@ public class RpnCalculator {
             case "-" -> a.subtract(b);
             case "*" -> a.multiply(b);
             case "/" -> a.divide(b, DIVISION_SCALE, RoundingMode.HALF_UP);
+            case "^" -> a.pow(toNonNegativeExponent(b));
             default -> throw new IllegalStateException("未対応の演算子です: " + operator);
         };
+    }
+
+    /**
+     * べき乗演算子("^")の指数として使える0以上の整数に変換する。
+     * @param exponent スタックから取り出した指数(2番目の値)
+     * @return 0以上の整数の指数
+     * @throws RpnCalculatorException 整数でない、または負の値の場合
+     */
+    private static int toNonNegativeExponent(BigDecimal exponent) {
+        int value;
+        try {
+            value = exponent.intValueExact();
+        } catch (ArithmeticException e) {
+            throw new RpnCalculatorException("べき乗の指数は整数で指定してください: " + exponent);
+        }
+        if (value < 0) {
+            throw new RpnCalculatorException("べき乗の指数は0以上の整数で指定してください: " + exponent);
+        }
+        return value;
     }
 }
