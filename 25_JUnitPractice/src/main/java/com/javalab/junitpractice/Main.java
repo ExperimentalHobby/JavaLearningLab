@@ -22,7 +22,8 @@ public class Main {
      * @param out 結果出力先
      */
     static void run(Scanner scanner, PrintStream out) {
-        OrderNotificationService service = new OrderNotificationService(new ConsoleEmailSender(out));
+        OrderNotificationService service =
+                new OrderNotificationService(new ConsoleEmailSender(out), new RegexEmailValidator());
         AtomicLong nextId = new AtomicLong(1);
         out.println("単体テスト練習(注文通知デモ)。コマンド: order <メールアドレス> <金額> / exit");
         while (scanner.hasNextLine()) {
@@ -37,14 +38,29 @@ public class Main {
                     case "exit" -> {
                         return;
                     }
-                    case "order" -> {
-                        Order order = new Order(nextId.getAndIncrement(), parts[1], new BigDecimal(parts[2]));
-                        service.notifyOrderConfirmed(order);
-                    }
+                    case "order" -> handleOrder(service, nextId, parts, out);
                     default -> out.println("不明なコマンドです: " + line);
                 }
             } catch (RuntimeException e) {
                 out.println("エラー: " + e.getMessage());
+            }
+        }
+    }
+
+    private static void handleOrder(OrderNotificationService service, AtomicLong nextId, String[] parts, PrintStream out) {
+        if (parts.length != 3) {
+            throw new IllegalArgumentException("使用方法: order <メールアドレス> <金額>");
+        }
+        Order order = new Order(nextId.getAndIncrement(), parts[1], new BigDecimal(parts[2]));
+        NotificationOutcome outcome = service.notifyOrderConfirmed(order);
+        // 修正前はスキップ時に何も表示されず、利用者には「何も起きなかった」ようにしか見えなかった。
+        switch (outcome) {
+            case SKIPPED_NON_POSITIVE_TOTAL ->
+                    out.println("注文番号" + order.id() + "は合計金額が0円以下のため送信をスキップしました");
+            case SKIPPED_INVALID_EMAIL ->
+                    out.println("注文番号" + order.id() + "はメールアドレスの形式が不正なため送信をスキップしました");
+            case SENT -> {
+                // ConsoleEmailSenderが送信内容を出力済みのため、ここでは追加表示不要。
             }
         }
     }
