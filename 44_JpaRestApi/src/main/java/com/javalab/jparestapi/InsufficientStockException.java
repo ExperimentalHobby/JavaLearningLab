@@ -1,13 +1,12 @@
 package com.javalab.jparestapi;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
-
-/** 注文数量が在庫を上回る場合にスローする非チェック例外。 */
-@ResponseStatus(HttpStatus.CONFLICT)
+/**
+ * 注文数量が在庫を上回る場合にスローする非チェック例外。
+ * レスポンスへの変換(409・メッセージ)は{@link GlobalExceptionHandler}が行う。
+ */
 public class InsufficientStockException extends RuntimeException {
 
     public InsufficientStockException(Long productId) {
-        super("insufficient stock: productId=" + productId);
+        super("在庫が不足しています: 商品ID=" + productId);
     }
 }

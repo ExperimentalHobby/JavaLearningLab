@@ -11,7 +11,7 @@ Spring Data JPA、レイヤードアーキテクチャ(Controller→Service→Re
 - `GET /api/products/{id}` — 単一商品取得(存在しなければ404)
 - `PUT /api/products/{id}` — 商品の名前・価格・在庫を更新
 - `DELETE /api/products/{id}` — 商品削除(204、存在しなければ404)
-- `POST /api/orders` — 複数商品の在庫を一括で引き当てる注文API(在庫不足があれば409)
+- `POST /api/orders` — 複数商品の在庫を一括で引き当てる注文API(在庫不足があれば409、成功時は引き当て後の商品一覧を返す)
 
 ## 実装メモ
 - 20_SpringBootApiIntro(REST APIだがインメモリ)と27_JpaHibernateApp(JPA永続化だがコンソールアプリ)は別々に練習していたため、本課題で「DBに永続化するWeb APIサーバー」を一本通しで実践した。
@@ -80,10 +80,20 @@ VSCode(Eclipse JDT)のnull解析で、`ProductService`の`findAll`/`delete`/`fin
 - 一方`ProductService`側の引数(`id`/`pageable`)や`findProductOrThrow`の戻り値にはnull許容性の注釈が無いため、この不一致が誤検知の原因だった
 - `id`/戻り値に`@NonNull`を波及させると、その呼び出し元(`findById`/`update`/`delete`/`fulfillOrder`)にも同様の注釈が必要になりクラス全体に変更が広がるため、影響範囲を抑えて該当3メソッドに`@SuppressWarnings("null")`を付与する方針にした
 
+### コードレビュー指摘への対応(Issue #176)
+- **在庫の引き当てに競合対策がなかった問題**: 「在庫を読む→判定する→減算する」がread-then-writeの競合状態になっており、同じ商品への同時引き当てで超過販売(在庫がマイナスになる、または両方成功してしまう)が起きることを、2スレッドが同時に同じ商品を引き当てるテスト(`OrderFulfillmentTest#fulfillOrder_concurrentRequestsForSameProduct_neverOversellsStock`)で実際に再現してから修正した。`ProductRepository.findByIdForUpdate`(`@Lock(LockModeType.PESSIMISTIC_WRITE)`)を追加し、`fulfillOrder`内で使用するようにした。楽観ロック(`@Version`)は「競合を検出して失敗させる」方式で呼び出し側にリトライ実装が必要になるのに対し、悲観ロックは「実際に安全に処理する」方式のため、超過販売を確実に防ぎたい在庫管理のユースケースにはこちらを選んだ。
+- **`OrderLine.quantity`が負でも通る問題 + `productId`がnullで500になる問題**: `ProductService.fulfillOrder`内で明示的に検証するようにした(商品IDがnull、数量が0以下ならエラー)。`List<OrderLine>`を直接`@RequestBody`にした場合、`@Valid`を付けても要素までは検証されない(`List<@Valid OrderLine>`のようにラップするDTOのフィールドに書いた場合のみカスケードされる)ため、Bean Validationではなく手動検証を選んだ。
+- **リクエストDTOにBean Validationがなかった問題**: `ProductRequest`に`@NotBlank`(name)・`@PositiveOrZero`(price, stock)を付与し、`spring-boot-starter-validation`を追加した。
+- **`@Transactional`がクラスレベルのみだった問題**: `findAll`/`findById`に`@Transactional(readOnly = true)`を追加した。
+- **`@RestControllerAdvice`がなくエラーレスポンスが英語・Spring既定形式だった問題**: `GlobalExceptionHandler`を新設し、`ProductNotFoundException`(404)/`InsufficientStockException`(409)/Bean Validation・手動検証エラー(400)を日本語メッセージのJSON(`ErrorResponse`/`FieldErrorResponse`)で返すようにした。あわせて例外メッセージ自体も日本語化した。
+- **`OrderController.fulfill`がvoidで200のみだった問題**: `ProductService.fulfillOrder`の戻り値を`List<ProductResponse>`(引き当て後の商品一覧)に変更し、そのまま返すようにした。
+- **学習テーマ「Flyway/Liquibaseによるスキーマバージョン管理」への対応**: 作業環境にDockerが無く`ProductRepositoryPostgresTest`(Testcontainers)がそもそも実行できないため、Flyway導入後にH2/PostgreSQL両方への影響を検証する手段がなく、リスクを検証しきれないため見送った。将来Docker環境が整った時点で改めて対応する。
+- **副次的に発見・修正した問題**: `GlobalExceptionHandler`(`@RestControllerAdvice`)を追加したところ、`/v3/api-docs`が500エラーになった。springdoc-openapi 2.6.0がSpring Framework 6.2系の`ControllerAdviceBean`コンストラクタ変更と非互換で、`@RestControllerAdvice`Beanが存在するとスキャン時に`NoSuchMethodError`になることが原因だった。springdoc-openapiを2.9.1に更新して解決した(この問題は今回`@RestControllerAdvice`を初めて追加したことで顕在化したものであり、既存の指摘事項とは独立した副産物)。
+
 ## テスト
 ```bash
 cd 44_JpaRestApi
-mvn test
+mvn test       # 34件パス(Postgresテストコンテナを除く。Docker未導入のためこの環境では実行不可)
 ```
 
 ## ステータス

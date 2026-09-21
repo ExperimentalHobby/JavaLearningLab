@@ -35,15 +35,24 @@
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
       <scope>runtime</scope>
     </dependency>
-    <!-- Spring Bootの依存関係管理に含まれないため、バージョンを明示指定する -->
+    <!--
+      Spring Bootの依存関係管理に含まれないため、バージョンを明示指定する。
+      2.6.0はSpring Framework 6.2系(Spring Boot 3.5.3が使用)の
+      ControllerAdviceBeanコンストラクタ変更と非互換で、@RestControllerAdviceが
+      存在すると/v3/api-docsが500になる問題があったため2.9.1へ更新した(Issue #176での発見)。
+    -->
     <dependency>
       <groupId>org.springdoc</groupId>
       <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-      <version>2.6.0</version>
+      <version>2.9.1</version>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
