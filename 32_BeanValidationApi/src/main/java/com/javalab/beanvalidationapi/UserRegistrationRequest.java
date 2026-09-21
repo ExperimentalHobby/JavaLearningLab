@@ -13,8 +13,8 @@ import jakarta.validation.constraints.NotNull;
  * @param age 年齢。0〜150の範囲であること
  */
 public record UserRegistrationRequest(
-        @NotBlank(message = "name must not be blank") String name,
-        @NotBlank(message = "email must not be blank") @Email(message = "email must be a valid email address") String email,
-        @NotNull(message = "age must not be null") @Min(value = 0, message = "age must be >= 0") @Max(value = 150, message = "age must be <= 150") Integer age
+        @NotBlank(message = "{user.name.notBlank}") String name,
+        @NotBlank(message = "{user.email.notBlank}") @Email(message = "{user.email.invalid}") @UniqueEmail String email,
+        @NotNull(message = "{user.age.notNull}") @Min(value = 0, message = "{user.age.min}") @Max(value = 150, message = "{user.age.max}") Integer age
 ) {
 }

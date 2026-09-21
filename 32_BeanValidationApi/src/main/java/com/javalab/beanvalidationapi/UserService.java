@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -14,7 +14,9 @@ import java.util.concurrent.atomic.AtomicLong;
 @Service
 public class UserService {
 
-    private final Map<Long, User> users = new ConcurrentHashMap<>();
+    // ConcurrentHashMapは反復順序を保証しないため、IDの昇順を保証するConcurrentSkipListMapを使う
+    // (IDは単調増加のため、キー昇順=登録順になる)。
+    private final Map<Long, User> users = new ConcurrentSkipListMap<>();
     private final AtomicLong nextId = new AtomicLong(1);
 
     public User register(UserRegistrationRequest request) {
@@ -34,5 +36,9 @@ public class UserService {
             throw new UserNotFoundException(id);
         }
         return user;
+    }
+
+    public boolean existsByEmail(String email) {
+        return users.values().stream().anyMatch(u -> u.email().equals(email));
     }
 }
