@@ -44,6 +44,47 @@ class MainTest {
     }
 
     @Test
+    void rectangleCommandShowsErrorForNegativeDimensionAndDoesNotAffectTotalArea() {
+        // "rectangle -4 5"は不正な寸法。以前は検証がなく面積-20.0の図形が登録され
+        // 合計面積に反映されてしまっていた。エラー表示のみで登録されないことを確認する。
+        Scanner scanner = new Scanner(new StringReader("rectangle -4 5\nrectangle 4 5\nlist\nexit\n"));
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(outContent, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out);
+
+        String output = outContent.toString(StandardCharsets.UTF_8);
+        assertTrue(output.contains("エラー"));
+        assertTrue(output.contains("合計面積=20.00"));
+    }
+
+    @Test
+    void removeCommandDeletesShapeAtIndexAndUpdatesTotalArea() {
+        // 「listから個別の図形を参照・削除できない」という指摘への対応。
+        // removeで1件削除すると、以降のlistの合計面積から除外されることを確認する。
+        Scanner scanner = new Scanner(new StringReader("circle 5\nrectangle 4 5\nremove 0\nlist\nexit\n"));
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(outContent, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out);
+
+        String output = outContent.toString(StandardCharsets.UTF_8);
+        assertTrue(output.contains("合計面積=20.00"));
+    }
+
+    @Test
+    void removeCommandShowsErrorForInvalidIndexAndContinues() {
+        Scanner scanner = new Scanner(new StringReader("remove 0\ncircle 5\nexit\n"));
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(outContent, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out);
+
+        String output = outContent.toString(StandardCharsets.UTF_8);
+        assertTrue(output.contains("エラー"));
+    }
+
+    @Test
     void triangleCommandAddsShapeReflectedInListTotalArea() {
         // 3-4-5の直角三角形(面積6.00)を登録し、listの合計面積に反映されることを確認する。
         Scanner scanner = new Scanner(new StringReader("triangle 3 4 5\nlist\nexit\n"));

@@ -1,5 +1,7 @@
 package com.javalab.shapes;
 
+import java.util.Objects;
+
 /**
  * 三角形。3辺の長さから面積(ヘロンの公式)・周囲長を計算する。
  */
@@ -40,5 +42,28 @@ public class Triangle extends Shape {
     @Override
     public String getName() {
         return "三角形";
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof Triangle other)) {
+            return false;
+        }
+        return Double.compare(sideA, other.sideA) == 0
+                && Double.compare(sideB, other.sideB) == 0
+                && Double.compare(sideC, other.sideC) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(sideA, sideB, sideC);
+    }
+
+    @Override
+    public String toString() {
+        return "Triangle{sideA=" + sideA + ", sideB=" + sideB + ", sideC=" + sideC + "}";
     }
 }

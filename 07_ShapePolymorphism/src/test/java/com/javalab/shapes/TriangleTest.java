@@ -33,4 +33,25 @@ class TriangleTest {
         // コンストラクタでこの検証が行われ、ShapeExceptionがスローされることを確認する。
         assertThrows(ShapeException.class, () -> new Triangle(1, 1, 10));
     }
+
+    @Test
+    void equalsAndHashCodeAreBasedOnSideLengths() {
+        Triangle triangle1 = new Triangle(3, 4, 5);
+        Triangle triangle2 = new Triangle(3, 4, 5);
+        Triangle differentTriangle = new Triangle(5, 5, 5);
+
+        assertEquals(triangle1, triangle2);
+        assertEquals(triangle1.hashCode(), triangle2.hashCode());
+        org.junit.jupiter.api.Assertions.assertNotEquals(triangle1, differentTriangle);
+    }
+
+    @Test
+    void toStringContainsSideLengths() {
+        Triangle triangle = new Triangle(3, 4, 5);
+
+        String text = triangle.toString();
+        org.junit.jupiter.api.Assertions.assertTrue(text.contains("3"));
+        org.junit.jupiter.api.Assertions.assertTrue(text.contains("4"));
+        org.junit.jupiter.api.Assertions.assertTrue(text.contains("5"));
+    }
 }

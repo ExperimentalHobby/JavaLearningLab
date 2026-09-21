@@ -1,8 +1,8 @@
 package com.javalab.shapes;
 
 /**
- * 面積・周囲長を計算できることを表す契約。図形以外の「測定可能な」概念にも適用できるよう、
- * {@link Shape}(抽象クラス)とは分離したinterfaceとして定義している。
+ * 面積・周囲長を計算できることを表す契約。将来、図形以外の「測定可能な」概念にも
+ * 適用できるようinterfaceとして分離しているが、現時点の実装は{@link Shape}のみ。
  */
 public interface Measurable {
 

@@ -1,5 +1,7 @@
 package com.javalab.shapes;
 
+import java.util.Objects;
+
 /**
  * 円。半径から面積・周囲長を計算する。
  */
@@ -31,5 +33,26 @@ public class Circle extends Shape {
     @Override
     public String getName() {
         return "円";
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof Circle other)) {
+            return false;
+        }
+        return Double.compare(radius, other.radius) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(radius);
+    }
+
+    @Override
+    public String toString() {
+        return "Circle{radius=" + radius + "}";
     }
 }

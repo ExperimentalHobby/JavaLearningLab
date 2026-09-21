@@ -25,7 +25,7 @@ public class Main {
     static void run(Scanner scanner, PrintStream out) {
         List<Shape> shapes = new ArrayList<>();
 
-        out.println("図形計算ツールへようこそ。コマンド: circle <半径> / rectangle <幅> <高さ> / triangle <a> <b> <c> / list / exit");
+        out.println("図形計算ツールへようこそ。コマンド: circle <半径> / rectangle <幅> <高さ> / triangle <a> <b> <c> / list / remove <番号> / exit");
 
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine().trim();
@@ -60,6 +60,8 @@ public class Main {
     private static void handleCommand(List<Shape> shapes, String line, PrintStream out) {
         if (line.equals("list")) {
             printShapes(shapes, out);
+        } else if (line.startsWith("remove ")) {
+            removeShape(shapes, line.substring(7).trim());
         } else if (line.startsWith("circle ")) {
             double radius = Double.parseDouble(line.substring(7).trim());
             shapes.add(new Circle(radius));
@@ -79,6 +81,21 @@ public class Main {
         } else {
             throw new IllegalArgumentException("不明なコマンドです: " + line);
         }
+    }
+
+    /**
+     * 指定インデックスの図形を削除する。
+     * @param shapes 登録済みの図形一覧
+     * @param indexText 削除対象のインデックス(0始まり、{@code list}表示の番号に対応)
+     * @throws NumberFormatException indexTextが数値として解析できない場合
+     * @throws IllegalArgumentException indexTextが範囲外の場合
+     */
+    private static void removeShape(List<Shape> shapes, String indexText) {
+        int index = Integer.parseInt(indexText);
+        if (index < 0 || index >= shapes.size()) {
+            throw new IllegalArgumentException("不正な図形番号です: " + index);
+        }
+        shapes.remove(index);
     }
 
     private static void printShapes(List<Shape> shapes, PrintStream out) {
