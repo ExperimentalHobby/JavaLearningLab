@@ -36,7 +36,7 @@ class ProductServiceTest {
     void findById_unknownId_throwsProductNotFoundException() {
         ProductNotFoundException ex = assertThrows(ProductNotFoundException.class, () -> productService.findById(999L));
 
-        assertEquals("product not found: id=999", ex.getMessage());
+        assertEquals("該当する商品が見つかりません: id=999", ex.getMessage());
     }
 
     @Test

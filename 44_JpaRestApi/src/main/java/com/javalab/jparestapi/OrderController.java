@@ -19,9 +19,9 @@ public class OrderController {
         this.productService = productService;
     }
 
-    @Operation(summary = "複数商品の在庫を一括で引き当てる", description = "在庫不足の商品があれば409を返し、全ての引き当てがロールバックされる")
+    @Operation(summary = "複数商品の在庫を一括で引き当てる", description = "在庫不足の商品があれば409を返し、全ての引き当てがロールバックされる。成功時は引き当て後の商品一覧を返す")
     @PostMapping
-    public void fulfill(@RequestBody List<OrderLine> lines) {
-        productService.fulfillOrder(lines);
+    public List<ProductResponse> fulfill(@RequestBody List<OrderLine> lines) {
+        return productService.fulfillOrder(lines);
     }
 }
