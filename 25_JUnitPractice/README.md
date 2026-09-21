@@ -14,6 +14,23 @@ TDD、Mockitoを使ったモックテスト
 - Mockitoの内部実装(バイトコード生成)がJDK 25の動的エージェント読み込みに関する警告を出すが、これはMockito自体がJDKの将来的な制限に向けて対応中の既知の警告であり、テスト結果やビルドには影響しない。
 - `Main`は01〜24と同じ設計パターンで、`order`コマンドの結果表示、および不正なコマンド入力時にエラー表示してループを継続する動作を結合テストで検証した(この結合テストは`ConsoleEmailSender`の実出力を検証するものであり、モックではなく実際の標準出力ストリームを使っている)。
 
+### コードレビュー指摘への対応(Issue #159)
+このフォルダは「単体テスト練習(JUnit)」自体が主目的のため、指摘のうちJUnit/Mockitoの機能デモ拡充(学習テーマ)を中心に対応した。
+
+**🟡 改善**
+- **合計0円以下の注文が黙ってスキップされる問題**: `notifyOrderConfirmed`の戻り値を`void`から`NotificationOutcome`(`SENT`/`SKIPPED_NON_POSITIVE_TOTAL`/`SKIPPED_INVALID_EMAIL`)に変更し、`Main`がスキップ理由を表示するようにした。
+- **`notifyOrders`が1件失敗で例外伝播する問題**: `BatchNotificationResult`(送信数・スキップ数・失敗一覧)を返す設計にし、1件の失敗が他の送信を妨げないようにした。
+- **メールアドレスの形式検証がない問題**: `EmailValidator`インターフェース(`RegexEmailValidator`実装)を追加し、`EmailSender`と同じDIパターンでコンストラクタ注入した。
+- **`order`コマンドの引数不足で英語の内部例外が表示される問題**: 引数個数を事前検証し「使用方法: order <メールアドレス> <金額>」と表示するようにした。
+
+**🔵 学習テーマ(JUnit/Mockitoの機能デモ拡充)**
+- `OrderNotificationServiceTest`を`@Nested`(正常系/スキップ系/異常系/バッチ処理/条件付き実行)で構造化し、`@DisplayName`で日本語のテスト名を付けた。
+- `@ParameterizedTest`を`@CsvSource`(合計金額パターン→結果)・`@ValueSource`(不正メール形式、`RegexEmailValidatorTest`)・`@MethodSource`(正常メール形式、同)でそれぞれ実践した。
+- `assertAll`でバッチ結果や複数の検証項目をまとめて検証し、`assertThrows`の戻り値(実際の例外インスタンス)でメッセージと原因(cause)の両方を検証した。
+- `@BeforeAll`/`@BeforeEach`/`@AfterEach`のライフサイクルを実装した。`@BeforeEach`でのデフォルトスタブ(`emailValidator.isValid()`)は全テストで使われるわけではないため、Mockitoの厳格スタブ検証に引っかからないよう`lenient()`を付けた。
+- `@Disabled`(未実装の既知の制約を明示)・`@Tag`(`mockito`/`integration`でテストを分類)・`Assumptions.assumeTrue`(システムプロパティによる条件付き実行の例)を実践した。
+- Mockitoは`ArgumentCaptor`(引数の内容を捕捉して検証)・`when().thenReturn()`(`EmailValidator`のスタブ)・`@InjectMocks`(モックの自動注入)・`InOrder`(複数注文の送信順序の検証)を新たに実践した。
+
 ## ステータス
 - [ ] 未着手
 - [ ] 実装中
