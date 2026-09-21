@@ -1,6 +1,8 @@
 package com.javalab.gameoflife;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -25,11 +27,14 @@ public class LifeFrame extends JFrame {
     private static final int COLS = 40;
     private static final int CELL_SIZE = 16;
     private static final int TIMER_DELAY_MS = 150;
+    private static final String[] SPEED_LABELS = {"遅い", "普通", "速い"};
+    private static final int[] SPEED_DELAYS_MS = {300, 150, 50};
 
     private final LifeBoardState state = new LifeBoardState(COLS, ROWS, new GameOfLife(), new Random());
     private final JPanel canvas;
     private final Timer timer;
     private final JLabel generationLabel = new JLabel("世代: 0");
+    private final JLabel statusLabel = new JLabel();
 
     public LifeFrame() {
         super("ライフゲーム");
@@ -64,27 +69,45 @@ public class LifeFrame extends JFrame {
 
     private JPanel buildControlPanel() {
         JButton startButton = new JButton("開始");
-        startButton.addActionListener(e -> timer.start());
+        startButton.addActionListener(e -> {
+            state.setRunning(true);
+            timer.start();
+        });
 
         JButton stopButton = new JButton("停止");
-        stopButton.addActionListener(e -> timer.stop());
+        stopButton.addActionListener(e -> stopAnimation());
 
         JButton stepButton = new JButton("1世代進める");
         stepButton.addActionListener(e -> step());
 
         JButton clearButton = new JButton("クリア");
         clearButton.addActionListener(e -> {
-            timer.stop();
+            stopAnimation();
             state.clear();
             refreshView();
         });
 
         JButton randomButton = new JButton("ランダム生成");
         randomButton.addActionListener(e -> {
-            timer.stop();
+            stopAnimation();
             state.randomize();
             refreshView();
         });
+
+        JComboBox<Preset> presetBox = new JComboBox<>(Preset.values());
+        JButton presetButton = new JButton("プリセット配置");
+        presetButton.addActionListener(e -> {
+            stopAnimation();
+            state.loadPreset((Preset) presetBox.getSelectedItem());
+            refreshView();
+        });
+
+        JComboBox<String> speedBox = new JComboBox<>(SPEED_LABELS);
+        speedBox.setSelectedIndex(1);
+        speedBox.addActionListener(e -> timer.setDelay(SPEED_DELAYS_MS[speedBox.getSelectedIndex()]));
+
+        JCheckBox torusCheckBox = new JCheckBox("トーラスモード");
+        torusCheckBox.addActionListener(e -> state.setTorusMode(torusCheckBox.isSelected()));
 
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         panel.add(startButton);
@@ -92,8 +115,18 @@ public class LifeFrame extends JFrame {
         panel.add(stepButton);
         panel.add(clearButton);
         panel.add(randomButton);
+        panel.add(presetBox);
+        panel.add(presetButton);
+        panel.add(speedBox);
+        panel.add(torusCheckBox);
         panel.add(generationLabel);
+        panel.add(statusLabel);
         return panel;
+    }
+
+    private void stopAnimation() {
+        timer.stop();
+        state.setRunning(false);
     }
 
     private void onCellClicked(int x, int y) {
@@ -107,6 +140,10 @@ public class LifeFrame extends JFrame {
 
     private void step() {
         state.step();
+        if (state.isStable()) {
+            stopAnimation();
+            statusLabel.setText("安定状態のため停止しました");
+        }
         refreshView();
     }
 
@@ -116,6 +153,9 @@ public class LifeFrame extends JFrame {
      */
     private void refreshView() {
         generationLabel.setText("世代: " + state.generation());
+        if (!state.isStable()) {
+            statusLabel.setText("");
+        }
         canvas.repaint();
     }
 

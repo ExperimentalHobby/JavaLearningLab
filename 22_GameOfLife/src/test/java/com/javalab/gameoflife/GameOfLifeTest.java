@@ -68,6 +68,21 @@ class GameOfLifeTest {
     }
 
     @Test
+    void nextGenerationWithWrapAroundCountsNeighborsAcrossOppositeEdges() {
+        // トーラスモードでは盤面の端が反対側と繋がっているとみなす。
+        // (0,0)は非トーラスでは隣接生存マス0(過疎で死滅)だが、
+        // トーラスでは(2,0)・(0,2)経由で2つの隣接生存マスとなり生存継続する。
+        Grid grid = new Grid(3, 3);
+        grid.setAlive(0, 0, true);
+        grid.setAlive(0, 2, true);
+        grid.setAlive(2, 0, true);
+
+        Grid next = gameOfLife.nextGeneration(grid, true);
+
+        assertTrue(next.isAlive(0, 0));
+    }
+
+    @Test
     void blinkerRotatesNinetyDegreesAfterOneGeneration() {
         // 「ブリンカー」: 3マスの水平な直線は1世代で垂直な直線に回転する既知の周期パターン。
         Grid grid = new Grid(3, 3);
