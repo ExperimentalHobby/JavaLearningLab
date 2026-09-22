@@ -3,6 +3,7 @@ package com.javalab.loggingtool;
 import ch.qos.logback.classic.Level;
 
 import java.io.PrintStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -49,13 +50,18 @@ public class Main {
                     case "summary" -> handleSummary(summarizer, parts, out);
                     default -> out.println("不明なコマンドです: " + line);
                 }
-            } catch (RuntimeException e) {
+            } catch (IllegalArgumentException | UncheckedIOException e) {
+                // IllegalArgumentExceptionは引数検証・不正なログレベル、
+                // UncheckedIOExceptionはsummaryコマンドのログファイル読み込み失敗から送出される。
                 out.println("エラー: " + e.getMessage());
             }
         }
     }
 
     private static void handleRun(BatchJobRunner jobRunner, String[] parts, PrintStream out) {
+        if (parts.length < 2) {
+            throw new IllegalArgumentException("使用方法: run <job1,job2,...>");
+        }
         List<String> jobNames = List.of(parts[1].split(","));
         BatchResult result = jobRunner.run(jobNames);
         out.println("成功=" + result.succeeded() + " 失敗=" + result.failed() + " スキップ=" + result.skipped());
