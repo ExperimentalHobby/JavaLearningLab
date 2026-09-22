@@ -35,10 +35,12 @@ class SecureControllerTest {
     }
 
     @Test
-    void hello_withoutAuthorizationHeader_returns401() {
+    void hello_withoutAuthorizationHeader_returns401WithJapaneseMessageBody() {
+        // 修正前はresponse.sendError(401)でボディが空だった。
         ResponseEntity<String> response = restTemplate.getForEntity("/api/secure/hello", String.class);
 
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals("{\"message\":\"認証が必要です\"}", response.getBody());
     }
 
     @Test

@@ -35,4 +35,18 @@ class JwtServiceTest {
 
         assertThrows(JwtException.class, () -> jwtService.extractUsername("not-a-valid-token"));
     }
+
+    @Test
+    void tokensSignedWithSameConfiguredSecret_canBeVerifiedAcrossInstances() {
+        // 署名鍵がインスタンス生成のたびにランダム生成されると、別インスタンス(=アプリ再起動)で
+        // 発行済みトークンが検証できなくなる。設定(Base64文字列)から鍵を注入できれば、
+        // 別インスタンスでも同じ鍵で検証できるはず。
+        String base64Secret = "ZGVtby1zZWNyZXQta2V5LWZvci1qd3Qtc2lnbmluZy1kby1ub3QtdXNlLWluLXByb2Q="; // gitleaks:allow (デモ用ダミー値、実際の秘密情報ではない)
+        JwtService issuer = new JwtService(base64Secret, Duration.ofMinutes(30));
+        JwtService verifier = new JwtService(base64Secret, Duration.ofMinutes(30));
+
+        String token = issuer.generateToken("alice");
+
+        assertEquals("alice", verifier.extractUsername(token));
+    }
 }

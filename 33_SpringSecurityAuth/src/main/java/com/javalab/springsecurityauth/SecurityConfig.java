@@ -1,9 +1,11 @@
 package com.javalab.springsecurityauth;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -18,8 +20,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 /**
  * JWT認証を組み込んだstatelessなAPI向けのSpring Security設定。
  * デモ用にユーザーストアはインメモリの1件のみとしている。
+ * {@code @EnableMethodSecurity}で{@code @PreAuthorize}によるメソッドレベル認可を有効化する。
  */
 @Configuration
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
@@ -28,10 +32,13 @@ public class SecurityConfig {
     }
 
     @Bean
-    public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
+    public UserDetailsService userDetailsService(
+            PasswordEncoder passwordEncoder,
+            @Value("${app.demo-user.username}") String demoUsername,
+            @Value("${app.demo-user.password}") String demoPassword) {
         return new InMemoryUserDetailsManager(
-                User.withUsername("alice")
-                        .password(passwordEncoder.encode("password"))
+                User.withUsername(demoUsername)
+                        .password(passwordEncoder.encode(demoPassword))
                         .roles("USER")
                         .build());
     }
@@ -49,7 +56,8 @@ public class SecurityConfig {
     // @NonNullApiのAbstractHttpConfigurerとの不一致で誤検知される警告を抑制する。
     @SuppressWarnings("null")
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtService jwtService) throws Exception {
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http, JwtService jwtService, UserDetailsService userDetailsService) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -57,8 +65,17 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(
-                        (request, response, _) -> response.sendError(401)))
-                .addFilterBefore(new JwtAuthenticationFilter(jwtService), UsernamePasswordAuthenticationFilter.class);
+                        (request, response, _) -> {
+                            // 修正前はresponse.sendError(401)でボディが空だった。
+                            // GlobalExceptionHandlerと形式(ErrorResponse相当のJSON)を揃えている。
+                            response.setStatus(401);
+                            response.setContentType("application/json");
+                            response.setCharacterEncoding("UTF-8");
+                            response.getWriter().write("{\"message\":\"認証が必要です\"}");
+                        }))
+                .addFilterBefore(
+                        new JwtAuthenticationFilter(jwtService, userDetailsService),
+                        UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
