@@ -42,6 +42,6 @@ class UserServiceTest {
 
         UserNotFoundException ex = assertThrows(UserNotFoundException.class, () -> service.findById(999L));
 
-        assertEquals("user not found: id=999", ex.getMessage());
+        assertEquals("該当するユーザーが見つかりません: id=999", ex.getMessage());
     }
 }
