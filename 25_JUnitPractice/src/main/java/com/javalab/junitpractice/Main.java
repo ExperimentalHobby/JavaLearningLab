@@ -41,7 +41,9 @@ public class Main {
                     case "order" -> handleOrder(service, nextId, parts, out);
                     default -> out.println("不明なコマンドです: " + line);
                 }
-            } catch (RuntimeException e) {
+            } catch (IllegalArgumentException | OrderNotificationException e) {
+                // IllegalArgumentExceptionは引数検証・BigDecimalの数値変換失敗、
+                // OrderNotificationExceptionはメール送信失敗から送出される。
                 out.println("エラー: " + e.getMessage());
             }
         }

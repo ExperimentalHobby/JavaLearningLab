@@ -83,6 +83,32 @@ class MainTest {
     }
 
     @Test
+    void runWeatherCommandWithoutArgumentShowsJapaneseUsageMessageAndContinues() {
+        // 修正前はparts[1]への無検証な添字アクセスでArrayIndexOutOfBoundsExceptionが発生し、
+        // catch (RuntimeException)経由で英語の内部例外メッセージがそのまま表示されていた。
+        String result = runCommands("weather\nlog 継続確認\nexit\n");
+
+        assertTrue(result.contains("エラー: 使い方: weather <温度> / weather unsubscribe"));
+        assertTrue(result.contains("ログに記録しました: 継続確認"));
+    }
+
+    @Test
+    void runShapeCommandWithoutTypeArgumentShowsJapaneseUsageMessageAndContinues() {
+        String result = runCommands("shape\nlog 継続確認\nexit\n");
+
+        assertTrue(result.contains("エラー: 使い方: shape <circle|rectangle> <params...>"));
+        assertTrue(result.contains("ログに記録しました: 継続確認"));
+    }
+
+    @Test
+    void runPayCommandWithoutAmountArgumentShowsJapaneseUsageMessageAndContinues() {
+        String result = runCommands("pay creditcard\nlog 継続確認\nexit\n");
+
+        assertTrue(result.contains("エラー: 使い方: pay <creditcard|paypal> <金額> [割引率]"));
+        assertTrue(result.contains("ログに記録しました: 継続確認"));
+    }
+
+    @Test
     void runShowsErrorAndContinuesForUnknownCommand() {
         Scanner scanner = new Scanner("foobar\nlog 継続確認\nexit\n");
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();

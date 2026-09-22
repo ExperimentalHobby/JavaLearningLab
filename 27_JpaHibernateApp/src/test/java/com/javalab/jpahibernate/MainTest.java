@@ -154,4 +154,42 @@ class MainTest {
         assertTrue(result.contains("該当する商品が見つかりません: id=999"));
         assertFalse(result.contains("削除しました"));
     }
+
+    @Test
+    void runShowsClearErrorForFindCommandWithMissingArguments() {
+        // 修正前はparts[1]でArrayIndexOutOfBoundsExceptionとなり、英語の内部例外メッセージが
+        // 表示されていた。
+        Scanner scanner = new Scanner("find\nexit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out, repository);
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains("使用方法: find <id>"));
+    }
+
+    @Test
+    void runShowsClearErrorForUpdateCommandWithMissingArguments() {
+        Scanner scanner = new Scanner("add ノート 150 100\nupdate 1 200\nexit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out, repository);
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains("使用方法: update <id> <価格> <在庫数>"));
+    }
+
+    @Test
+    void runShowsClearErrorForDeleteCommandWithMissingArguments() {
+        Scanner scanner = new Scanner("delete\nexit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out, repository);
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains("使用方法: delete <id>"));
+    }
 }

@@ -66,7 +66,9 @@ public class Main {
                     case "pay" -> handlePay(checkout, parts, out);
                     default -> out.println("不明なコマンドです: " + line);
                 }
-            } catch (RuntimeException e) {
+            } catch (IllegalArgumentException e) {
+                // NumberFormatExceptionはIllegalArgumentExceptionのサブクラスなので、
+                // ここで数値変換の失敗もまとめて捕捉できる。
                 out.println("エラー: " + e.getMessage());
             }
         }
@@ -79,7 +81,10 @@ public class Main {
     }
 
     private static void handleWeather(WeatherStation weatherStation, WeatherObserver consoleObserver, String[] parts) {
-        if (parts.length >= 2 && parts[1].equals("unsubscribe")) {
+        if (parts.length < 2) {
+            throw new IllegalArgumentException("使い方: weather <温度> / weather unsubscribe");
+        }
+        if (parts[1].equals("unsubscribe")) {
             weatherStation.unsubscribe(consoleObserver);
             return;
         }
@@ -96,6 +101,9 @@ public class Main {
     }
 
     private static void handleShape(ShapeFactory shapeFactory, String[] parts, PrintStream out) {
+        if (parts.length < 2) {
+            throw new IllegalArgumentException("使い方: shape <circle|rectangle> <params...>");
+        }
         double[] params = new double[parts.length - 2];
         for (int i = 2; i < parts.length; i++) {
             params[i - 2] = Double.parseDouble(parts[i]);
@@ -105,6 +113,9 @@ public class Main {
     }
 
     private static void handlePay(Checkout checkout, String[] parts, PrintStream out) {
+        if (parts.length < 3) {
+            throw new IllegalArgumentException("使い方: pay <creditcard|paypal> <金額> [割引率]");
+        }
         PaymentStrategy strategy = switch (parts[1]) {
             case "creditcard" -> new CreditCardPayment();
             case "paypal" -> new PayPalPayment();

@@ -59,7 +59,9 @@ public class Main {
                     case "cheapest" -> handleCheapest(service, fetchers, parts, out);
                     default -> out.println("不明なコマンドです: " + line);
                 }
-            } catch (RuntimeException e) {
+            } catch (IllegalArgumentException | CompletionException e) {
+                // IllegalArgumentExceptionは引数検証、CompletionExceptionは
+                // CompletableFuture.join()での非同期処理失敗(NoAvailablePriceException以外の原因)から送出される。
                 out.println("エラー: " + e.getMessage());
             }
         }

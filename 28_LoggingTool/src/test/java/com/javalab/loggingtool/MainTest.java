@@ -109,4 +109,18 @@ class MainTest {
         String result = buffer.toString(StandardCharsets.UTF_8);
         assertTrue(result.contains("不正なログレベルです: BOGUS"));
     }
+
+    @Test
+    void runShowsClearErrorForRunCommandWithMissingJobNamesArgument() {
+        // 修正前はparts[1]でArrayIndexOutOfBoundsExceptionとなり、英語の内部例外メッセージが
+        // 表示されていた。
+        Scanner scanner = new Scanner("run\nexit\n");
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        PrintStream out = new PrintStream(buffer, true, StandardCharsets.UTF_8);
+
+        Main.run(scanner, out, new BatchJobRunner(), new LogLevelController());
+
+        String result = buffer.toString(StandardCharsets.UTF_8);
+        assertTrue(result.contains("使用方法: run <job1,job2,...>"));
+    }
 }

@@ -38,6 +38,9 @@ public class Main {
                     return;
                 }
                 if (command.equals("start")) {
+                    if (parts.length != 3) {
+                        throw new IllegalArgumentException("使用方法: start <顧客名> <配送先住所>");
+                    }
                     builder = new Order.Builder(parts[1], parts[2]);
                     out.println("注文を開始しました: " + parts[1] + " 様");
                     continue;
@@ -48,10 +51,16 @@ public class Main {
                 }
                 switch (command) {
                     case "item" -> {
+                        if (parts.length != 4) {
+                            throw new IllegalArgumentException("使用方法: item <商品名> <数量> <単価>");
+                        }
                         builder.addItem(parts[1], Integer.parseInt(parts[2]), Integer.parseInt(parts[3]));
                         out.println("商品を追加しました: " + parts[1]);
                     }
                     case "payment" -> {
+                        if (parts.length != 2) {
+                            throw new IllegalArgumentException("使用方法: payment <方法>");
+                        }
                         builder.paymentMethod(parts[1]);
                         out.println("支払方法を設定しました: " + parts[1]);
                     }
@@ -59,7 +68,7 @@ public class Main {
                         // parts[1].equals("on")がfalseの場合、"on"/"off"以外の入力でも
                         // 黙ってoffとして扱われ、表示("設定しました: xyz")と実際の設定が
                         // 食い違っていた問題への対応。"on"/"off"以外は明示的にエラーとする。
-                        if (!parts[1].equals("on") && !parts[1].equals("off")) {
+                        if (parts.length != 2 || (!parts[1].equals("on") && !parts[1].equals("off"))) {
                             throw new IllegalArgumentException("使用方法: wrap on|off");
                         }
                         builder.giftWrap(parts[1].equals("on"));
@@ -77,7 +86,9 @@ public class Main {
                     }
                     default -> out.println("不明なコマンドです: " + line);
                 }
-            } catch (RuntimeException e) {
+            } catch (IllegalArgumentException | IllegalStateException e) {
+                // IllegalArgumentExceptionは引数検証・数値変換失敗、IllegalStateExceptionは
+                // Order.Builder.build()の状態違反(商品未追加・build済み)から送出される。
                 out.println("エラー: " + e.getMessage());
             }
         }

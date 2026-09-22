@@ -58,7 +58,9 @@ public class Main {
                     case "delete" -> handleDelete(repository, parts, out);
                     default -> out.println("不明なコマンドです: " + line);
                 }
-            } catch (RuntimeException e) {
+            } catch (IllegalArgumentException e) {
+                // NumberFormatExceptionはIllegalArgumentExceptionのサブクラスなので、
+                // ここで数値変換の失敗もまとめて捕捉できる。
                 out.println("エラー: " + e.getMessage());
             }
         }
@@ -85,6 +87,9 @@ public class Main {
     }
 
     private static void handleFind(ProductRepository repository, String[] parts, PrintStream out) {
+        if (parts.length != 2) {
+            throw new IllegalArgumentException("使用方法: find <id>");
+        }
         Optional<Product> found = repository.findById(Long.parseLong(parts[1]));
         if (found.isEmpty()) {
             out.println("該当する商品が見つかりません: id=" + parts[1]);
@@ -109,6 +114,9 @@ public class Main {
     }
 
     private static void handleUpdate(ProductRepository repository, String[] parts, PrintStream out) {
+        if (parts.length != 4) {
+            throw new IllegalArgumentException("使用方法: update <id> <価格> <在庫数>");
+        }
         long id = Long.parseLong(parts[1]);
         Optional<Product> found = repository.findById(id);
         if (found.isEmpty()) {
@@ -128,6 +136,9 @@ public class Main {
     }
 
     private static void handleDelete(ProductRepository repository, String[] parts, PrintStream out) {
+        if (parts.length != 2) {
+            throw new IllegalArgumentException("使用方法: delete <id>");
+        }
         long id = Long.parseLong(parts[1]);
         boolean deleted = repository.deleteById(id);
         out.println(deleted ? "削除しました: id=" + id : "該当する商品が見つかりません: id=" + id);
