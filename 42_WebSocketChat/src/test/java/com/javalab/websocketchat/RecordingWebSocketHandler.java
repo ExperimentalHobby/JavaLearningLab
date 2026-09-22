@@ -9,6 +9,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 /**
  * テスト用のWebSocketクライアントハンドラ。受信したメッセージを{@link BlockingQueue}に積み、
  * {@link #awaitMessage()}でタイムアウト付きにポーリング取得できるようにすることで、
@@ -29,5 +31,10 @@ class RecordingWebSocketHandler extends TextWebSocketHandler {
             throw new AssertionError("タイムアウト: メッセージを受信できませんでした");
         }
         return message;
+    }
+
+    /** 短い待機時間内にメッセージが届かないことを確認する(「届かないこと」の確定的な検証は原理的に不可能なため、目安の待機)。 */
+    void assertNoMessageWithin(long timeoutMillis) throws InterruptedException {
+        assertNull(messages.poll(timeoutMillis, TimeUnit.MILLISECONDS));
     }
 }
