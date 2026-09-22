@@ -32,7 +32,7 @@ public class AuthController {
     @PostMapping("/login")
     public AuthResponse login(@RequestBody AuthRequest request) {
         if (loginAttemptService.isLocked(request.username())) {
-            throw new LockedException("too many failed login attempts");
+            throw new LockedException("ログイン試行回数が上限に達しました");
         }
 
         try {
