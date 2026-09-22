@@ -1,0 +1,14 @@
+@startuml
+skinparam defaultFontName VL Gothic
+class AuthController
+class SecureController
+class JwtService
+class JwtAuthenticationFilter
+class LoginAttemptService
+class SecurityConfig
+AuthController --> JwtService
+AuthController --> LoginAttemptService
+SecurityConfig --> JwtAuthenticationFilter
+JwtAuthenticationFilter --> JwtService
+SecurityConfig --> SecureController
+@enduml

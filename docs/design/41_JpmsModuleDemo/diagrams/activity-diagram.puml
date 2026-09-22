@@ -1,0 +1,13 @@
+@startuml
+skinparam defaultFontName VL Gothic
+start
+:アプリモジュールを起動;
+:サービス定義を読み込む;
+if (プロバイダが見つかるか?) then (yes)
+  :実装を取得;
+  :あいさつを表示;
+else (no)
+  :サービス未構成エラー;
+endif
+stop
+@enduml

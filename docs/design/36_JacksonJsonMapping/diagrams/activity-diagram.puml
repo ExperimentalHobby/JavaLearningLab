@@ -1,0 +1,14 @@
+@startuml
+skinparam defaultFontName VL Gothic
+start
+:入力形式を選択;
+:Jacksonで読み込み;
+if (構文は正しいか?) then (yes)
+  :金額・日付を変換;
+  :Productへマッピング;
+  :指定形式で出力;
+else (no)
+  :変換エラーを返す;
+endif
+stop
+@enduml

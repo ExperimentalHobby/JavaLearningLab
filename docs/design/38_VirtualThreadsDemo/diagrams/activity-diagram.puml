@@ -1,0 +1,14 @@
+@startuml
+skinparam defaultFontName VL Gothic
+start
+:URL一覧を受け取る;
+:実行方式を選択;
+:各URLを並行確認;
+if (応答したか?) then (yes)
+  :成功結果を記録;
+else (no)
+  :タイムアウト/例外を失敗結果に記録;
+endif
+:全結果を集計;
+stop
+@enduml

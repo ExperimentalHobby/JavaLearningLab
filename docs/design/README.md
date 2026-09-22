@@ -3,7 +3,7 @@
 各エクササイズフォルダ(`NN_ExerciseName/`)に対応する設計書を `docs/design/NN_ExerciseName/` に作成する。
 `docs/` はgitignore対象のローカル資料であり、PRには含まれない。
 
-`01_Calculator` を最初のテンプレートとして、以降のフォルダも同じ構成・手順を踏襲する。
+`01_Calculator` を最初のテンプレートとして、実装済みの各フォルダも同じ構成・手順を踏襲する。現在の設計書対象は 01〜33 および 36〜44 の 42 プロジェクトである。34 は未作成、35 は 20_SpringBootApiIntro への Dockerfile 追加を表す管理上の番号で、独立プロジェクトではない。
 
 ## ディレクトリ構成
 
@@ -68,6 +68,25 @@ cd docs/design/NN_ExerciseName
 ```
 
 必要な環境: Ruby + `asciidoctor-pdf` + `asciidoctor-diagram`、PlantUML(Java)。
+
+## 発展編の設計書
+
+以下の発展編にも設計書を配置している。
+
+* `31_ModernJavaSyntax`: record・sealed interface・パターンマッチング
+* `32_BeanValidationApi`: Bean ValidationとRESTエラー処理
+* `33_SpringSecurityAuth`: JWT認証と認可
+* `36_JacksonJsonMapping`: JSON/XMLマッピング
+* `37_OptionalNullSafety`: Optionalとnull安全設計
+* `38_VirtualThreadsDemo`: Virtual Threadsと並行I/O
+* `39_AlgorithmsDataStructures`: ソートと二分探索木
+* `40_ReflectionAnnotation`: リフレクションとカスタムアノテーション
+* `41_JpmsModuleDemo`: JPMSとServiceLoader
+* `42_WebSocketChat`: WebSocketチャット
+* `43_JmhBenchmark`: JMHベンチマーク
+* `44_JpaRestApi`: JPA・在庫トランザクション・REST API
+
+各設計書の「関連資料」には、実装の背景を確認できる対応 Issue を記載している。
 
 ## 参考
 

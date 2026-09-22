@@ -1,0 +1,56 @@
+= 36_JacksonJsonMapping 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-09-22
+:toc: left
+:toclevels: 2
+:sectnums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+== 概要
+
+=== 目的
+JacksonによるJSON/XML変換、日付処理、金額のカスタムシリアライズを実装する。
+
+=== 構成
+`ProductJsonMapper`と`ProductXmlMapper`が変換入口となり、`Product`をJSON/XMLへ変換する。`PriceSerializer`と`PriceDeserializer`が金額表現を制御し、`ProductList`がXMLのルート構造を表す。
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/168[Issue #168]
+
+== ユースケース
+
+* UC-1: 商品をJSONへ変換する
+* UC-2: JSONから商品を復元する
+* UC-3: 商品一覧をXMLへ変換・復元する
+* UC-4: 不正な入力を変換エラーとして扱う
+
+== シーケンス図
+
+[plantuml, sequence-mapping, svg]
+----
+include::diagrams/sequence-mapping.puml[]
+----
+
+== クラス図
+
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+== アクティビティ図
+
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+== 補足事項
+
+LocalDateはモジュール設定で扱い、金額はカスタム変換で`150`と`150円`の表現を相互変換する。JSON/XMLのエラー形式は呼び出し側が識別できるよう統一する。

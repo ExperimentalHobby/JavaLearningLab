@@ -1,0 +1,11 @@
+@startuml
+skinparam defaultFontName VL Gothic
+start
+:JMH設定を読み込む;
+:ForkでJVMを分離;
+:Warmupを実行;
+:Measurementを実行;
+:結果を集計;
+:スループット/平均時間を出力;
+stop
+@enduml

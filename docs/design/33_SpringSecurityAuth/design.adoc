@@ -1,0 +1,56 @@
+= 33_SpringSecurityAuth 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-09-22
+:toc: left
+:toclevels: 2
+:sectnums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+== 概要
+
+=== 目的
+Spring SecurityとJWTによるステートレス認証、保護リソースの認可、ログイン試行制限を学習する。
+
+=== 構成
+`AuthController`が認証を受け付け、`JwtService`がトークンを発行する。`JwtAuthenticationFilter`がBearerトークンを検証し、`SecurityConfig`が公開・保護範囲を定義する。`LoginAttemptService`は連続失敗を一時的にロックする。
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/167[Issue #167]
+
+== ユースケース
+
+* UC-1: 認証情報からJWTを発行する
+* UC-2: JWT付きで保護エンドポイントへアクセスする
+* UC-3: トークンなし・期限切れアクセスを401で拒否する
+* UC-4: ログイン失敗回数に応じて一時ロックする
+
+== シーケンス図
+
+[plantuml, sequence-authentication, svg]
+----
+include::diagrams/sequence-authentication.puml[]
+----
+
+== クラス図
+
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+== アクティビティ図
+
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+== 補足事項
+
+署名鍵は設定から取得し、JWTの有効期限と権限を検証する。認証失敗の詳細を過度に開示せず、例外応答を一元化する。

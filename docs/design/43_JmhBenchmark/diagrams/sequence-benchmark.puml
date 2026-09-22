@@ -1,0 +1,12 @@
+@startuml
+skinparam defaultFontName VL Gothic
+participant JMH
+participant ベンチマーク
+participant 対象実装
+participant Blackhole
+JMH -> ベンチマーク: warmup/measurement
+ベンチマーク -> 対象実装: 入力サイズで実行
+対象実装 --> ベンチマーク: 結果
+ベンチマーク -> Blackhole: 結果を消費
+JMH --> ベンチマーク: 時間/スループット
+@enduml

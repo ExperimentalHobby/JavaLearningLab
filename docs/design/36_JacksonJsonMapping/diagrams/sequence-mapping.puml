@@ -1,0 +1,13 @@
+@startuml
+skinparam defaultFontName VL Gothic
+actor 利用者
+participant 変換API
+participant Jackson
+participant カスタム変換
+利用者 -> 変換API: 商品データ
+変換API -> Jackson: JSON/XMLを読み書き
+Jackson -> カスタム変換: 金額・日付を変換
+カスタム変換 --> Jackson: 変換値
+Jackson --> 変換API: Product
+変換API --> 利用者: 結果
+@enduml

@@ -1,0 +1,16 @@
+@startuml
+skinparam defaultFontName VL Gothic
+start
+:WebSocket接続;
+if (接続数に余裕があるか?) then (yes)
+  :ユーザー名を登録;
+  if (メッセージは有効か?) then (yes)
+    :全セッションへ送信;
+  else (no)
+    :エラーを送信;
+  endif
+else (no)
+  :接続を拒否;
+endif
+stop
+@enduml

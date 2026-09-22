@@ -1,0 +1,15 @@
+@startuml
+skinparam defaultFontName VL Gothic
+package greeting-api {
+  interface Greeter
+}
+package greeting-impl {
+  class JapaneseGreeter
+}
+package app {
+  class Main
+}
+JapaneseGreeter ..|> Greeter
+Main ..> Greeter
+Main ..> JapaneseGreeter : ServiceLoader
+@enduml

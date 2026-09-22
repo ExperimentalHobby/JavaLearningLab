@@ -1,0 +1,56 @@
+= 40_ReflectionAnnotation 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-09-22
+:toc: left
+:toclevels: 2
+:sectnums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+== 概要
+
+=== 目的
+カスタムアノテーションとリフレクションAPIを使い、簡易的なフィールド検証ライブラリを実装する。
+
+=== 構成
+`@NotBlank`、`@Min`、`@Max`が制約を表し、`Validator`が実行時アノテーションを読み取って検証する。違反は`ValidationViolation`、アノテーションの型誤用は`AnnotationMisuseException`で表現する。
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/172[Issue #172]
+
+== ユースケース
+
+* UC-1: 検証対象のフィールドを走査する
+* UC-2: アノテーションの制約違反を収集する
+* UC-3: 継承元のフィールドも検証する
+* UC-4: 型に合わないアノテーションの誤用を検出する
+
+== シーケンス図
+
+[plantuml, sequence-validation, svg]
+----
+include::diagrams/sequence-validation.puml[]
+----
+
+== クラス図
+
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+== アクティビティ図
+
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+== 補足事項
+
+アノテーションは`RetentionPolicy.RUNTIME`で保持する。合成フィールドを除外し、`getDeclaredFields`と親クラス走査で検証対象を決定する。

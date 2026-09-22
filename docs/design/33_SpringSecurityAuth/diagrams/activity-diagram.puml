@@ -1,0 +1,16 @@
+@startuml
+skinparam defaultFontName VL Gothic
+start
+:ログイン要求;
+if (試行回数が上限未満?) then (yes)
+  if (認証成功?) then (yes)
+    :JWTを発行;
+  else (no)
+    :失敗回数を増加;
+    :401を返す;
+  endif
+else (no)
+  :一時ロックを返す;
+endif
+stop
+@enduml

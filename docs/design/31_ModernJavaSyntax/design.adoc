@@ -1,0 +1,56 @@
+= 31_ModernJavaSyntax 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-09-22
+:toc: left
+:toclevels: 2
+:sectnums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+== 概要
+
+=== 目的
+record、sealed interface、パターンマッチング、text blockを使った注文状態管理CLIで、Java 25の型安全な表現を学習する。
+
+=== 構成
+`OrderState`が受付・発送・配達・キャンセルの状態を限定し、`OrderStateTransition`が遷移を判定する。`OrderReceiptFormatter`はレシートを整形し、`OrderStatePersistence`はJacksonで状態を保存・復元する。
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/165[Issue #165]
+
+== ユースケース
+
+* UC-1: 注文状態を正当な次の状態へ遷移する
+* UC-2: 不正な状態遷移を拒否する
+* UC-3: 注文をJSONへ保存し復元する
+* UC-4: text blockでレシートを表示する
+
+== シーケンス図
+
+[plantuml, sequence-order, svg]
+----
+include::diagrams/sequence-order.puml[]
+----
+
+== クラス図
+
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+== アクティビティ図
+
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+== 補足事項
+
+sealed interfaceの網羅性をswitchパターンで活用し、recordは不変なデータ保持に使用する。テストでは正当・不正遷移とJSONラウンドトリップを確認する。

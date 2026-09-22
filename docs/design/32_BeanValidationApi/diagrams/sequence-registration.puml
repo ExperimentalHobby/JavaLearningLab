@@ -1,0 +1,18 @@
+@startuml
+skinparam defaultFontName VL Gothic
+actor 利用者
+participant Controller
+participant BeanValidation
+participant Service
+participant ExceptionHandler
+利用者 -> Controller: ユーザー登録
+Controller -> BeanValidation: 入力を検証
+alt 検証成功
+  Controller -> Service: 登録
+  Service --> Controller: 登録結果
+  Controller --> 利用者: 201 Created
+else 検証失敗
+  BeanValidation -> ExceptionHandler: 検証例外
+  ExceptionHandler --> 利用者: 400 Bad Request
+end
+@enduml

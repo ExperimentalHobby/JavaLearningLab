@@ -1,0 +1,13 @@
+@startuml
+skinparam defaultFontName VL Gothic
+actor 利用者
+participant Main
+participant アルゴリズム
+participant メトリクス
+利用者 -> Main: 配列と方式を指定
+Main -> アルゴリズム: ソート実行
+アルゴリズム -> メトリクス: 比較・移動・時間を記録
+メトリクス --> アルゴリズム: 統計
+アルゴリズム --> Main: SortResult
+Main --> 利用者: 結果と比較値
+@enduml

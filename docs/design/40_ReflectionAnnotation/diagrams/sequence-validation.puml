@@ -1,0 +1,15 @@
+@startuml
+skinparam defaultFontName VL Gothic
+actor 利用者
+participant Validator
+participant Reflection
+participant 対象オブジェクト
+participant 結果
+利用者 -> Validator: 検証を依頼
+Validator -> Reflection: フィールドと注釈を取得
+Reflection -> 対象オブジェクト: 値を読み取る
+対象オブジェクト --> Reflection: フィールド値
+Reflection --> Validator: メタデータと値
+Validator -> 結果: 違反を追加
+結果 --> 利用者: 検証結果
+@enduml

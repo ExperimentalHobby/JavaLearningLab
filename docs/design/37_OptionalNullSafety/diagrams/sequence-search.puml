@@ -1,0 +1,13 @@
+@startuml
+skinparam defaultFontName VL Gothic
+actor 利用者
+participant CLI
+participant Service
+participant Repository
+利用者 -> CLI: ID/メールを入力
+CLI -> Service: 社員を検索
+Service -> Repository: Optionalで検索
+Repository --> Service: 値あり/空
+Service --> CLI: map/filterで結果整形
+CLI --> 利用者: 社員情報/既定値
+@enduml

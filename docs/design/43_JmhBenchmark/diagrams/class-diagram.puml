@@ -1,0 +1,12 @@
+@startuml
+skinparam defaultFontName VL Gothic
+class StringConcatBenchmark
+class StringConcatUtil
+class StackBenchmark
+class SimpleLinkedStack
+class BenchmarkSmokeTest
+StringConcatBenchmark --> StringConcatUtil
+StackBenchmark --> SimpleLinkedStack
+BenchmarkSmokeTest ..> StringConcatBenchmark
+BenchmarkSmokeTest ..> StackBenchmark
+@enduml

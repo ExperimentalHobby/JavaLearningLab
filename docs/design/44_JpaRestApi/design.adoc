@@ -1,0 +1,57 @@
+= 44_JpaRestApi 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-09-22
+:toc: left
+:toclevels: 2
+:sectnums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+== 概要
+
+=== 目的
+Spring Data JPAを使った商品CRUD、検索・ページング、在庫引き当てを実DBで扱うREST APIを実装する。
+
+=== 構成
+`ProductController`と`OrderController`がDTOを受け付け、`ProductService`がトランザクション境界を担う。`ProductRepository`が永続化し、`GlobalExceptionHandler`がエラーを統一する。OpenAPIとActuatorで運用情報を公開する。
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/176[Issue #176]
+
+== ユースケース
+
+* UC-1: 商品を登録・参照・更新・削除する
+* UC-2: 商品を部分一致検索し、ページング・ソートする
+* UC-3: 複数商品の在庫をトランザクション内で引き当てる
+* UC-4: 在庫不足時にロールバックする
+* UC-5: Swagger UIとActuatorでAPI・ヘルスを確認する
+
+== シーケンス図
+
+[plantuml, sequence-order, svg]
+----
+include::diagrams/sequence-order.puml[]
+----
+
+== クラス図
+
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+== アクティビティ図
+
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+== 補足事項
+
+在庫競合を防ぐため、注文処理では悲観ロックと`@Transactional`を使う。在庫不足や入力エラーはHTTPエラーへ変換し、TestcontainersではPostgreSQLとの結合を確認する。

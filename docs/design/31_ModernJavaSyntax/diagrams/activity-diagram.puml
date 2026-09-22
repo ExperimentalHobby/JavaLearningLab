@@ -1,0 +1,14 @@
+@startuml
+skinparam defaultFontName VL Gothic
+start
+:注文を読み込む;
+:現在状態と要求状態を判定;
+if (遷移は正当か?) then (yes)
+  :状態を更新;
+  :JSONへ保存;
+  :レシートを表示;
+else (no)
+  :エラーを表示;
+endif
+stop
+@enduml

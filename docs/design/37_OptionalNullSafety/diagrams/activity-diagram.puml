@@ -1,0 +1,14 @@
+@startuml
+skinparam defaultFontName VL Gothic
+start
+:検索条件を受け取る;
+:Repositoryを検索;
+if (社員が存在するか?) then (yes)
+  :値を変換・絞り込み;
+  :結果を表示;
+else (no)
+  :既定値または例外を選択;
+  :結果を表示;
+endif
+stop
+@enduml

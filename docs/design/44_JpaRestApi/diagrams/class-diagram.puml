@@ -1,0 +1,15 @@
+@startuml
+skinparam defaultFontName VL Gothic
+class ProductController
+class OrderController
+class ProductService
+class ProductRepository
+class Product
+class GlobalExceptionHandler
+ProductController --> ProductService
+OrderController --> ProductService
+ProductService --> ProductRepository
+ProductRepository --> Product
+ProductController ..> GlobalExceptionHandler
+OrderController ..> GlobalExceptionHandler
+@enduml
