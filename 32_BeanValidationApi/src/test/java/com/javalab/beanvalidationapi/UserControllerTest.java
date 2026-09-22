@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -89,8 +90,8 @@ class UserControllerTest {
                 new org.springframework.http.HttpEntity<>("{bad", headers), String.class);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertTrue(response.getBody().contains("リクエストボディの形式が不正です"));
+        String body = Objects.requireNonNull(response.getBody(), "レスポンスボディがnullです");
+        assertTrue(body.contains("リクエストボディの形式が不正です"));
     }
 
     @Test
@@ -98,8 +99,8 @@ class UserControllerTest {
         ResponseEntity<String> response = restTemplate.getForEntity("/api/users/abc", String.class);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertNotNull(response.getBody());
-        assertTrue(response.getBody().contains("パラメータの形式が不正です"));
+        String body = Objects.requireNonNull(response.getBody(), "レスポンスボディがnullです");
+        assertTrue(body.contains("パラメータの形式が不正です"));
     }
 
     @Test

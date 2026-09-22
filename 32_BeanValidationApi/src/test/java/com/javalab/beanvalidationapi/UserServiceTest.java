@@ -22,7 +22,7 @@ class UserServiceTest {
 
         List<User> users = service.findAll();
 
-        assertEquals(List.of("佐藤一郎", "鈴木花子", "山田太郎"), users.stream().map(User::name).toList());
+        assertEquals(List.of("佐藤一郎", "鈴木花子", "山田太郎"), users.stream().map(user -> user.name()).toList());
     }
 
     @Test

@@ -116,7 +116,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         });
     }
 
-    private void sendTo(WebSocketSession session, String text) {
+    private void sendTo(WebSocketSession session, @NonNull String text) {
         try {
             session.sendMessage(new TextMessage(text));
         } catch (IOException e) {
@@ -128,7 +128,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
      * ユーザー名が登録済みのセッションのみへブロードキャストする(未登録セッションは対象外)。
      * @param excludeSessionId ブロードキャスト対象から除外するセッションID(不要な場合は{@code null})
      */
-    private void broadcast(String text, String excludeSessionId) {
+    private void broadcast(@NonNull String text, String excludeSessionId) {
         TextMessage message = new TextMessage(text);
         usernames.keySet().stream()
                 .filter(id -> !id.equals(excludeSessionId))

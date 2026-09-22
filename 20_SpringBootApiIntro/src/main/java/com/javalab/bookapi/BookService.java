@@ -39,7 +39,7 @@ public class BookService {
         // ConcurrentHashMap.values()の反復順序はハッシュ値依存で不定なため、
         // 呼び出し側から見て安定した順序になるようID昇順にソートする。
         return books.values().stream()
-                .sorted(Comparator.comparingLong(Book::id))
+                .sorted(Comparator.comparingLong(book -> book.id()))
                 .toList();
     }
 

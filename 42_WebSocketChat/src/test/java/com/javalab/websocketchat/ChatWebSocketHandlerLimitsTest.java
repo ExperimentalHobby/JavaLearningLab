@@ -33,7 +33,7 @@ class ChatWebSocketHandlerLimitsTest {
     @Autowired
     private ChatWebSocketHandler handler;
 
-    private WebSocketSession connect(TextWebSocketHandler clientHandler) throws Exception {
+    private WebSocketSession connect(@NonNull TextWebSocketHandler clientHandler) throws Exception {
         StandardWebSocketClient client = new StandardWebSocketClient();
         return client.execute(clientHandler, "ws://localhost:" + port + "/chat").get(5, TimeUnit.SECONDS);
     }

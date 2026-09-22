@@ -16,9 +16,9 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @EnableScheduling
 public class WebSocketConfig implements WebSocketConfigurer {
 
-    private final ChatWebSocketHandler chatWebSocketHandler;
+    private final @NonNull ChatWebSocketHandler chatWebSocketHandler;
 
-    public WebSocketConfig(ChatWebSocketHandler chatWebSocketHandler) {
+    public WebSocketConfig(@NonNull ChatWebSocketHandler chatWebSocketHandler) {
         this.chatWebSocketHandler = chatWebSocketHandler;
     }
 

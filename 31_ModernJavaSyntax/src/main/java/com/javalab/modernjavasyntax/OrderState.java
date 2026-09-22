@@ -25,10 +25,10 @@ public sealed interface OrderState permits OrderState.Placed, OrderState.Shipped
     /** 状態の日本語ラベル。{@code list}表示やエラーメッセージの組み立てで共通利用する。 */
     default String label() {
         return switch (this) {
-            case Placed p -> "注文受付";
-            case Shipped s -> "発送済み";
-            case Delivered d -> "配達完了";
-            case Cancelled c -> "キャンセル";
+            case Placed _ -> "注文受付";
+            case Shipped _ -> "発送済み";
+            case Delivered _ -> "配達完了";
+            case Cancelled _ -> "キャンセル";
         };
     }
 
