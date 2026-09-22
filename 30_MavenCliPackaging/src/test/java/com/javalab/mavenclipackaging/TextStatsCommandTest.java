@@ -180,6 +180,12 @@ class TextStatsCommandTest {
         CommandLine cmd = new CommandLine(new TextStatsCommand());
         StringWriter out = new StringWriter();
         cmd.setOut(new PrintWriter(out));
+        // picocliのAnsi.AUTOは実行環境(MSYS/Git Bash等)の環境変数だけでANSI対応を判定し、
+        // setOut()でStringWriterへリダイレクトしていても考慮しない。そのため環境によっては
+        // "Usage: "の直後に装飾用のエスケープシーケンスが挿入され、"Usage: textstat"という
+        // プレーンテキストの部分一致に失敗する(文字コードの問題ではない)。
+        // テストでは常に一貫した結果を得るため明示的にANSIを無効化する。
+        cmd.setColorScheme(new CommandLine.Help.ColorScheme.Builder(CommandLine.Help.Ansi.OFF).build());
 
         int exitCode = cmd.execute("--help");
 
