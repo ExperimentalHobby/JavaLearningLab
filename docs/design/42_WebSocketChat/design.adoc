@@ -1,0 +1,56 @@
+= 42_WebSocketChat 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-09-22
+:toc: left
+:toclevels: 2
+:sectnums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+== 概要
+
+=== 目的
+Spring WebSocketによるリアルタイムの複数人チャットと、接続・入力制御を実装する。
+
+=== 構成
+`WebSocketConfig`が`/chat`を登録し、`ChatWebSocketHandler`がセッション管理、ユーザー名登録、ブロードキャストを行う。`ConcurrentWebSocketSessionDecorator`で送信を直列化し、静的HTML/JavaScriptクライアントから接続する。
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/174[Issue #174]
+
+== ユースケース
+
+* UC-1: WebSocketへ接続しユーザー名を登録する
+* UC-2: チャットメッセージを全員へ配信する
+* UC-3: 入退室通知を配信する
+* UC-4: 不正な名前・長すぎるメッセージ・接続数超過を拒否する
+
+== シーケンス図
+
+[plantuml, sequence-chat, svg]
+----
+include::diagrams/sequence-chat.puml[]
+----
+
+== クラス図
+
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+== アクティビティ図
+
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+== 補足事項
+
+セッション集合は並行アクセスを前提に管理する。送信失敗が他クライアントへの配信を止めないよう、個別エラーを処理してセッションを整理する。

@@ -121,6 +121,54 @@ pushd 30_MavenCliPackaging
 powershell -ExecutionPolicy Bypass -File generate-pdf.ps1
 popd
 
+pushd 31_ModernJavaSyntax
+powershell -ExecutionPolicy Bypass -File generate-pdf.ps1
+popd
+
+pushd 32_BeanValidationApi
+powershell -ExecutionPolicy Bypass -File generate-pdf.ps1
+popd
+
+pushd 33_SpringSecurityAuth
+powershell -ExecutionPolicy Bypass -File generate-pdf.ps1
+popd
+
+pushd 36_JacksonJsonMapping
+powershell -ExecutionPolicy Bypass -File generate-pdf.ps1
+popd
+
+pushd 37_OptionalNullSafety
+powershell -ExecutionPolicy Bypass -File generate-pdf.ps1
+popd
+
+pushd 38_VirtualThreadsDemo
+powershell -ExecutionPolicy Bypass -File generate-pdf.ps1
+popd
+
+pushd 39_AlgorithmsDataStructures
+powershell -ExecutionPolicy Bypass -File generate-pdf.ps1
+popd
+
+pushd 40_ReflectionAnnotation
+powershell -ExecutionPolicy Bypass -File generate-pdf.ps1
+popd
+
+pushd 41_JpmsModuleDemo
+powershell -ExecutionPolicy Bypass -File generate-pdf.ps1
+popd
+
+pushd 42_WebSocketChat
+powershell -ExecutionPolicy Bypass -File generate-pdf.ps1
+popd
+
+pushd 43_JmhBenchmark
+powershell -ExecutionPolicy Bypass -File generate-pdf.ps1
+popd
+
+pushd 44_JpaRestApi
+powershell -ExecutionPolicy Bypass -File generate-pdf.ps1
+popd
+
 pushd release
 if not exist 01_Calculator mkdir 01_Calculator
 if not exist 02_RockPaperScissors mkdir 02_RockPaperScissors
@@ -152,6 +200,18 @@ if not exist 27_JpaHibernateApp mkdir 27_JpaHibernateApp
 if not exist 28_LoggingTool mkdir 28_LoggingTool
 if not exist 29_CompletableFutureDemo mkdir 29_CompletableFutureDemo
 if not exist 30_MavenCliPackaging mkdir 30_MavenCliPackaging
+if not exist 31_ModernJavaSyntax mkdir 31_ModernJavaSyntax
+if not exist 32_BeanValidationApi mkdir 32_BeanValidationApi
+if not exist 33_SpringSecurityAuth mkdir 33_SpringSecurityAuth
+if not exist 36_JacksonJsonMapping mkdir 36_JacksonJsonMapping
+if not exist 37_OptionalNullSafety mkdir 37_OptionalNullSafety
+if not exist 38_VirtualThreadsDemo mkdir 38_VirtualThreadsDemo
+if not exist 39_AlgorithmsDataStructures mkdir 39_AlgorithmsDataStructures
+if not exist 40_ConcurrencyUtilities mkdir 40_ConcurrencyUtilities
+if not exist 41_JpmsModuleDemo mkdir 41_JpmsModuleDemo
+if not exist 42_WebSocketChat mkdir 42_WebSocketChat
+if not exist 43_JmhBenchmark mkdir 43_JmhBenchmark
+if not exist 44_JpaRestApi mkdir 44_JpaRestApi
 
 copy ..\01_Calculator\design.pdf 01_Calculator\.
 copy ..\02_RockPaperScissors\design.pdf 02_RockPaperScissors\.
@@ -183,6 +243,18 @@ copy ..\27_JpaHibernateApp\design.pdf 27_JpaHibernateApp\.
 copy ..\28_LoggingTool\design.pdf 28_LoggingTool\.
 copy ..\29_CompletableFutureDemo\design.pdf 29_CompletableFutureDemo\.
 copy ..\30_MavenCliPackaging\design.pdf 30_MavenCliPackaging\.
+copy ..\31_ModernJavaSyntax\design.pdf 31_ModernJavaSyntax\.
+copy ..\32_BeanValidationApi\design.pdf 32_BeanValidationApi\.
+copy ..\33_SpringSecurityAuth\design.pdf 33_SpringSecurityAuth\.
+copy ..\36_JacksonJsonMapping\design.pdf 36_JacksonJsonMapping\.
+copy ..\37_OptionalNullSafety\design.pdf 37_OptionalNullSafety\.
+copy ..\38_VirtualThreadsDemo\design.pdf 38_VirtualThreadsDemo\.
+copy ..\39_AlgorithmsDataStructures\design.pdf 39_AlgorithmsDataStructures\.
+copy ..\40_ReflectionAnnotation\design.pdf 40_ReflectionAnnotation\.
+copy ..\41_JpmsModuleDemo\design.pdf 41_JpmsModuleDemo\.
+copy ..\42_WebSocketChat\design.pdf 42_WebSocketChat\.
+copy ..\43_JmhBenchmark\design.pdf 43_JmhBenchmark\.
+copy ..\44_JpaRestApi\design.pdf 44_JpaRestApi\.
 popd
 
 pause

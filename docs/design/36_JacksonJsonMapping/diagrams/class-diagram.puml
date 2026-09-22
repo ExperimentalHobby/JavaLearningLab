@@ -1,0 +1,13 @@
+@startuml
+skinparam defaultFontName VL Gothic
+class Product <<record>>
+class ProductList
+class ProductJsonMapper
+class ProductXmlMapper
+class PriceSerializer
+class PriceDeserializer
+ProductJsonMapper --> Product
+ProductXmlMapper --> ProductList
+Product --> PriceSerializer
+Product --> PriceDeserializer
+@enduml

@@ -1,0 +1,13 @@
+@startuml
+skinparam defaultFontName VL Gothic
+class SortAlgorithms
+class SortMetrics
+class SortResult
+class "BinarySearchTree<T>" as BinarySearchTree
+class Main
+SortAlgorithms --> SortMetrics
+SortAlgorithms --> SortResult
+Main --> SortAlgorithms
+Main --> BinarySearchTree
+BinarySearchTree --> "0..*" BinarySearchTree : 子ノード
+@enduml

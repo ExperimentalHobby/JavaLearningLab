@@ -1,0 +1,18 @@
+@startuml
+skinparam defaultFontName VL Gothic
+start
+:リクエストを受信;
+:Bean Validationを実行;
+if (入力は有効か?) then (yes)
+  :メール重複を確認;
+  if (重複なし?) then (yes)
+    :ユーザーを登録;
+    :201を返す;
+  else (no)
+    :重複エラーを返す;
+  endif
+else (no)
+  :フィールドエラーを返す;
+endif
+stop
+@enduml

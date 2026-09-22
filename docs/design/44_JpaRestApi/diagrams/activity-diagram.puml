@@ -1,0 +1,15 @@
+@startuml
+skinparam defaultFontName VL Gothic
+start
+:注文を受信;
+:商品をロックして取得;
+if (在庫は足りるか?) then (yes)
+  :在庫を減算;
+  :トランザクションをcommit;
+  :成功を返す;
+else (no)
+  :ロールバック;
+  :在庫不足エラーを返す;
+endif
+stop
+@enduml

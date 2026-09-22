@@ -43,6 +43,7 @@ Java学習用のアプリ・技術トピックを作成するプロジェクト�
 - [x] [30_MavenCliPackaging](30_MavenCliPackaging/README.md) - CLIパッケージ化&配布(Mavenプロジェクト)
 
 ### フェーズ4: 発展編(抜け漏れ補完テーマ)
+- 34 は未作成、35 は `20_SpringBootApiIntro` の Dockerfile 追加を管理する番号のため、独立プロジェクトではありません。
 - [x] [31_ModernJavaSyntax](31_ModernJavaSyntax/README.md) - Java 25モダン構文実践(record/sealed/パターンマッチング)
 - [x] [32_BeanValidationApi](32_BeanValidationApi/README.md) - 入力検証&エラーハンドリング強化(Bean Validation)
 - [x] [33_SpringSecurityAuth](33_SpringSecurityAuth/README.md) - 認証・認可付きAPI(Spring Security + JWT)

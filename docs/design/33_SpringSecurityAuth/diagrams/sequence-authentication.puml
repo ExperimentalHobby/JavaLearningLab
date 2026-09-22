@@ -1,0 +1,16 @@
+@startuml
+skinparam defaultFontName VL Gothic
+actor 利用者
+participant 認証API
+participant JWTサービス
+participant 認証フィルター
+participant 保護API
+利用者 -> 認証API: ログイン
+認証API -> JWTサービス: トークン発行
+JWTサービス --> 利用者: JWT
+利用者 -> 認証フィルター: Bearer JWT
+認証フィルター -> JWTサービス: 検証
+JWTサービス --> 認証フィルター: 権限
+認証フィルター -> 保護API: 認証済み要求
+保護API --> 利用者: 保護リソース
+@enduml

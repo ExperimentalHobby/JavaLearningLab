@@ -1,0 +1,13 @@
+@startuml
+skinparam defaultFontName VL Gothic
+actor 利用者
+participant CLI
+participant 状態遷移
+participant 永続化
+利用者 -> CLI: 注文状態を指定
+CLI -> 状態遷移: 次の状態を判定
+状態遷移 --> CLI: 新しい状態
+CLI -> 永続化: JSON保存
+永続化 --> CLI: 保存結果
+CLI --> 利用者: レシート/結果
+@enduml

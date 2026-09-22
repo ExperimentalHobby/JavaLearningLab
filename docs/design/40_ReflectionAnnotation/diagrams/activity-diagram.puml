@@ -1,0 +1,14 @@
+@startuml
+skinparam defaultFontName VL Gothic
+start
+:対象クラスの階層を走査;
+:実行時アノテーションを取得;
+:フィールド値を読み取る;
+if (制約を満たすか?) then (yes)
+  :次のフィールドへ;
+else (no)
+  :違反を収集;
+endif
+:結果を返す;
+stop
+@enduml

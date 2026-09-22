@@ -1,0 +1,56 @@
+= 39_AlgorithmsDataStructures 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-09-22
+:toc: left
+:toclevels: 2
+:sectnums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+== 概要
+
+=== 目的
+複数のソートアルゴリズムと二分探索木を実装し、正しさ・計算量・実測統計を比較する。
+
+=== 構成
+`SortAlgorithms`は選択・挿入・クイック・マージソートを提供し、`SortMetrics`と`SortResult`に比較回数・移動回数・所要時間を記録する。`BinarySearchTree<T>`は挿入・検索・反復走査を提供する。
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/171[Issue #171]
+
+== ユースケース
+
+* UC-1: 入力配列を指定アルゴリズムでソートする
+* UC-2: ソート結果と統計情報を比較する
+* UC-3: 二分探索木へ値を挿入・検索する
+* UC-4: 木を中順・前順・後順・レベル順で走査する
+
+== シーケンス図
+
+[plantuml, sequence-algorithm, svg]
+----
+include::diagrams/sequence-algorithm.puml[]
+----
+
+== クラス図
+
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+== アクティビティ図
+
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+== 補足事項
+
+平均・最悪計算量を比較できるよう統計を分離する。クイックソートはランダムピボットを使い、木の処理はスタックやキューによる反復実装でスタック深度を制御する。

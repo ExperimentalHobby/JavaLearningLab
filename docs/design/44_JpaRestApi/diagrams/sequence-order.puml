@@ -1,0 +1,15 @@
+@startuml
+skinparam defaultFontName VL Gothic
+actor 利用者
+participant OrderController
+participant ProductService
+participant ProductRepository
+participant Database
+利用者 -> OrderController: 在庫引き当て
+OrderController -> ProductService: 注文を処理
+ProductService -> ProductRepository: 悲観ロックで取得
+ProductRepository -> Database: SELECT FOR UPDATE
+Database --> ProductRepository: 商品/在庫
+ProductService -> Database: 在庫更新をcommit
+ProductService --> 利用者: 注文結果
+@enduml

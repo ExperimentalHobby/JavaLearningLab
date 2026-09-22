@@ -1,0 +1,12 @@
+@startuml
+skinparam defaultFontName VL Gothic
+class WebSocketConfig
+class ChatWebSocketHandler
+class RecordingWebSocketHandler
+class WebSocketSession
+class ConcurrentWebSocketSessionDecorator
+WebSocketConfig --> ChatWebSocketHandler
+ChatWebSocketHandler --> WebSocketSession
+ChatWebSocketHandler --> ConcurrentWebSocketSessionDecorator
+RecordingWebSocketHandler --|> ChatWebSocketHandler
+@enduml

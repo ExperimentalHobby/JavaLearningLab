@@ -1,0 +1,10 @@
+@startuml
+skinparam defaultFontName VL Gothic
+class Employee <<record>>
+class EmployeeRepository
+class EmployeeService
+class Main
+Main --> EmployeeService
+EmployeeService --> EmployeeRepository
+EmployeeRepository --> Employee
+@enduml

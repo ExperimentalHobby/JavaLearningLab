@@ -1,0 +1,20 @@
+@startuml
+skinparam defaultFontName VL Gothic
+class Main
+interface OrderState <<sealed>>
+class Placed
+class Shipped
+class Delivered
+class Cancelled
+class OrderStateTransition
+class OrderReceiptFormatter
+class OrderStatePersistence
+OrderState <|.. Placed
+OrderState <|.. Shipped
+OrderState <|.. Delivered
+OrderState <|.. Cancelled
+Main --> OrderStateTransition
+Main --> OrderReceiptFormatter
+Main --> OrderStatePersistence
+OrderStateTransition --> OrderState
+@enduml

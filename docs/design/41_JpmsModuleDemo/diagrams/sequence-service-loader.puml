@@ -1,0 +1,12 @@
+@startuml
+skinparam defaultFontName VL Gothic
+participant Main
+participant ServiceLoader
+participant 実装モジュール
+Main -> ServiceLoader: Greeterを検索
+ServiceLoader -> 実装モジュール: プロバイダを発見
+実装モジュール --> ServiceLoader: JapaneseGreeter
+ServiceLoader --> Main: Greeter実装
+Main -> Greeter: あいさつを生成
+Greeter --> Main: メッセージ
+@enduml

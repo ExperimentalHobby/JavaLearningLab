@@ -1,0 +1,13 @@
+@startuml
+skinparam defaultFontName VL Gothic
+start
+:入力データを受け取る;
+:ソート方式を選択;
+:比較・交換を実行;
+:統計を記録;
+if (木構造も操作するか?) then (yes)
+  :挿入・検索・走査を実行;
+endif
+:結果を表示;
+stop
+@enduml

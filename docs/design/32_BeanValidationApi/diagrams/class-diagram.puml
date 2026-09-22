@@ -1,0 +1,14 @@
+@startuml
+skinparam defaultFontName VL Gothic
+class UserController
+class UserRegistrationRequest <<record>>
+class UserService
+class GlobalExceptionHandler
+interface UniqueEmail
+class UniqueEmailValidator
+UserController --> UserRegistrationRequest
+UserController --> UserService
+UserService --> UniqueEmailValidator
+UserController ..> GlobalExceptionHandler
+UniqueEmailValidator ..|> UniqueEmail
+@enduml

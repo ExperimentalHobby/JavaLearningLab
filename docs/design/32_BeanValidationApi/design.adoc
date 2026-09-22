@@ -1,0 +1,56 @@
+= 32_BeanValidationApi 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-09-22
+:toc: left
+:toclevels: 2
+:sectnums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+== 概要
+
+=== 目的
+Bean Validationとグローバル例外ハンドラーで、REST APIの入力検証とエラーレスポンスを一元化する。
+
+=== 構成
+`UserController`が`UserRegistrationRequest`を`@Valid`で検証し、`UserService`が登録と重複確認を行う。`GlobalExceptionHandler`が検証・404・重複エラーをHTTPレスポンスへ変換する。
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/166[Issue #166]
+
+== ユースケース
+
+* UC-1: 正常なユーザーを登録する
+* UC-2: フィールド検証エラーを400で返す
+* UC-3: メール重複を拒否する
+* UC-4: 存在しないユーザーを404で返す
+
+== シーケンス図
+
+[plantuml, sequence-registration, svg]
+----
+include::diagrams/sequence-registration.puml[]
+----
+
+== クラス図
+
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+== アクティビティ図
+
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+== 補足事項
+
+カスタム制約`@UniqueEmail`は標準アノテーションで表現できない重複検証を担当する。利用者向けのエラー形式は例外ハンドラーで統一する。

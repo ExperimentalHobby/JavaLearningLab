@@ -1,0 +1,14 @@
+@startuml
+skinparam defaultFontName VL Gothic
+actor 利用者
+participant Checker
+participant 実行スレッド
+participant Endpoint
+participant Result
+利用者 -> Checker: URL一覧を渡す
+Checker -> 実行スレッド: 並行タスクを投入
+実行スレッド -> Endpoint: HTTP接続
+Endpoint --> 実行スレッド: 応答/タイムアウト
+実行スレッド -> Result: 成否と時間を記録
+Result --> 利用者: 全結果
+@enduml

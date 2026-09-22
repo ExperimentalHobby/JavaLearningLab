@@ -1,0 +1,16 @@
+@startuml
+skinparam defaultFontName VL Gothic
+annotation NotBlank
+annotation Min
+annotation Max
+class Validator
+class ValidationViolation
+class AnnotationMisuseException
+class UserForm
+Validator --> NotBlank
+Validator --> Min
+Validator --> Max
+Validator --> ValidationViolation
+Validator --> AnnotationMisuseException
+Validator --> UserForm
+@enduml

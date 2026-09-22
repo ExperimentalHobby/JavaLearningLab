@@ -1,0 +1,56 @@
+= 37_OptionalNullSafety 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-09-22
+:toc: left
+:toclevels: 2
+:sectnums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+== 概要
+
+=== 目的
+Optionalを戻り値の値の有無の表現に限定して使い、null安全な検索処理を設計する。
+
+=== 構成
+`EmployeeRepository`がID・メール検索を行い、`EmployeeService`が`map`、`flatMap`、`filter`、`orElse`などで結果を組み立てる。`Employee`はOptionalをフィールドに保持しないrecordである。
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/169[Issue #169]
+
+== ユースケース
+
+* UC-1: IDまたはメールで社員を検索する
+* UC-2: 社員のメールドメインを取得する
+* UC-3: 複数IDの存在を確認する
+* UC-4: 値なしを既定値または例外へ変換する
+
+== シーケンス図
+
+[plantuml, sequence-search, svg]
+----
+include::diagrams/sequence-search.puml[]
+----
+
+== クラス図
+
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+== アクティビティ図
+
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+== 補足事項
+
+Optionalはサービスの戻り値で使用し、エンティティのフィールド型には使用しない。必須入力は`Objects.requireNonNull`で早期に検証する。

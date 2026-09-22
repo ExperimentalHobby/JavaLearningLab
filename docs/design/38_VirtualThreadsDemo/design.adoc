@@ -1,0 +1,56 @@
+= 38_VirtualThreadsDemo 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-09-22
+:toc: left
+:toclevels: 2
+:sectnums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+== 概要
+
+=== 目的
+Virtual ThreadsとPlatform Threadsを同じエンドポイント確認処理で比較し、I/O待ちの並行性とタイムアウトを学ぶ。
+
+=== 構成
+`EndpointChecker`を共通契約とし、`VirtualThreadEndpointChecker`と`PlatformThreadEndpointChecker`が実行方式を提供する。`AbstractEndpointChecker`は共通の結果集約を行い、`CheckResult`が成功・失敗・所要時間を保持する。
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/170[Issue #170]
+
+== ユースケース
+
+* UC-1: 複数URLを並行確認する
+* UC-2: Virtual ThreadとPlatform Threadの結果を比較する
+* UC-3: タイムアウトを失敗結果として記録する
+* UC-4: 一部の接続失敗後も全体結果を返す
+
+== シーケンス図
+
+[plantuml, sequence-check, svg]
+----
+include::diagrams/sequence-check.puml[]
+----
+
+== クラス図
+
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+== アクティビティ図
+
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+== 補足事項
+
+Virtual ThreadはI/O待ちの大量並行処理を想定する。CPUバウンド処理の高速化を目的にせず、タイムアウトと例外を個別の結果へ変換する。

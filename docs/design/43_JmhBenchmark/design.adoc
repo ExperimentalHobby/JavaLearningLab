@@ -1,0 +1,56 @@
+= 43_JmhBenchmark 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-09-22
+:toc: left
+:toclevels: 2
+:sectnums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+== 概要
+
+=== 目的
+JMHで文字列結合とスタック実装の性能を同じ条件で測定し、ベンチマーク設計を学ぶ。
+
+=== 構成
+`StringConcatBenchmark`は`+`と`StringBuilder`を比較し、`StackBenchmark`は自前連結リスト、`ArrayDeque`、`Stack`を比較する。`@Param`が入力サイズを変え、スモークテストが生成物と対象ロジックを検証する。
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/175[Issue #175]
+
+== ユースケース
+
+* UC-1: 文字列結合方式の平均時間を測定する
+* UC-2: スタック実装のスループットを比較する
+* UC-3: 入力サイズ別の傾向を測定する
+* UC-4: ベンチマーク生成物の配線をスモークテストする
+
+== シーケンス図
+
+[plantuml, sequence-benchmark, svg]
+----
+include::diagrams/sequence-benchmark.puml[]
+----
+
+== クラス図
+
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+== アクティビティ図
+
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+== 補足事項
+
+`@Fork`、`@Warmup`、`@Measurement`を明示し、JVM起動・ウォームアップ・計測を分離する。ベンチマーク対象の戻り値は`Blackhole`などで最適化除去を防ぐ。

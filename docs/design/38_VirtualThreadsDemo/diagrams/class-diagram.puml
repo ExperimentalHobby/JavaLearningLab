@@ -1,0 +1,12 @@
+@startuml
+skinparam defaultFontName VL Gothic
+interface EndpointChecker
+abstract class AbstractEndpointChecker
+class VirtualThreadEndpointChecker
+class PlatformThreadEndpointChecker
+class CheckResult
+EndpointChecker <|.. AbstractEndpointChecker
+AbstractEndpointChecker <|-- VirtualThreadEndpointChecker
+AbstractEndpointChecker <|-- PlatformThreadEndpointChecker
+AbstractEndpointChecker --> CheckResult
+@enduml

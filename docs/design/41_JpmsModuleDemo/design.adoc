@@ -1,0 +1,56 @@
+= 41_JpmsModuleDemo 設計書
+:doctype: article
+:title-page:
+:revdate: 2026-09-22
+:toc: left
+:toclevels: 2
+:sectnums:
+:source-highlighter: rouge
+:icons: font
+:imagesdir: diagrams
+:pdf-fontsdir: ../fonts
+:pdf-themesdir: ../themes
+:pdf-theme: ja
+
+== 概要
+
+=== 目的
+JPMSのモジュール境界とServiceLoaderによる実装差し替えを、API・実装・アプリの3モジュールで学習する。
+
+=== 構成
+`greeting-api`が`Greeter`サービスを公開し、`greeting-impl`が`JapaneseGreeter`を提供する。`app`は`ServiceLoader`で実装を発見する。`module-info.java`の`exports`、`requires`、`uses`、`provides`が境界を定義する。
+
+=== 関連資料
+https://github.com/ExperimentalHobby/JavaLearningLab/issues/173[Issue #173]
+
+== ユースケース
+
+* UC-1: APIモジュールのサービス契約を参照する
+* UC-2: ServiceLoaderで実装を発見する
+* UC-3: 非公開パッケージへの直接アクセスを拒否する
+* UC-4: 実装モジュールを差し替えてアプリを起動する
+
+== シーケンス図
+
+[plantuml, sequence-service-loader, svg]
+----
+include::diagrams/sequence-service-loader.puml[]
+----
+
+== クラス図
+
+[plantuml, class-diagram, svg]
+----
+include::diagrams/class-diagram.puml[]
+----
+
+== アクティビティ図
+
+[plantuml, activity-diagram, svg]
+----
+include::diagrams/activity-diagram.puml[]
+----
+
+== 補足事項
+
+`exports`されないパッケージは強くカプセル化される。テスト実行時はMaven Surefireとモジュールパスの制約を分けて確認する。
