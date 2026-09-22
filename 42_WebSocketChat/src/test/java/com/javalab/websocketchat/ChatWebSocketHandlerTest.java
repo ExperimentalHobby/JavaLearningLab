@@ -3,6 +3,7 @@ package com.javalab.websocketchat;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
@@ -18,12 +19,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * (モックは使わない、既存Issueと同じ「実リソースでのテスト」方針)。
  *
  * {@code ChatWebSocketHandler}はSpringのsingleton Beanであり、{@code @SpringBootTest}は
- * デフォルトでテストメソッド間でSpringコンテキスト(=登録済みユーザー名の状態)を共有する。
- * セッションclose後のサーバー側クリーンアップは非同期のため、JUnit5のテスト実行順序に依存すると
- * 前のテストのユーザー名registrationが残って別テストと衝突しうる(ローカルでは通ってもCIでのみ
- * 失敗する原因になった)。そのためテストごとに一意なユーザー名を用いている。
+ * デフォルトでテストメソッド間でSpringコンテキスト(=登録済みユーザー名や接続の状態)を共有する。
+ * セッションclose後のサーバー側クリーンアップ(退出通知の送信)は非同期のため、前のテストで
+ * closeしたセッションの「退出しました」broadcastが、次のテストが新しいセッションを登録した
+ * 「後」に届いてしまうことがある。これはテストごとにユーザー名を分けるだけでは防げない
+ * (broadcastは登録済みの全セッションへ届くため)。そのため{@link DirtiesContext}で
+ * テストメソッドごとにSpringコンテキスト(=ハンドラの状態)を作り直し、テスト間の状態共有を断つ。
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class ChatWebSocketHandlerTest {
 
     @LocalServerPort
