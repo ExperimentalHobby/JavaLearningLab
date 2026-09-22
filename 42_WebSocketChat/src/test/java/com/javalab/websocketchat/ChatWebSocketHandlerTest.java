@@ -3,11 +3,13 @@ package com.javalab.websocketchat;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.lang.NonNull;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,7 +35,7 @@ class ChatWebSocketHandlerTest {
     @LocalServerPort
     private int port;
 
-    private WebSocketSession connect(RecordingWebSocketHandler handler) throws Exception {
+    private WebSocketSession connect(@NonNull RecordingWebSocketHandler handler) throws Exception {
         StandardWebSocketClient client = new StandardWebSocketClient();
         return client.execute(handler, "ws://localhost:" + port + "/chat").get(5, TimeUnit.SECONDS);
     }
@@ -124,7 +126,7 @@ class ChatWebSocketHandlerTest {
         RecordingWebSocketHandler handlerA = new RecordingWebSocketHandler();
         WebSocketSession sessionA = connect(handlerA);
 
-        sessionA.sendMessage(new TextMessage("あ".repeat(21)));
+        sessionA.sendMessage(new TextMessage(Objects.requireNonNull("あ".repeat(21))));
 
         assertEquals("エラー: ユーザー名は20文字以内で入力してください", handlerA.awaitMessage());
 
@@ -153,7 +155,7 @@ class ChatWebSocketHandlerTest {
         WebSocketSession sessionA = connect(handlerA);
         sessionA.sendMessage(new TextMessage("太郎8"));
 
-        sessionA.sendMessage(new TextMessage("あ".repeat(501)));
+        sessionA.sendMessage(new TextMessage(Objects.requireNonNull("あ".repeat(501))));
 
         assertEquals("エラー: メッセージは500文字以内で入力してください", handlerA.awaitMessage());
 

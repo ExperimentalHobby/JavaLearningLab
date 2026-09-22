@@ -37,7 +37,7 @@ class BookServiceTest {
         service.create("坊っちゃん", "夏目漱石");
         service.create("こころ", "夏目漱石");
 
-        List<Long> ids = service.findAll().stream().map(Book::id).toList();
+        List<Long> ids = service.findAll().stream().map(book -> book.id()).toList();
 
         assertEquals(ids.stream().sorted().toList(), ids);
     }
