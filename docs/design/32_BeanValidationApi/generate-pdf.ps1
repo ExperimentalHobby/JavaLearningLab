@@ -1,4 +1,4 @@
-# 32_BeanValidationApi デザイン書PDF生成スクリプト
+﻿# 32_BeanValidationApi デザイン書PDF生成スクリプト
 #
 # 用法: ./generate-pdf.ps1
 #

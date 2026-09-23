@@ -1,4 +1,4 @@
-# 31_ModernJavaSyntax デザイン書PDF生成スクリプト
+﻿# 31_ModernJavaSyntax デザイン書PDF生成スクリプト
 #
 # 用法: ./generate-pdf.ps1
 #
