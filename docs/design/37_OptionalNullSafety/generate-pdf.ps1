@@ -1,4 +1,4 @@
-# 37_OptionalNullSafety デザイン書PDF生成スクリプト
+﻿# 37_OptionalNullSafety デザイン書PDF生成スクリプト
 #
 # 用法: ./generate-pdf.ps1
 #

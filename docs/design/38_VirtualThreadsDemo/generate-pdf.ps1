@@ -1,4 +1,4 @@
-# 38_VirtualThreadsDemo デザイン書PDF生成スクリプト
+﻿# 38_VirtualThreadsDemo デザイン書PDF生成スクリプト
 #
 # 用法: ./generate-pdf.ps1
 #
